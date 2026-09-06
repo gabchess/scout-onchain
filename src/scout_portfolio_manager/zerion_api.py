@@ -273,6 +273,9 @@ class ZerionAPIReader:
         "trade": {"in": "buy", "out": "sell"},
         "send": {"in": "transfer", "out": "transfer"},
         "receive": {"in": "transfer", "out": "transfer"},
+        "deposit": {"in": "transfer", "out": "transfer"},
+        "withdraw": {"in": "transfer", "out": "transfer"},
+        "claim": {"in": "transfer", "out": "transfer"},
     }
 
     @staticmethod

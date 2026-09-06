@@ -328,6 +328,46 @@ def test_unmapped_operation_type_is_skipped_with_warning_and_snapshot_still_succ
     assert any("unmapped operation_type" in record.message for record in caplog.records)
 
 
+def test_deposit_withdraw_and_claim_map_to_transfer(caplog):
+    transport = recording_transport(
+        [
+            tx_page(
+                [
+                    tx_item("h1", "deposit", [transfer("out", "ETH")]),
+                    tx_item("h2", "withdraw", [transfer("in", "ETH")]),
+                    tx_item("h3", "claim", [transfer("in", "ETH")]),
+                ]
+            )
+        ]
+    )
+    with caplog.at_level(logging.WARNING):
+        transactions = make_reader(transport).get_transactions(WALLET)
+
+    assert len(transactions) == 3
+    assert {t.kind for t in transactions} == {"transfer"}
+    assert not any("unmapped operation_type" in record.message for record in caplog.records)
+
+
+def test_other_untyped_operations_still_skip_with_warning(caplog):
+    transport = recording_transport(
+        [
+            tx_page(
+                [
+                    tx_item("h1", "approve", [transfer("out")]),
+                    tx_item("h2", "burn", [transfer("out")]),
+                    tx_item("h3", "delegate", [transfer("out")]),
+                ]
+            )
+        ]
+    )
+    with caplog.at_level(logging.WARNING):
+        transactions = make_reader(transport).get_transactions(WALLET)
+
+    assert transactions == []
+    warnings = [r.message for r in caplog.records if "unmapped operation_type" in r.message]
+    assert len(warnings) == 3
+
+
 def test_trade_self_direction_transfer_is_skipped_with_warning(caplog):
     transport = recording_transport([tx_page([tx_item("h1", "trade", [transfer("self")])])])
     with caplog.at_level(logging.WARNING):
