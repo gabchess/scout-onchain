@@ -381,11 +381,11 @@ class ZerionAPIReader:
     def _numeric_amount(value: Any) -> Optional[float]:
         """Accept either a bare number or a Zerion quantity object with a "float" key.
 
-        Moderate confidence: Zerion's documented positions/transactions field names
-        (quantity, value, fungible_info) were confirmed by fetch, but whether
-        ``quantity`` is a bare float or an object (as Zerion uses elsewhere in its
-        API) was not confirmed for these two endpoints. This accepts both shapes
-        rather than guessing one.
+        Confirmed 2026-09-04: Zerion's documented positions/transactions field names
+        (quantity, value, fungible_info) were confirmed by fetch, and ``quantity``
+        is an object (as Zerion uses elsewhere in its API), not a bare float, for
+        both endpoints. This still accepts both shapes rather than hard-failing on
+        an unexpected one.
         """
         if isinstance(value, Mapping):
             value = value.get("float")
@@ -450,7 +450,10 @@ class ZerionAPIReader:
 
     def _positions_url(self, wallet_address: str) -> str:
         path = f"/wallets/{quote(wallet_address, safe='')}/positions/"
-        query = "currency=usd&filter%5Bpositions%5D=only_simple"
+        query = (
+            "currency=usd&filter%5Bpositions%5D=only_simple"
+            "&filter%5Btrash%5D=only_non_trash"
+        )
         return f"{self.config.base_url.rstrip('/')}{path}?{query}"
 
     def _transactions_url(self, wallet_address: str) -> str:
@@ -458,6 +461,7 @@ class ZerionAPIReader:
         query = (
             "currency=usd&page%5Bsize%5D=100"
             "&filter%5Boperation_types%5D=trade%2Csend%2Creceive"
+            "&filter%5Btrash%5D=only_non_trash"
         )
         return f"{self.config.base_url.rstrip('/')}{path}?{query}"
 

@@ -102,6 +102,7 @@ def test_get_positions_maps_single_unpaginated_call():
     expected = (
         f"{BASE_URL}/wallets/{WALLET}/positions/"
         "?currency=usd&filter%5Bpositions%5D=only_simple"
+        "&filter%5Btrash%5D=only_non_trash"
     )
     assert transport.calls[0].full_url == expected
 
@@ -157,6 +158,7 @@ def test_get_transactions_single_page_no_links_key():
     assert transport.calls[0].full_url == (
         f"{BASE_URL}/wallets/{WALLET}/transactions/"
         "?currency=usd&page%5Bsize%5D=100&filter%5Boperation_types%5D=trade%2Csend%2Creceive"
+        "&filter%5Btrash%5D=only_non_trash"
     )
 
 

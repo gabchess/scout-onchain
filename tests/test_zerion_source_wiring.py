@@ -106,9 +106,11 @@ def test_bound_reader_observes_configured_wallet_only():
     assert snapshot.holdings[0].value_usd == pytest.approx(2017.48)
     assert snapshot.transactions == []
     assert seen == [
-        f"https://api.zerion.io/v1/wallets/{WALLET}/positions/?currency=usd&filter%5Bpositions%5D=only_simple",
+        f"https://api.zerion.io/v1/wallets/{WALLET}/positions/"
+        "?currency=usd&filter%5Bpositions%5D=only_simple&filter%5Btrash%5D=only_non_trash",
         f"https://api.zerion.io/v1/wallets/{WALLET}/transactions/"
-        "?currency=usd&page%5Bsize%5D=100&filter%5Boperation_types%5D=trade%2Csend%2Creceive",
+        "?currency=usd&page%5Bsize%5D=100&filter%5Boperation_types%5D=trade%2Csend%2Creceive"
+        "&filter%5Btrash%5D=only_non_trash",
     ]
     assert CREDENTIAL not in repr(reader) and CREDENTIAL not in repr(reader._reader.config)
 
