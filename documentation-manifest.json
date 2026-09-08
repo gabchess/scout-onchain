@@ -1,7 +1,7 @@
 {
   "format": "cd-documentation-manifest/v1",
   "product": "scout-portfolio-manager",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "claim_boundary": "Fixture is the default; live Zerion is optional and read-only; host and MCP have no execute, sign, or submit tool.",
   "files": [
     {
@@ -10,15 +10,15 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "c8757f8d2609ab529db1f1c4a34c358dfd9ae9cb334f5798b66a5009132754d8"
+      "sha256": "51a95e4eb1ed3603e96edbf9fff6684e1e847364a60592295697e25302922969"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "6fa322482837846cfbf55a2419c35f0ba0b251280a218f8d40bb877d4cf92d2c"
+      "sha256": "b31ae84a97183ef3f44db1a7efeb7500763464d0b6a9d34cefcbae7dc92d3d3f"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
-      "sha256": "0bebbbb3b55b6a1d38a36f81d91de473a8b82539d09fe5b587a8f18ed7f25243"
+      "sha256": "dae7ddc7e7ce5ec092fe60703448074032cc9cb9af0af870b9d15a8cd36da553"
     },
     {
       "path": "HOST-MATRIX.md",
@@ -38,7 +38,7 @@
     },
     {
       "path": "LLM-HANDOFF.md",
-      "sha256": "c3a9cd1c020122b71e3e669f5177c8c330f7613107b42338284ddc4f0cbe3c0f"
+      "sha256": "a55c4ee263174dd1485ae3fe90fc8f6ab3aee21baf8cba793a5da10e2649d34d"
     },
     {
       "path": "PLUGIN-START-HERE.md",
@@ -46,15 +46,15 @@
     },
     {
       "path": "README.md",
-      "sha256": "07f12944104e91030b785a3a1847e3f51288914846aa20f78a0d1625558034c8"
+      "sha256": "005ff515b29667bb8f50dce9f5b01d9faab62f5c36e662b38304638226f8cac6"
     },
     {
       "path": "SECURITY.md",
-      "sha256": "67a5500ad0e48b9b0d34866a3ad79dae0b538454e4752e4c0388a42ca327b1b7"
+      "sha256": "bae5a5651ddfa5e06d444c23b0c88a1475f910455aeb6c71943ef944db8ab4c8"
     },
     {
       "path": "START-HERE.md",
-      "sha256": "ee2b42d3947781cd4a62aabe79fb7ffda62c767b49ffd637da42c8a27b280626"
+      "sha256": "eb77fa7ac9ccc6102f4ea9882761d7cac7c10fdd230d3b73fb0ffc4ff63a8b55"
     },
     {
       "path": "SUPPORT.md",
@@ -70,11 +70,15 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "9b79ce99bb43e8033b5d9c373f3e2bc09afe7fa4965185cf3e78a574cbfdc6d6"
+      "sha256": "c6c49f7ac96fc51616c2e588ebf64456cb4b7a365631699a9d1458d3c6a08306"
     },
     {
       "path": "docs/SHOW-ME.md",
       "sha256": "2528409038598d2e07fed31113ea1e8674a9506d4b9d4e8da90cc2a57cd5464d"
+    },
+    {
+      "path": "docs/X402.md",
+      "sha256": "72a43521cd55d10b7aee61a408cf6bde3d5c91fef251ce2f22f8593dffec72f4"
     },
     {
       "path": "docs/ZERION-API-DX-PROPOSAL.md",

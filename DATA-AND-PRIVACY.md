@@ -12,6 +12,8 @@ The default configuration reads the synthetic JSON fixture at `fixtures/portfoli
 
 The host and MCP server enable this source only when `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` are both present in the server process environment. The key is read once at startup, held in memory for the process lifetime, and excluded from object representations, error messages, tool results, and logs written by this package. A partial configuration stops the server instead of silently serving the fixture. The wallet address is sent to Zerion in the request path and is returned in snapshot results, so treat results as containing personal wallet data.
 
+In x402 mode (`ZERION_X402_PRIVATE_KEY` + `ZERION_WALLET_ADDRESS`), the same read-only requests are authorized per call by a small USDC payment on Base instead of an API key. The payment wallet's private key is read once at startup, held in memory, and excluded from representations, errors, results, and logs. Per-call spend is capped client-side (default `$0.05`) before any payment is signed. The payment itself is public onchain data: the payment wallet address and per-call fees are visible on Base, so use a dedicated wallet that does not link to identities the operator wants kept private. The observed wallet never signs anything.
+
 The host application is responsible for credential storage, network logs, retention, access control, and deletion. Use a customer-controlled secret manager. Do not place credentials or personal wallet data in source files, fixtures, prompts, logs, or support reports.
 
 API-backed data may be incomplete, stale, unavailable, or subject to the permissions and limits of the configured Zerion account. Review the applicable Zerion terms and privacy documentation before using real wallet data.

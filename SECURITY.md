@@ -6,6 +6,7 @@
 - The MCP server registers observation, calculation, parsing, and preview tools only.
 - No component connects a wallet, signs, submits, or executes a transaction.
 - The optional Zerion adapter performs a read-only aggregate portfolio request; it does not expose an execution rail.
+- The optional x402 mode (`ZERION_X402_PRIVATE_KEY`) settles per-request data fees from a dedicated payment wallet. It is the only signing the product does, it is capped client-side before signing (default `$0.05` per call), and the observed wallet never signs. Treat the payment wallet key as a hot secret: dedicated wallet, minimal balance.
 - A preview is a proposal and must not be represented as a completed transaction.
 - `analyze_asset`, `dca_windows`, `set_alert`, and `check_alerts` are read-only; their output is heuristic, not investment advice.
 

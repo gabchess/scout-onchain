@@ -65,6 +65,10 @@ class ZerionAPIRateLimitError(ZerionAPIError):
         super().__init__(message, status=status)
 
 
+class ZerionAPIPaymentError(ZerionAPIError):
+    """x402 payment was rejected or failed to settle (HTTP 402)."""
+
+
 class ZerionAPIServerError(ZerionAPIError):
     """The API reported a server-side failure (HTTP 5xx)."""
 
@@ -93,19 +97,26 @@ class ZerionConfigError(ValueError):
 
 @dataclass(frozen=True)
 class ZerionAPIConfig:
-    """Connection settings; the API key is excluded from representations."""
+    """Connection settings; the API key is excluded from representations.
 
-    api_key: str = field(repr=False)
+    ``api_key`` is None only in x402 mode, where access is paid per request
+    and no Authorization header is sent.
+    """
+
+    api_key: Optional[str] = field(repr=False)
     base_url: str = "https://api.zerion.io/v1"
     timeout_seconds: float = 10.0
     max_pages: int = 20
     """Bounds worst-case request cost per snapshot call. Default 20 (~2,000 tx via
     page[size]=100) balances completeness against free-tier daily quota (2k req/day);
-    override per-deployment for wallets with deeper history."""
+    override per-deployment for wallets with deeper history. In x402 mode it bounds
+    per-snapshot spend instead: at ~$0.01/call, 20 calls is ~$0.20 worst case."""
 
     def __post_init__(self) -> None:
-        if not isinstance(self.api_key, str) or not self.api_key.strip():
-            raise ValueError("api_key must be non-empty")
+        if self.api_key is not None and (
+            not isinstance(self.api_key, str) or not self.api_key.strip()
+        ):
+            raise ValueError("api_key must be None (x402 mode) or a non-empty string")
         if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive and finite")
         if (
@@ -445,6 +456,10 @@ class ZerionAPIReader:
             raise ZerionAPITransportError("Zerion API transport failed") from exc
 
     def _headers(self) -> Dict[str, str]:
+        if self.config.api_key is None:
+            # x402 mode: no Authorization header. Access is settled per
+            # request by the injected payment transport.
+            return {"Accept": "application/json"}
         encoded = base64.b64encode((self.config.api_key + ":").encode("utf-8")).decode("ascii")
         return {"Authorization": f"Basic {encoded}", "Accept": "application/json"}
 
@@ -545,19 +560,36 @@ def reader_from_env(
 ) -> Optional[ZerionWalletReader]:
     """Build the Zerion source from the environment, or return None when it is not enabled.
 
-    Returns None only when neither variable is set. Raises ZerionConfigError when exactly
-    one is set, so a half-configured host fails loudly instead of silently serving the
+    Authorization mode is exclusive: ``ZERION_X402_PRIVATE_KEY`` selects the
+    pay-per-call x402 source (see ``x402_source``), otherwise
+    ``ZERION_API_KEY`` selects the key-auth source. Returns None only when no
+    variable is set. Raises ZerionConfigError on a partial configuration, so a
+    half-configured host fails loudly instead of silently serving the
     fixture. The error message never contains the credential value.
     """
+    from .x402_source import X402_KEY_ENV
+
     key = (environ.get(API_KEY_ENV) or "").strip()
     wallet = (environ.get(WALLET_ENV) or "").strip()
+    x402_key = (environ.get(X402_KEY_ENV) or "").strip()
+    if x402_key:
+        if transport is not None:
+            raise ZerionConfigError(
+                "A custom transport cannot be injected in x402 mode; the x402 "
+                "SDK owns the request transport."
+            )
+        from .x402_source import reader_from_env as x402_reader_from_env
+
+        return x402_reader_from_env(environ)
     if not key and not wallet:
         return None
     if not key or not wallet:
         missing = WALLET_ENV if key else API_KEY_ENV
         raise ZerionConfigError(
             f"{API_KEY_ENV} and {WALLET_ENV} must both be set to enable the Zerion API "
-            f"source; {missing} is missing. The fixture is not used as a fallback."
+            f"source; {missing} is missing. The fixture is not used as a fallback. "
+            f"Alternatively, set {X402_KEY_ENV} and {WALLET_ENV} for pay-per-call "
+            "x402 access."
         )
     chain = (environ.get(CHAIN_ENV) or "").strip() or "multi-chain"
     api_reader = ZerionAPIReader(ZerionAPIConfig(api_key=key), transport=transport)

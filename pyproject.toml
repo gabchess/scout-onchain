@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scout-portfolio-manager"
-version = "0.3.3"
+version = "0.4.0"
 description = "Fixture-backed read-only portfolio intelligence"
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.5,<3"]
@@ -13,6 +13,7 @@ dependencies = ["pydantic>=2.5,<3"]
 test = ["pytest>=8,<9"]
 quality = ["ruff>=0.6,<1", "mypy>=1.11,<2"]
 mcp = ["mcp>=1.2,<2"]
+x402 = ["x402[requests,evm]>=2.22,<3", "eth-account>=0.13"]
 
 [project.scripts]
 zpm-mcp = "scout_portfolio_manager.mcp_server:main"
@@ -47,3 +48,7 @@ exclude = ["^tests/", "^build/"]
 [[tool.mypy.overrides]]
 module = ["scout_portfolio_manager.mcp_server"]
 ignore_missing_imports = true
+[[tool.mypy.overrides]]
+module = ["x402.*", "eth_account.*", "web3.*", "requests.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
