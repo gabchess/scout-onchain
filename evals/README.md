@@ -43,8 +43,8 @@ python3 scripts/scout_eval.py --dry-run
 ```
 
 If the key is absent, `--judge` skips cleanly. On HTTP 402, the runner stops the
-suite immediately and does not retry. Use only the capped `scout-tix-evals-25`
-budget key ($25, no refresh). Never use the Arcana unlimited key.
+suite and does not retry. Use a project-scoped key with a budget set by the
+operator. This repository supplies no key and grants no spending authority.
 
 CI runs the offline suite by default. The live job can run only through a manual
 workflow dispatch with `live_judge` enabled and the `AI_GATEWAY_API_KEY` repository

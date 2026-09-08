@@ -1,11 +1,4 @@
-/* Front-end for the Zerion portfolio-manager agent demo.
-   Renders read-only host responses; contains no portfolio logic of its own.
-
-   Design rule for this file: every panel's MAIN view is a heading plus at
-   most a couple of short lines, one plain-language verdict, or a small set
-   of plain-value chips. Anything technical (raw indicators, formulas,
-   confidence tags, IDs, fixture locators) goes inside that panel's single
-   <details> element, collapsed by default. */
+/* Renders the fixture-backed demo. Technical detail stays collapsed. */
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -266,9 +259,7 @@ async function runDca(text) {
 /* ---------- Analysis (calculate), verdict sourced from dca_windows' label ---------- */
 
 function verdictText(label, asset) {
-  if (label === "favorable") return `Good week to buy ${asset}.`;
-  if (label === "unfavorable") return `Not a great week to buy ${asset}.`;
-  return `No strong signal on ${asset} this week.`;
+  return `${asset} matches the ${label} rule set.`;
 }
 
 function renderTa(analyzeData, windowData) {
@@ -282,7 +273,7 @@ function renderTa(analyzeData, windowData) {
   const ind = analyzeData.indicators || {};
   const range = ind.range_30d;
   const rangeText =
-    range != null ? `${usd(range.low)}&ndash;${usd(range.high)}` : "&mdash;";
+    range != null ? `${usd(range.low)} to ${usd(range.high)}` : "n/a";
   const label = windowData?.status === "ok" ? windowData.label : null;
   const asset = analyzeData.asset;
 
@@ -305,13 +296,13 @@ function renderTa(analyzeData, windowData) {
       "Details",
       `<div class="ta-stats">
         <div class="stat"><div class="k">SMA 20</div><div class="v">${
-          ind.sma_20 != null ? usd(ind.sma_20) : "&mdash;"
+          ind.sma_20 != null ? usd(ind.sma_20) : "n/a"
         }</div></div>
         <div class="stat"><div class="k">EMA 12</div><div class="v">${
-          ind.ema_12 != null ? usd(ind.ema_12) : "&mdash;"
+          ind.ema_12 != null ? usd(ind.ema_12) : "n/a"
         }</div></div>
         <div class="stat"><div class="k">RSI 14</div><div class="v">${
-          ind.rsi_14 != null ? ind.rsi_14 : "&mdash;"
+          ind.rsi_14 != null ? ind.rsi_14 : "n/a"
         }</div></div>
         <div class="stat"><div class="k">30d range</div><div class="v">${rangeText}</div></div>
       </div>
@@ -339,7 +330,7 @@ async function loadTa() {
 function renderDcaWindow(data) {
   const el = $("#dca-windows-body");
   if (data.status !== "ok") {
-    el.innerHTML = `<p class="placeholder">Buy window unavailable: ${esc(
+    el.innerHTML = `<p class="placeholder">DCA context unavailable: ${esc(
       data.error?.message || data.error || "unknown error",
     )}</p>`;
     return;
@@ -380,7 +371,7 @@ async function loadDcaWindow() {
     );
     renderDcaWindow(data);
   } catch (err) {
-    el.innerHTML = `<p class="placeholder">Buy window unavailable: ${esc(err.message)}</p>`;
+    el.innerHTML = `<p class="placeholder">DCA context unavailable: ${esc(err.message)}</p>`;
   }
 }
 

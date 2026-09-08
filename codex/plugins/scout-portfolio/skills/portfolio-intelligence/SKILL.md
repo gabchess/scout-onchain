@@ -1,26 +1,27 @@
 ---
 name: portfolio-intelligence
-description: Answers portfolio and PnL questions and produces safe DCA previews using read-only tools
+description: Answers portfolio and PnL questions and produces approval-required DCA previews
 ---
 
 # Portfolio intelligence
 
 ## Scope
 
-Use the fixture-backed host or the optional read-only MCP server to:
+Use the fixture-backed host or optional MCP server to:
 
 - observe the current portfolio snapshot;
 - calculate explainable USD PnL;
 - parse a DCA request into explicit fields;
 - build a complete preview that remains approval-required.
 
-The default source is synthetic fixture data. An API-backed source is optional and must be
-explicitly configured by the user. Say which source was used.
+The default source is synthetic fixture data. An operator can configure API-key
+or x402 Zerion access. Say which source was used. x402 can spend USDC from its
+dedicated payment wallet; never ask the user to paste its private key in chat.
 
 ## Safety rules
 
 - Never ask for, store, or repeat API keys, signing keys, recovery phrases, or wallet secrets.
-- Never sign, submit, execute, route, or claim settlement of a transaction.
+- Never sign, submit, execute, route, or claim settlement of a trade.
 - Never infer a chain, schedule, source wallet, destination wallet, amount, or asset.
 - Keep the boundaries distinct: observe, calculate, propose, approve, execute, verify.
 - A preview is a proposal. It must say `approval_state=required` and `execution_available=false`.

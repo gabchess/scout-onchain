@@ -2,26 +2,30 @@
   "schema_version": 1,
   "name": "scout-portfolio",
   "version": "0.4.0",
-  "release_kind": "early-public-release",
+  "release_kind": "early-public-source",
+  "publication_status": "This manifest does not assert a published GitHub release.",
   "license": "MIT",
-  "default_behavior": "fixture-backed and read-only",
+  "default_behavior": "synthetic fixture with no network request",
   "primary_host": "Claude Code plugin, local marketplace",
   "fallback_hosts": [
-    "Codex local marketplace",
-    "Plain Python install via uv (`uv run --extra mcp zpm-mcp`, no plugin host)"
+    "Codex skills layout with a separate stdio MCP route",
+    "Plain Python or stdio MCP through uv"
   ],
   "optional_integration": {
     "name": "Zerion API",
-    "mode": "read-only",
-    "authorization": ["api_key", "x402 pay-per-call (USDC on Base, client-side spend cap)"],
-    "scope": "aggregate wallet portfolio observation",
+    "authorization": [
+      "api_key",
+      "x402 pay-per-call (USDC on Base, per-payment cap)"
+    ],
+    "scope": "per-asset positions and mapped transaction history for one wallet",
     "enabled_by_default": false
   },
   "execution_boundary": {
     "wallet_connection": false,
-    "signing": false,
-    "submission": false,
-    "execution": false,
+    "observed_wallet_signing": false,
+    "x402_payment_signing": true,
+    "trade_submission": false,
+    "trade_execution": false,
     "settlement_verification": false
   },
   "honesty_artifacts": [
@@ -34,39 +38,11 @@
   "known_limits": [
     "Synthetic fixture is not live data.",
     "API-backed observations depend on endpoint access, authorization, freshness, and availability.",
+    "x402 has a per-payment cap but no cumulative session budget in Scout.",
+    "No live paid x402 request is verified by this repository.",
     "No production SLA or Zerion endorsement is claimed."
   ],
-  "evidence_boundary": "Proves the declared release identity, version, execution boundary, and file tree as authored and checksummed (see SHA256SUMS.txt); does not prove behavior, security, or data freshness on the installer's machine.",
-  "release_artifacts": [
-    {
-      "path": "dist/scout-portfolio-0.2.0.zip",
-      "sha256": "d4798d1be02d2df095699d560aaa98ac897e2f13faf0181ed24f4d64f9e55d9f",
-      "version": "0.2.0",
-      "built_at": "2026-09-04T20:59:10Z"
-    },
-    {
-      "path": "dist/scout-portfolio-0.3.0.zip",
-      "sha256": "72511714e406a8521e80d5bd7e8bbe03cc4bc0f1532abfeabf54621ccdec4c92",
-      "version": "0.3.0",
-      "built_at": "2026-09-04T23:26:59Z"
-    },
-    {
-      "path": "dist/scout-portfolio-0.3.1.zip",
-      "sha256": "1243007a70e521292a998cce41ed3170f7c25eda68817c3c6d24a27f8258cb58",
-      "version": "0.3.1",
-      "built_at": "2026-09-05T00:27:44Z"
-    },
-    {
-      "path": "dist/scout-portfolio-0.3.2.zip",
-      "sha256": "2931a9ed0da2dd6b5e3761d24195258c2cf3b3da160ef6702879a7910c569f08",
-      "version": "0.3.2",
-      "built_at": "2026-09-05T15:21:31Z"
-    },
-    {
-      "path": "dist/scout-portfolio-0.3.3.zip",
-      "sha256": "3da5621e6476e4beb4383c592e9b4a63e0ade3a7a73dc0331aae5045aa7026dc",
-      "version": "0.3.3",
-      "built_at": "2026-09-08T00:18:30Z"
-    }
-  ]
+  "evidence_boundary": "This manifest describes source identity, package boundaries, and local build records. It does not prove publication, live provider behavior, security on an installer's machine, or data freshness.",
+  "release_artifact_policy": "The local builder adds an entry after creating a verified ZIP. A build record is not publication evidence.",
+  "release_artifacts": []
 }

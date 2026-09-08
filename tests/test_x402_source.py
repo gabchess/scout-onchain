@@ -1,8 +1,7 @@
 """Env-gated wiring of the optional x402 pay-per-call Zerion source.
 
-Offline by construction: every test injects a fake session, so no x402 SDK,
-no network, and no money is touched. The real SDK path is exercised by the
-optional dependency group, not here.
+Offline by construction: transport tests inject a fake session, while SDK
+smoke tests create an ephemeral signer in memory. No network or money is used.
 
 Rules under test: exclusive authorization modes, loud partial-config errors,
 spend-cap validation, typed transport errors (including the non-retryable
@@ -10,6 +9,7 @@ spend-cap validation, typed transport errors (including the non-retryable
 """
 
 from pathlib import Path
+from urllib.request import Request
 
 import pytest
 
@@ -19,12 +19,15 @@ from scout_portfolio_manager.x402_source import (
     X402_KEY_ENV,
     X402_MAX_ENV,
     parse_max_usd_per_call,
-    reader_from_env as x402_reader_from_env,
     x402_transport,
+)
+from scout_portfolio_manager.x402_source import (
+    reader_from_env as x402_reader_from_env,
 )
 from scout_portfolio_manager.zerion_api import (
     API_KEY_ENV,
     WALLET_ENV,
+    ZerionAPIAuthError,
     ZerionAPIPaymentError,
     ZerionConfigError,
     reader_from_env,
@@ -73,9 +76,11 @@ class FakeSession:
         self.raise_exc = raise_exc
         self.headers = headers
         self.gets = []
+        self.request_headers = []
 
-    def get(self, url, timeout=None):
+    def get(self, url, headers=None, timeout=None):
         self.gets.append(url)
+        self.request_headers.append(headers or {})
         if self.raise_exc is not None:
             raise self.raise_exc
         payload = self.payload
@@ -93,7 +98,10 @@ def x402_env(**extra):
 # --- spend cap validation -----------------------------------------------------
 
 
-@pytest.mark.parametrize("value", ["$0.05", "$1", "$0.01", "$10.50", "$0.1"])
+@pytest.mark.parametrize(
+    "value",
+    ["$0.05", "$1", "$0.01", "$10.50", "$0.1", "$0.00000000000000000001"],
+)
 def test_valid_money_strings_pass_through_unchanged(value):
     assert parse_max_usd_per_call(value) == value
 
@@ -179,9 +187,11 @@ def test_bound_reader_observes_wallet_with_no_authorization_header():
     assert snapshot.holdings[0].asset == "ETH"
     assert snapshot.holdings[0].value_usd == pytest.approx(2017.48)
     assert snapshot.transactions == []
+    assert reader.authorization_mode == "x402"
     # Exactly the two documented endpoints, nothing else.
     assert len(session.gets) == 2
     assert all("api.zerion.io/v1" in url for url in session.gets)
+    assert all(headers.get("Accept") == "application/json" for headers in session.request_headers)
     # x402 mode sends no Basic-auth header; access is settled per request.
     assert reader._reader.config.api_key is None
     assert "Authorization" not in reader._reader._headers()
@@ -231,6 +241,20 @@ def test_transport_exception_maps_to_transport_error():
     assert "connection reset" not in str(caught.value)
 
 
+def test_sdk_payment_error_maps_to_non_retryable_payment_without_leaking():
+    pytest.importorskip("x402")
+    from x402.http.clients.requests import PaymentError
+
+    secret_detail = "payment-secret-detail"
+    session = FakeSession(raise_exc=PaymentError(secret_detail))
+    host = ReadOnlyHost(x402_reader_from_env(x402_env(), session=session))
+    result = host.get_portfolio_snapshot()
+
+    assert result["error"]["kind"] == "payment"
+    assert result["error"]["retryable"] is False
+    assert secret_detail not in repr(result)
+
+
 def test_server_and_rate_limit_statuses_keep_their_kinds():
     from scout_portfolio_manager.zerion_api import (
         ZerionAPIRateLimitError,
@@ -240,14 +264,26 @@ def test_server_and_rate_limit_statuses_keep_their_kinds():
     cases = [
         (429, ZerionAPIRateLimitError),
         (503, ZerionAPIServerError),
-        (401, None),
+        (401, ZerionAPIAuthError),
     ]
     for status, expected in cases:
         session = FakeSession(status_code=status, payload={})
         reader = x402_reader_from_env(x402_env(), session=session)
-        with pytest.raises(Exception) as caught:
+        with pytest.raises(expected) as caught:
             reader.snapshot()
         assert caught.value.status == status
+
+
+def test_missing_http_status_is_a_transport_error():
+    class NoStatusSession:
+        def get(self, url, headers=None, timeout=None):
+            return object()
+
+    from scout_portfolio_manager.zerion_api import ZerionAPITransportError
+
+    transport = x402_transport(NoStatusSession())
+    with pytest.raises(ZerionAPITransportError):
+        transport(Request("https://api.zerion.io/v1/wallets/x/positions/"), 10.0)
 
 
 def test_mcp_build_host_prefers_x402_source(monkeypatch):
@@ -280,8 +316,6 @@ def test_fixture_remains_default_when_nothing_set(monkeypatch):
 
 def test_transport_direct_status_mapping():
     transport = x402_transport(FakeSession(status_code=404, payload={}))
-    from urllib.request import Request
-
     from scout_portfolio_manager.zerion_api import ZerionAPIError
 
     with pytest.raises(ZerionAPIError) as caught:

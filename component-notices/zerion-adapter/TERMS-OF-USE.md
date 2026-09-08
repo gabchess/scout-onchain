@@ -2,7 +2,7 @@
 
 ## What this component is
 
-`ZerionAPIReader` and `ZerionWalletReader` (`src/scout_portfolio_manager/zerion_api.py`) are an opt-in, read-only client for Zerion's hosted wallet positions and transactions endpoints at `https://api.zerion.io`. The adapter is disabled by default; it activates only when an operator sets both `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It performs no write, sign, submit, or execute call, and this repository provides no such capability anywhere in the codebase.
+`ZerionAPIReader` and `ZerionWalletReader` read Zerion's hosted positions and transactions endpoints at `https://api.zerion.io`. The source is disabled by default. API-key mode uses `ZERION_API_KEY`; x402 mode uses a payment-wallet key through `x402_source.py`. The x402 wallet can sign and pay data fees. Neither mode can sign for the observed wallet or execute a trade.
 
 ## Governing terms
 
@@ -10,4 +10,4 @@ This project's MIT license covers the adapter's own source code. It does not cov
 
 ## Operator responsibility
 
-The operator supplies and controls the API key, through their own secret manager, per [`SECURITY.md`](../../SECURITY.md) and [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md) in this folder. This project does not store, transmit to a third party, or have any visibility into the operator's Zerion account or credentials.
+The operator supplies and controls each credential through a secret manager, per [`SECURITY.md`](../../SECURITY.md) and [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md). Zerion and x402 services receive data required by their protocols.

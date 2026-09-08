@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Regenerated `uv.lock` for 0.4.0 and added CI coverage for lock drift and the real x402 SDK import contract.
+- Mapped SDK payment-flow failures to non-retryable `payment` errors without exposing raw exception text.
+- Blocked the multi-read `watch` report in x402 mode until Scout has a cumulative spend budget.
+- Rebuilt the release archive contract around the complete portable tree, archive-local checksums, local-link checks, and deterministic extracted smoke tests.
+- Corrected stale aggregate-adapter, tool-count, Codex-runtime, alert-side-effect, and x402 authority claims.
+
+### Changed
+
+- Compressed the README and install guide around the user action, current boundary, and verified host routes.
+
 ## 0.4.0 - 2026-09-08
 
 Adds an optional x402 pay-per-call route to the read-only Zerion source. Same
@@ -10,12 +24,11 @@ instead of authorized by API key.
 
 - `src/scout_portfolio_manager/x402_source.py`: x402-backed transport for
   `ZerionAPIReader`. Enabled by `ZERION_X402_PRIVATE_KEY` +
-  `ZERION_WALLET_ADDRESS`. Per-call spend cap via
+  `ZERION_WALLET_ADDRESS`. Per-payment spend cap via
   `ZERION_X402_MAX_USD_PER_CALL` (default `$0.05`), enforced by the x402 SDK
   before any payment is signed.
 - `ZerionAPIPaymentError` and a typed `payment` observe-error kind for HTTP
-  402 responses. Not auto-retried: a retry would spend money again for the
-  same failure.
+  402 responses. Scout adds no retry loop after the SDK returns a failure.
 - Optional dependency group `x402` (`pip install -e '.[x402]'`): the Coinbase
   x402 Python SDK and `eth-account`. The default install stays
   dependency-light.
@@ -33,11 +46,10 @@ instead of authorized by API key.
   `ZERION_X402_PRIVATE_KEY` is set. Setting both it and `ZERION_API_KEY` is a
   startup error: one authorization mode per source.
 
-### Unchanged
+### Trade boundary
 
-- Scout is still read-only. The only signature is the x402 data-fee payment
-  from the operator's dedicated payment wallet. The observed wallet never
-  signs. No execute, sign, or submit tool is registered.
+- Scout has no trade tool. The operator's dedicated x402 wallet signs data-fee
+  payments. The observed wallet never signs.
 
 ## 0.3.3 - 2026-09-07
 
@@ -77,7 +89,7 @@ repo root, plus a voice pass on the README.
 ### Added
 
 - `trigger-evals.json` for both bundled skills (`portfolio-intelligence`, `watch`),
-  covering description-routing cases sourced from each `SKILL.md`'s scope section and
+  covering description-routing cases from each skill's scope and
   `evals/behavioral-evals.md`.
 - `tests/test_execution_boundary.py`: converts the "host and MCP carry no execute tool"
   claim in `CLAIMS.md` from a docstring convention into a CI gate. AST-scans `host.py`
@@ -87,8 +99,8 @@ repo root, plus a voice pass on the README.
 
 ### Changed
 
-- `skills/portfolio-intelligence/SKILL.md` and `skills/watch/SKILL.md` descriptions
-  tightened to strict third person ("Answers...", "Runs...").
+- The portfolio-intelligence and watch descriptions were tightened to strict
+  third person ("Answers...", "Runs...").
 
 ## 0.3.1 - 2026-09-04
 
@@ -116,7 +128,7 @@ plus an unattended watch loop that chains them into one report.
 - `set_alert` and `check_alerts`: a user-chosen price-threshold rule is stored locally in
   `.scout/alerts.json` and evaluated on demand; no background schedule, no push, no
   network call.
-- The `watch` skill (`skills/watch/SKILL.md`), which chains
+- The `watch` skill under `skills/watch/`, which chains
   `get_portfolio_snapshot -> analyze_asset -> dca_windows -> check_alerts` into one
   on-demand pass and writes a static `scout-report.html`. Sized for a Claude Code
   `/loop` tick; each run is a fresh process, and only `.scout/alerts.json` persists

@@ -1,18 +1,18 @@
 # Host matrix
 
-What each install route actually gets, and what the repo can prove about it. Evidence levels: VERIFIED-IN-CI (a test or gate in `.github/workflows/ci.yml` fails if the claim breaks), TESTS (covered by the offline suite, not a separate CI gate), PACKAGE (file inspection), NOT PROVEN (no evidence in this repo).
+Evidence labels describe what this repository can show. `CI` means a workflow blocks drift. `TEST` means offline coverage. `PACKAGE` means file inspection. `UNVERIFIED` needs a host or live smoke test.
 
-| Capability | Claude Code plugin | Codex mirror | Generic MCP host (stdio) | Evidence level |
-|---|---|---|---|---|
-| Skill files included | Yes, `skills/` at plugin root | Yes, generated into `codex/plugins/` | No, skills do not travel over stdio | PACKAGE; `scripts/build_host_layouts.py` generates the mirror |
-| MCP server registers exactly the 8 named tools | Yes, via `.mcp.json` | Yes, same stdio config | Yes, `.mcp.json` merges into any MCP client | VERIFIED-IN-CI; `tests/test_execution_boundary.py` pins the live tool set |
-| Fixture-backed offline mode is the default | Yes | Yes | Yes | VERIFIED-IN-CI; the whole suite runs offline against `fixtures/portfolio.json` |
-| Optional read-only Zerion observation | Yes, when both env vars are set | Yes, same adapter | Yes, same adapter | TESTS; `tests/test_zerion_api.py` covers the adapter, CI makes no live calls |
-| Alerts are local on-demand files (`.scout/alerts.json`) | Yes | Yes | Yes | VERIFIED-IN-CI; `tests/test_alerts.py`, `tests/test_host_alerts.py` |
-| Execution, signing, or wallet connect | Not included | Not included | Not included | VERIFIED-IN-CI; AST import-graph scan plus tool-set pin in `tests/test_execution_boundary.py` |
-| Fresh-host automatic activation | Not proven | Not proven | Not proven | No evidence in this repo; hosts may require an explicit install or restart step |
-| Cursor.app end-to-end smoke test | n/a | n/a | Not proven | CLAIMS.md: "Cursor.app smoke-test may still be pending" |
+| Capability | Claude Code plugin | Codex skills | Generic stdio MCP | Evidence |
+|:--|:--|:--|:--|:--|
+| Skill files | Root `skills/` | Generated `codex/plugins/` copy | Outside MCP | PACKAGE; generator has a CI drift check |
+| Eight MCP tools | Root `.mcp.json` | Attach the stdio route separately | `zpm-mcp` | CI; tool names and import boundary are pinned |
+| Fixture default | Yes | Available after MCP attachment | Yes | CI; offline suite |
+| Zerion API-key source | Yes | Available after MCP attachment | Yes | TEST; no current live call |
+| Zerion x402 source | Yes | Available after MCP attachment | Yes | TEST; real SDK builds offline, live paid call unverified |
+| Local alert file | `.scout/alerts.json` | Written by attached MCP runtime | `.scout/alerts.json` | CI; alert tests |
+| Trade execution | Absent | Absent | Absent | CI; AST graph and tool registry gate |
+| Fresh-host activation | Unverified | Unverified | Unverified | Requires host-specific smoke evidence |
 
-The 8 tools: `get_portfolio_snapshot`, `get_pnl`, `parse_dca_request`, `preview_dca`, `analyze_asset`, `dca_windows`, `set_alert`, `check_alerts`.
+Claude Code is the primary packaged plugin. The Codex layout carries skills and metadata. It does not duplicate the Python runtime or root `.mcp.json` inside the generated plugin directory.
 
-Claude Code is the primary host; Codex and plain stdio are fallbacks (see `RELEASE-MANIFEST.json`). Boundaries and claims: [`CLAIMS.md`](CLAIMS.md), [`SECURITY.md`](SECURITY.md).
+See [`START-HERE.md`](START-HERE.md) for install routes and [`CLAIMS.md`](CLAIMS.md) for claim status.

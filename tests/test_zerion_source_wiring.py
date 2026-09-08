@@ -88,6 +88,7 @@ def test_both_variables_build_bound_wallet_reader_with_optional_chain():
     assert isinstance(reader, ZerionWalletReader)
     assert reader.wallet_address == WALLET
     assert reader.chain == "multi-chain"
+    assert reader.authorization_mode == "api_key"
     assert reader_from_env(enabled_env(**{CHAIN_ENV: "ethereum"})).chain == "ethereum"
 
 

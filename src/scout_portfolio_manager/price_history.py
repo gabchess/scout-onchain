@@ -1,9 +1,7 @@
 """Fixture-backed daily-close price history reader.
 
-Mirrors portfolio.py's reader shape: a zero-argument-per-call Protocol plus one
-fixture-backed implementation. No live network call happens here, ever;
-replacing this with a live price-history source is a named roadmap item, not
-built yet (see docs/spec-scout-ta-and-watch-0.3.0.md).
+Mirrors portfolio.py's reader shape with a Protocol and one fixture-backed
+implementation. This module has no live price-history source.
 """
 
 import json
@@ -22,7 +20,7 @@ class PriceHistoryReader(Protocol):
 class FixturePriceHistoryReader:
     """Reads a synthetic, deterministic daily-close series from a JSON fixture."""
 
-    def __init__(self, fixture_path: Union[str, Path]):
+    def __init__(self, fixture_path: Union[str, Path]) -> None:
         self.fixture_path = Path(fixture_path)
 
     def series(self, asset: str) -> Optional[AssetPriceHistory]:

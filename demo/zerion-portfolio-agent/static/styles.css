@@ -1,5 +1,5 @@
 :root {
-  /* Core palette, design.zerion.io/color (zerion-branding skill, tokens.md, verbatim) */
+  /* Core palette reference: design.zerion.io/color */
   --zr-navy: #06003C;      /* Pantone 2757 C */
   --zr-original: #3232DC;  /* Pantone 2728 C */
   --zr-digital: #2461ED;   /* Pantone 279 C */
@@ -11,11 +11,11 @@
   --zr-pink: #FFBDFF;      /* Pantone 243 C */
   --zr-grey: #F0F0F0;      /* Cool Gray 1 C */
 
-  /* Semantic assignment, house rule, see rules.md */
+  /* Semantic assignment for this demo */
   --positive: var(--zr-mint);
   --negative: var(--zr-peach);
 
-  /* Gradient pairs, design.zerion.io/color, the only six allowed */
+  /* Gradient pairs from the referenced palette */
   --grad-original-navy: linear-gradient(135deg, var(--zr-original), var(--zr-navy));
   --grad-blue-original: linear-gradient(135deg, var(--zr-blue), var(--zr-original));
   --grad-mint-digital: linear-gradient(135deg, var(--zr-mint), var(--zr-digital));
@@ -27,18 +27,18 @@
   --font-sans: "Aeonik Pro", -apple-system, "Segoe UI", sans-serif;
   --font-weight-main: 500; /* Aeonik Pro Medium is the main weight */
 
-  /* Surface roles for a dark-theme build, house defaults, not Zerion values */
+  /* Project defaults, not Zerion values */
   --bg: var(--zr-navy);
-  --bg-raised: #0d0a52;   /* derived tint of --zr-navy, house default */
-  --border: #241f5c;      /* derived tint of --zr-navy, house default */
+  --bg-raised: #0d0a52;
+  --border: #241f5c;
   --text: var(--zr-grey);
 
-  /* Radius, house default, Zerion's site names no numeric scale for UI */
+  /* Project radius scale */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
 
-  /* Spacing scale, house default, Zerion's site names no numeric scale */
+  /* Project spacing scale */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 16px;
@@ -48,35 +48,11 @@
 }
 
 :root {
-  /* House additions below this line. These are UI mechanics (surfaces,
-     motion timing, a monospace stack for data tables) and opacity tints
-     of the eight named tokens above, not new brand colors. Per
-     tokens.md's own note: "use opacity or a tint of an existing token,
-     not a new hex." */
-
   --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
-
-  /* Recessed panel surface: a translucent navy wash over --bg-raised,
-     not a new hex, an rgba of --zr-navy (6, 0, 60). */
   --bg-inset: rgba(6, 0, 60, 0.55);
-
-  /* Muted body text: an opacity tint of --zr-grey (240, 240, 240). */
   --text-dim: rgba(240, 240, 240, 0.62);
-
-  /* UI chrome accent (focus rings, links, interactive borders). Zerion
-     Blue's documented role is "tertiary accent" in the plan's token
-     table, distinct from --positive/--negative. */
   --accent: var(--zr-blue);
-
-  /* House semantic addition, not a Zerion-defined alias: informational /
-     needs-input state (clarification prompts, medium-low confidence,
-     fixture-data note). Zerion's site names no info/warning color, so
-     this is our call, same as --positive/--negative (rules.md #5). Uses
-     Zerion Digital, distinct from the mint/peach success-error pair. */
-  --attention: var(--zr-digital);
-
-  /* Opacity tints of the eight named tokens, used for badge fills and
-     borders so no state color is a new invented hex. */
+  --attention: var(--zr-blue);
   --tint-mint-fill: rgba(63, 253, 238, 0.12);
   --tint-mint-line: rgba(63, 253, 238, 0.4);
   --tint-peach-fill: rgba(255, 117, 131, 0.12);
@@ -109,7 +85,7 @@ body {
   outline-offset: 2px;
 }
 
-/* Top bar: one left-aligned row, brand then status badges, same line */
+/* Top bar */
 .topbar {
   display: flex;
   align-items: center;
@@ -119,8 +95,7 @@ body {
 }
 .brand { display: flex; align-items: center; gap: 12px; }
 
-/* Triangle key-visual, Basic option. The one motif on this screen; not
-   Zerion's logo mark (no rounded-square housing, no second triangle). */
+/* Original triangle, not Zerion's logo. */
 .brand-mark {
   width: 32px;
   height: 32px;
@@ -176,25 +151,18 @@ body {
 
 .loading, .placeholder { color: var(--text-dim); font-size: 13.5px; }
 
-/* Shared "big number, small label" hero used by every panel's main view.
-   The number is always the largest text in the panel; the label is a
-   small caption under or beside it (Gabe, 2026-09-04: less text, clearer
-   hierarchy, no paragraphs in the main view). */
+/* Shared hero metric */
 .stat-hero { margin: 4px 0 4px; }
 .stat-hero .num { font-size: 32px; font-weight: 700; letter-spacing: 0.3px; }
 .stat-hero .lbl { color: var(--text-dim); font-size: 13px; margin-top: 2px; }
 
-/* One plain-language verdict line, used by the Analysis and Alerts panels
-   in place of a table of raw indicators. */
+/* Plain-language result */
 .verdict { margin: 4px 0; font-size: 17px; font-weight: 600; }
 .asof { margin: 6px 0 0; color: var(--text-dim); font-size: 12.5px; }
 
 .rule { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
 
-/* The one collapsed disclosure per panel. Everything technical (raw
-   indicators, formulas, confidence tags, IDs, fixture paths) lives here,
-   closed by default, so a casual viewer never sees it and an engineer
-   always can. */
+/* Technical detail stays collapsed by default. */
 details.details { margin-top: 10px; }
 details.details summary {
   cursor: pointer;
@@ -319,8 +287,6 @@ tr:last-child td { border-bottom: none; }
   font-weight: 700;
   color: var(--zr-pink);
 }
-/* Same weight/size as the page footer's disclosure line (.safety-strip p):
-   deliberately quiet so it never competes with .approval-line above it. */
 .proposal-disclosure {
   margin: 4px 0 0;
   font-size: 12px;
@@ -368,7 +334,7 @@ tr:last-child td { border-bottom: none; }
 }
 .mono-id { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
 
-/* Analysis (This week) */
+/* Current signal */
 .ta-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -389,7 +355,7 @@ tr:last-child td { border-bottom: none; }
 }
 .stat .v { font-family: var(--mono); font-size: 15px; font-weight: 600; }
 
-/* Buy window */
+/* DCA context */
 .risk-label {
   display: block;
   font: 600 10.5px/1.4 var(--mono);
@@ -457,7 +423,7 @@ tr:last-child td { border-bottom: none; }
 }
 .report-link:hover { filter: brightness(1.08); }
 
-/* Footer: the one page-level not-financial-advice line. Nothing else. */
+/* Footer */
 .safety-strip {
   padding: 12px 28px 18px;
   color: var(--text-dim);

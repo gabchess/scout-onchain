@@ -14,6 +14,10 @@ No tool in this chain writes, signs, submits, or schedules anything. `set_alert`
 part of the chain itself; call it separately (CLI, MCP tool call, or `preview_dca`'s own
 Python fallback pattern) before a `watch` run to have `check_alerts` evaluate it.
 
+The chain repeats snapshot reads through PnL, analysis, windows, and alerts.
+`build_report` refuses an x402-backed host until Scout has a cumulative spend
+budget. This prevents an on-demand report or loop tick from multiplying paid calls.
+
 ## `render_report`'s inputs
 
 ```python

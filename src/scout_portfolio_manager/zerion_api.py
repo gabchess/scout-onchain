@@ -107,10 +107,11 @@ class ZerionAPIConfig:
     base_url: str = "https://api.zerion.io/v1"
     timeout_seconds: float = 10.0
     max_pages: int = 20
-    """Bounds worst-case request cost per snapshot call. Default 20 (~2,000 tx via
-    page[size]=100) balances completeness against free-tier daily quota (2k req/day);
-    override per-deployment for wallets with deeper history. In x402 mode it bounds
-    per-snapshot spend instead: at ~$0.01/call, 20 calls is ~$0.20 worst case."""
+    """Caps the transaction walk at 20 pages (~2,000 transactions) by default.
+
+    A snapshot also makes one positions request. In x402 mode, the default can
+    therefore make up to 21 top-level API requests. Provider pricing can change.
+    """
 
     def __post_init__(self) -> None:
         if self.api_key is not None and (
@@ -543,6 +544,11 @@ class ZerionWalletReader:
         self._reader = reader
         self.wallet_address = wallet_address
         self.chain = chain
+
+    @property
+    def authorization_mode(self) -> Literal["api_key", "x402"]:
+        """Name the configured authorization boundary without exposing a secret."""
+        return "x402" if self._reader.config.api_key is None else "api_key"
 
     def snapshot(self) -> PortfolioSnapshot:
         return self._reader.snapshot(self.wallet_address, self.chain)

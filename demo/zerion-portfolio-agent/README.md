@@ -17,8 +17,8 @@ The demo is a thin window onto `scout_portfolio_manager.host.ReadOnlyHost`.
 It adds no portfolio logic and no execution capability of any kind.
 
 Execution boundary: not implemented in this host. A DCA request ends at a
-complete, approval-required preview. Wallet handoff and execution are a
-future product direction, not a current capability.
+complete, approval-required preview. Wallet connection and execution are
+outside the current capability.
 
 ## Safety boundary
 
@@ -26,8 +26,8 @@ future product direction, not a current capability.
 
 - No wallet connect, no signing, no transaction submission, no fund movement,
   no investment advice.
-- The demo server exposes only four read-only endpoints mirroring the host
-  tools; there is no execute/sign/submit route to call.
+- The demo server exposes eight fixture-backed endpoints. It has no execute,
+  sign, or submit route.
 - Runs entirely offline on the synthetic fixture. It makes no live Zerion
   API call. `ZERION_API_KEY` is **not** required and is never read by the
   demo. Fixture values are examples, not live market data.
@@ -67,21 +67,19 @@ importable works. The server adds `src/` to `sys.path`, so a plain
 
 ## Things to try
 
-- Click **incomplete → clarification** (`DCA another $300 of ETH`): the intent
+- Click **incomplete, then clarification** (`DCA another $300 of ETH`): the intent
   grid shows which fields parsed and which are missing, and the agent asks a
   clarification question instead of inferring a chain, schedule, or wallet.
-- Click **complete → preview**
+- Click **complete, then preview**
   (`DCA $300 ETH on ethereum weekly from wallet:0xabc123 to wallet:0xdef456`):
   a full preview renders with `approval_state: required`,
   `execution_available: false`, and every assumed quote value labeled as a
   fixture placeholder.
-- Type your own request and watch the parser refuse to guess.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `PLAN.md` | Goal, MVP scope, outs, stack rationale (written before implementation) |
 | `server.py` | Stdlib HTTP server wrapping `ReadOnlyHost`; serves the API + static UI |
 | `static/index.html` | Product chrome: pipeline strip, snapshot, PnL, DCA agent panels |
 | `static/app.js` | Fetches host responses and renders them; no portfolio logic |
@@ -93,6 +91,10 @@ importable works. The server adds `src/` to `sys.path`, so a plain
 |---|---|
 | `GET /api/snapshot` | `get_portfolio_snapshot()` |
 | `GET /api/pnl?asset=ETH` | `get_pnl(asset)` |
+| `GET /api/analyze?asset=ETH` | `analyze_asset(asset)` |
+| `GET /api/dca-windows?asset=ETH` | `dca_windows(asset)` |
+| `GET /api/alerts` | `check_alerts()` |
+| `GET /api/report` | `reporting_html.build_report(host)` |
 | `POST /api/dca/parse` `{"text": …}` | `parse_dca_request(text)` |
 | `POST /api/dca/preview` `{"text": …}` | `preview_dca(text)` |
 

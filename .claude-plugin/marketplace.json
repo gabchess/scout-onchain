@@ -3,12 +3,12 @@
   "owner": {
     "name": "Scout / Gabe"
   },
-  "description": "Public Claude Code tooling for read-only portfolio intelligence.",
+  "description": "Portfolio intelligence with fixture and optional Zerion data sources.",
   "plugins": [
     {
       "name": "scout-portfolio",
       "source": "./",
-      "description": "Read-only portfolio snapshots, explainable PnL, DCA clarification, and safe previews."
+      "description": "Portfolio snapshots, explainable PnL, DCA clarification, and approval-required previews."
     }
   ]
 }

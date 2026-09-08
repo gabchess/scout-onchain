@@ -1,7 +1,7 @@
 {
   "name": "scout-portfolio",
   "version": "0.4.0",
-  "description": "Read-only portfolio intelligence for fixture data or an explicitly configured Zerion API adapter.",
+  "description": "Portfolio intelligence for fixture data or an explicitly configured Zerion source.",
   "author": {
     "name": "Scout / Gabe"
   },
@@ -10,7 +10,8 @@
     "portfolio",
     "crypto",
     "pnl",
-    "read-only",
-    "mcp"
+    "mcp",
+    "x402",
+    "zerion"
   ]
 }
