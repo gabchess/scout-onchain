@@ -40,6 +40,8 @@ jobs:
         run: python scripts/check_plugin_manifest.py .
       - name: Checksum drift check
         run: python scripts/write_checksums.py --check
+      - name: Documentation manifest drift check
+        run: python scripts/gen_doc_manifest.py --check
 
   offline-evals:
     runs-on: ubuntu-latest
