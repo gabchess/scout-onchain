@@ -33,7 +33,7 @@ The 0.1.0 release's optional Zerion source returned a single synthetic aggregate
 
 The parser accepts both a bare numeric `quantity` and Zerion's `{"float": ...}` object. Prior development inspection confirmed the object form. Current live compatibility remains outside CI. Preserve a secret-scrubbed response shape if mapping fails.
 
-x402 has a per-payment cap and no cumulative budget in 0.4.0. The `watch` report blocks x402 because it repeats snapshot reads. Paid integration status remains live unverified; see [`docs/X402.md`](docs/X402.md).
+x402 has per-payment and process-lifetime caps. The `watch` report uses one shared wallet snapshot and displays remaining budget. Paid integration status remains live unverified; see [`docs/X402.md`](docs/X402.md).
 
 ## Before opening an issue
 

@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Give an agent this repository folder or ZIP. Install Scout. Do not invent capabilities from marketing copy. Read [`CLAIMS.md`](CLAIMS.md) before repeating product claims.
+Give an agent this repository folder or ZIP. Install Scout as its onchain portfolio manager. The host may choose one tool or combine several tools from the user's request. Read [`CLAIMS.md`](CLAIMS.md) before repeating product claims.
 
 ## Install routes
 
@@ -14,8 +14,9 @@ Discovery is not a successful install. Ask the host to list MCP tools or run `/p
 ## Do
 
 - Use the fixture by default.
-- Treat Zerion as optional portfolio observation. API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. x402 mode uses a dedicated payment wallet and can spend USDC per payment.
+- Treat Zerion as optional portfolio observation. API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. x402 mode uses a dedicated Base payment wallet and spends within per-payment and process limits.
 - Keep DCA incomplete fields as clarification, never guessed.
+- Keep every DCA result as a proposal with approval required.
 
 ## Do not
 

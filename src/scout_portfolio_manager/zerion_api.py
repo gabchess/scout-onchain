@@ -69,6 +69,10 @@ class ZerionAPIPaymentError(ZerionAPIError):
     """x402 payment was rejected or failed to settle (HTTP 402)."""
 
 
+class ZerionAPIBudgetError(ZerionAPIError):
+    """Scout stopped an x402 payment before signing because its budget was spent."""
+
+
 class ZerionAPIServerError(ZerionAPIError):
     """The API reported a server-side failure (HTTP 5xx)."""
 
@@ -469,10 +473,7 @@ class ZerionAPIReader:
 
     def _positions_url(self, wallet_address: str) -> str:
         path = f"/wallets/{quote(wallet_address, safe='')}/positions/"
-        query = (
-            "currency=usd&filter%5Bpositions%5D=only_simple"
-            "&filter%5Btrash%5D=only_non_trash"
-        )
+        query = "currency=usd&filter%5Bpositions%5D=only_simple&filter%5Btrash%5D=only_non_trash"
         return f"{self.config.base_url.rstrip('/')}{path}?{query}"
 
     def _transactions_url(self, wallet_address: str) -> str:
@@ -500,9 +501,7 @@ class ZerionAPIReader:
                 # sends 404 on a list path, keep it as a generic API error
                 # (status=404); the host maps that status to a "not_found"
                 # observe-error kind without a dedicated exception type.
-                raise ZerionAPIError(
-                    "Zerion API returned HTTP 404", status=exc.code
-                ) from None
+                raise ZerionAPIError("Zerion API returned HTTP 404", status=exc.code) from None
             if exc.code == 429:
                 # OpenAPI TooManyRequests does not document Retry-After, but
                 # RFC 6585 defines the header for 429 regardless, so parse it
@@ -537,18 +536,32 @@ class ZerionWalletReader:
     """One-wallet view of ZerionAPIReader matching the host's zero-argument reader protocol."""
 
     def __init__(
-        self, reader: ZerionAPIReader, wallet_address: str, chain: str = "multi-chain"
+        self,
+        reader: ZerionAPIReader,
+        wallet_address: str,
+        chain: str = "multi-chain",
+        *,
+        spend_budget: Any = None,
     ) -> None:
         if not isinstance(wallet_address, str) or not wallet_address.strip():
             raise ValueError("wallet_address must be non-empty")
         self._reader = reader
         self.wallet_address = wallet_address
         self.chain = chain
+        self._spend_budget = spend_budget
 
     @property
     def authorization_mode(self) -> Literal["api_key", "x402"]:
         """Name the configured authorization boundary without exposing a secret."""
         return "x402" if self._reader.config.api_key is None else "api_key"
+
+    @property
+    def spend_budget(self) -> Optional[Mapping[str, Any]]:
+        """Return a credential-free x402 budget snapshot when one is configured."""
+        if self._spend_budget is None:
+            return None
+        status = self._spend_budget.status()
+        return dict(status)
 
     def snapshot(self) -> PortfolioSnapshot:
         return self._reader.snapshot(self.wallet_address, self.chain)

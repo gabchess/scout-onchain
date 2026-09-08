@@ -56,21 +56,25 @@ def test_check_alerts_filters_by_asset(tmp_path):
     assert result["unknown"] == []
 
 
-def test_check_alerts_evaluates_analyze_asset_once_per_distinct_asset(tmp_path, monkeypatch):
-    host = _host(tmp_path)
+def test_check_alerts_observes_wallet_once_for_all_rules(tmp_path):
+    from scout_portfolio_manager.portfolio import FixturePortfolioReader
+
+    class CountingReader:
+        def __init__(self):
+            self.calls = 0
+            self.fixture = FixturePortfolioReader(FIXTURE)
+
+        def snapshot(self):
+            self.calls += 1
+            return self.fixture.snapshot()
+
+    reader = CountingReader()
+    host = ReadOnlyHost(reader, alerts_path=tmp_path / "alerts.json")
     host.set_alert("ETH", "rsi_below", 30.0)
     host.set_alert("ETH", "rsi_below", 40.0)
 
-    calls = []
-    original = host.analyze_asset
-
-    def counting_analyze_asset(asset):
-        calls.append(asset)
-        return original(asset)
-
-    monkeypatch.setattr(host, "analyze_asset", counting_analyze_asset)
     host.check_alerts()
-    assert calls == ["ETH"]
+    assert reader.calls == 1
 
 
 def test_no_daemon_or_background_thread_is_created(tmp_path):

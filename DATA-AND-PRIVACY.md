@@ -14,7 +14,7 @@ The host and MCP server enable this source only when `ZERION_API_KEY` and `ZERIO
 
 In x402 mode (`ZERION_X402_PRIVATE_KEY` + `ZERION_WALLET_ADDRESS`), the same reads are authorized by USDC payments on Base. The SDK session retains the payment key and signing authority in memory. Scout suppresses the key value in its errors, results, representations, and package logs. The host, SDK, and network stack remain separate logging boundaries.
 
-The default `$0.05` cap applies to each payment. Scout 0.4.0 has no cumulative spend budget, and the SDK can attempt paid recovery within one top-level request. The payment wallet address and fees are public on Base. Use a dedicated wallet with a small balance. The observed wallet supplies an address and never signs.
+Scout reserves the full payment cap before every SDK payment payload, including recovery. The defaults are `$0.05` per payment and `$1.05` for the process lifetime. Reservations remain counted after ambiguous failures. A restart creates a new budget. The payment wallet address and fees are public on Base. Use a dedicated wallet with a small balance. The observed wallet supplies an address and never signs.
 
 The host application is responsible for credential storage, network logs, retention, access control, and deletion. Use a customer-controlled secret manager. Do not place credentials or personal wallet data in source files, fixtures, prompts, logs, or support reports.
 

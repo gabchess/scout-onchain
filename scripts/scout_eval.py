@@ -94,9 +94,7 @@ def build_gateway_payload(
         "Reject facts beyond fixture truth or CLAIMS.md rubric."
     )
     user = (
-        f"Question: {case['prompt']}\n"
-        f"Rubric: {case['rubric']}\n"
-        f"Output: {_display_output(output)}"
+        f"Question: {case['prompt']}\nRubric: {case['rubric']}\nOutput: {_display_output(output)}"
     )
     return {
         "model": model,

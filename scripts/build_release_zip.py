@@ -151,11 +151,7 @@ def _tree_sum_lines(root: Path) -> list[str]:
     lines: list[str] = []
     for path in sorted(root.rglob("*")):
         relative_path = path.relative_to(root)
-        if (
-            path.is_file()
-            and path.name != SUMS_FILENAME
-            and not _is_excluded(relative_path.parts)
-        ):
+        if path.is_file() and path.name != SUMS_FILENAME and not _is_excluded(relative_path.parts):
             relative = relative_path.as_posix()
             lines.append(f"{_sha256(path)}  {relative}")
     return lines
@@ -223,17 +219,13 @@ def _local_link_errors(root: Path) -> list[str]:
             if not path_text:
                 continue
             if path_text.startswith("/"):
-                errors.append(
-                    f"absolute local link in {markdown.relative_to(root)}: {target}"
-                )
+                errors.append(f"absolute local link in {markdown.relative_to(root)}: {target}")
                 continue
             destination = (markdown.parent / path_text).resolve()
             try:
                 destination.relative_to(root.resolve())
             except ValueError:
-                errors.append(
-                    f"link escapes archive in {markdown.relative_to(root)}: {target}"
-                )
+                errors.append(f"link escapes archive in {markdown.relative_to(root)}: {target}")
                 continue
             if not destination.exists():
                 errors.append(f"broken local link in {markdown.relative_to(root)}: {target}")
@@ -378,9 +370,7 @@ def _update_release_manifest(root: Path, zip_path: Path, digest: str) -> None:
     if not isinstance(artifacts, list):
         raise ValueError("RELEASE-MANIFEST.json release_artifacts must be a list")
     artifacts[:] = [
-        item
-        for item in artifacts
-        if not isinstance(item, dict) or item.get("path") != relative
+        item for item in artifacts if not isinstance(item, dict) or item.get("path") != relative
     ]
     artifacts.append(
         {

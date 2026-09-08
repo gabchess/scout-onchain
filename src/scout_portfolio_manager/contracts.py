@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -49,15 +49,6 @@ class PortfolioSnapshot(BaseModel):
         if any(marker in value.lower() for marker in ("private", "seed", "secret")):
             raise ValueError("secret-bearing wallet identifiers are not allowed")
         return value
-
-
-class BasisInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    asset: str = Field(min_length=1)
-    amount_usd: float = Field(gt=0)
-    source: Literal["observed_transactions", "user_input"]
-    as_of: Optional[datetime] = None
 
 
 class PricePoint(BaseModel):

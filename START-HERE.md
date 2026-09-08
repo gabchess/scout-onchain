@@ -1,6 +1,6 @@
 # Start here
 
-Scout 0.4.0 supports Claude Code, Codex skills, local Python, and stdio MCP clients. The synthetic fixture is the default source.
+Scout 0.4.0 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
 
 After setup, ask:
 
@@ -10,9 +10,9 @@ A working install returns a portfolio and PnL with the data source named.
 
 ## Install scope
 
-Installation copies local files, registers skills or a plugin, and can start the fixture-backed MCP process. Live Zerion access begins only when the operator supplies a complete API-key or x402 configuration.
+Installation copies local files, registers the skills or plugin, and can start the fixture-backed MCP process. Live Zerion reads begin when the operator supplies a complete API-key or x402 configuration. The synthetic fixture remains the default.
 
-Scout has no observed-wallet signer or trade execution rail. x402 mode gives a separate payment wallet authority to pay API fees. `set_alert` writes local `.scout/alerts.json`; the package creates no daemon or scheduled task.
+Scout has no observed-wallet signer or trade execution rail. x402 mode gives a separate payment wallet authority to pay analytics fees within a process budget. `set_alert` writes local `.scout/alerts.json`; the package creates no daemon or scheduled task.
 
 ## Route 1: Claude Code plugin
 
@@ -112,9 +112,11 @@ Restart the client and inspect its MCP tool list. Host activation remains unveri
 
 ## Optional Zerion data
 
-API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. x402 mode needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the `x402` dependency extra. The modes are exclusive. See [`docs/X402.md`](docs/X402.md) before enabling payments.
+API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. x402 mode needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the `x402` dependency extra. It pays for analytics access from a separate Base wallet. The modes are exclusive. See [`docs/X402.md`](docs/X402.md) before enabling payments.
 
 The live source reads positions and mapped transactions. Call-time failure returns a typed error with `fallback: "none"`.
+
+Scout keeps DCA on the proposal side of the boundary in both modes. `preview_dca` can accept quote values from a host adapter. Version 0.4.0 does not call Zerion's swap quote endpoint or submit a trade.
 
 ## Browser demo
 
@@ -126,6 +128,8 @@ Open `http://127.0.0.1:8787`. The demo reads the fixture and ignores Zerion envi
 
 ## Runtime boundary
 
-The eight tools cover portfolio observation, PnL, DCA parsing and preview, asset analysis, DCA windows, and local alerts. Complete previews keep `approval_state=required` and `execution_available=false`. Approval identity, trade execution, settlement verification, live price history, and pushed alerts are outside version 0.4.0.
+The eight tools cover portfolio observation, PnL, DCA parsing and proposal preview, asset analysis, DCA windows, and local alerts. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
+
+Live price history and pushed alerts are outside version 0.4.0. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.

@@ -40,9 +40,7 @@ def _doc_paths(root: Path) -> list[str]:
     paths = [p.name for p in root.glob("*.md") if p.is_file()]
     docs = root / "docs"
     if docs.is_dir():
-        paths += [
-            p.relative_to(root).as_posix() for p in docs.rglob("*.md") if p.is_file()
-        ]
+        paths += [p.relative_to(root).as_posix() for p in docs.rglob("*.md") if p.is_file()]
     return sorted(set(paths))
 
 
@@ -60,9 +58,7 @@ def compute_manifest(root: Path) -> str:
         "product": "scout-portfolio-manager",
         "version": _read_version(root),
         "claim_boundary": CLAIM_BOUNDARY,
-        "files": [
-            {"path": rel, "sha256": _sha256_of(root / rel)} for rel in _doc_paths(root)
-        ],
+        "files": [{"path": rel, "sha256": _sha256_of(root / rel)} for rel in _doc_paths(root)],
     }
     return json.dumps(payload, indent=2) + "\n"
 
@@ -83,9 +79,7 @@ def check(root: Path) -> list[str]:
         }
     except (json.JSONDecodeError, KeyError, TypeError):
         return errors
-    expected_files = {
-        f["path"]: f["sha256"] for f in json.loads(expected)["files"]
-    }
+    expected_files = {f["path"]: f["sha256"] for f in json.loads(expected)["files"]}
     for path in sorted(set(actual_files) - set(expected_files)):
         errors.append(f"entry for removed or renamed doc: {path}")
     for path in sorted(set(expected_files) - set(actual_files)):

@@ -6,23 +6,23 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "caa161bdb1493ed2b78b3713595d1020f2c429c2f40fff076edb1a5b58f622bf"
+      "sha256": "1598f19efde14c0c25d60635c7d0a0cd06c02c85659abb228477ec1bde988471"
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "9f0e7293c706725f831e5803f71c69c716b67a955520b3d51a22645abaa526f6"
+      "sha256": "1f46f6a1a44343981588be9943514f24144dabc1d669f62e466ba76f05f48af7"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "585c6a98685ddb01d6e58cb205e023753b02219e64fb0626ea942d724d748dce"
+      "sha256": "d7e8a495e840850b32f265198e082f617579c0b369035fdaf0e45cd1cd4a04a3"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
-      "sha256": "a1ae1c9ecf7517455dbba1668bebbf078d1f6ede4ca53d13193345bcf71886c3"
+      "sha256": "b8a0ddb2cb5bbf857ac4f11e7af8cfa0a685edf942ef9a4c708c33c4591fc03d"
     },
     {
       "path": "HOST-MATRIX.md",
-      "sha256": "ad62f27fd0f69ac1291be709218eee99f1e32c59c8f51dca3f06c8cbf2f005bc"
+      "sha256": "e1cb24186c092d4cd0c89da6e516e45e1fab08d498debe57b5376b957ad32e7c"
     },
     {
       "path": "LICENSE-STATUS.md",
@@ -34,19 +34,19 @@
     },
     {
       "path": "README.md",
-      "sha256": "b9c24d9d7b0a9aaa6384b7898f3ee1648a5108bc8b186cee92359cd6661d6595"
+      "sha256": "d1ce9a3520faefb7c47785d6dcaa329b22215ce85c899ab48d89d30513c22e97"
     },
     {
       "path": "SECURITY.md",
-      "sha256": "580817e9c9ffa7e738cffa7cfb5c803556f062f5361325a39f2cf6a7d789db75"
+      "sha256": "384f0b52d85c425e7890fc1c8839d03db89c24dd34a5ba13d6f8241d8ce8e590"
     },
     {
       "path": "START-HERE.md",
-      "sha256": "d65a513bf25e8356c9f95c316cf52003f2833d5072daa3c1f0109ca518ec9a1a"
+      "sha256": "b9a9a8377c120d927a9493bac5afd0ac88b810f9011b5ec62453caec48c7d514"
     },
     {
       "path": "SUPPORT.md",
-      "sha256": "90ce17f22486efb852cc59d92fe87a6cd51ac73235645dcd893adae5d195149a"
+      "sha256": "3af281b4a2c9e201cdacf4771f7a7b3f880dcd32ffaa6dacee1cb1a7647fe31e"
     },
     {
       "path": "THIRD-PARTY-NOTICES.md",
@@ -54,23 +54,19 @@
     },
     {
       "path": "WHAT-BROKE.md",
-      "sha256": "c51d9c183c5cc89c410472a1bce344346609a57d326be2443971c542bd8f9137"
+      "sha256": "50d5427733853b3259a86e4ec37526ac859d9fa83389a2fd07a6e0d5800ec5db"
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "fe9e9197fb736b865fe4756d263044d5ca69137cd52d83277d0ff53cf7635e39"
+      "sha256": "39883b748130424c2da1c37ec2e88dcd140a8f94db597c3038b0c69ea97139aa"
     },
     {
       "path": "docs/SHOW-ME.md",
-      "sha256": "66072ddf0db9e64cd0fda729a14d47a0bf853172050be38f0d23bf78d5135874"
+      "sha256": "8e86b888f23fb1410dadd1fa985f3167e31514ecdbfd9e1f39365791ca9f26a5"
     },
     {
       "path": "docs/X402.md",
-      "sha256": "9526c88b41a773f6627bfe7c378b451f2b67ce8f8b15b0ad04ba2af15f04ed42"
-    },
-    {
-      "path": "docs/ZERION-FACING-BRIEF.md",
-      "sha256": "fd41afab61a54913615e69a17968f41bdf18d12bd118b4cdb7926a7828534144"
+      "sha256": "62443a7d6778ee5e063b142bc02fe8c1d2d7d3dc2a487e2a4095a61279d7a58d"
     }
   ]
 }

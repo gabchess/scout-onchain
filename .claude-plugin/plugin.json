@@ -1,7 +1,7 @@
 {
   "name": "scout-portfolio",
   "version": "0.4.0",
-  "description": "Portfolio intelligence for fixture data or an explicitly configured Zerion source.",
+  "description": "Customizable onchain portfolio manager for AI agents, powered by fixture or Zerion data.",
   "author": {
     "name": "Scout / Gabe"
   },

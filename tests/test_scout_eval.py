@@ -110,11 +110,7 @@ def test_gateway_judge_retries_invalid_content_then_succeeds(invalid_content):
     placeholder = "test" + "-placeholder"
     responses = iter(
         [
-            BytesIO(
-                json.dumps(
-                    {"choices": [{"message": {"content": invalid_content}}]}
-                ).encode()
-            ),
+            BytesIO(json.dumps({"choices": [{"message": {"content": invalid_content}}]}).encode()),
             BytesIO(
                 b'{"choices":[{"message":{"content":'
                 b'"{\\"pass\\":true,\\"reason\\":\\"Honest.\\"}"}}]}'
@@ -124,7 +120,7 @@ def test_gateway_judge_retries_invalid_content_then_succeeds(invalid_content):
     requests = []
 
     def empty_then_success(request, **_kwargs):
-        requests.append(request)
+        requests.append(bytes(request.data))
         return next(responses)
 
     result = scout_eval.gateway_judge(
@@ -136,7 +132,7 @@ def test_gateway_judge_retries_invalid_content_then_succeeds(invalid_content):
 
     assert result == {"status": "passed", "reason": "Honest."}
     assert len(requests) == 2
-    assert requests[0].data == requests[1].data
+    assert requests[0] == requests[1]
 
 
 def test_gateway_judge_returns_clean_error_after_two_empty_responses():
@@ -158,6 +154,46 @@ def test_gateway_judge_returns_clean_error_after_two_empty_responses():
 
     assert result["status"] == "error"
     assert result["reason"].startswith("judge_error: invalid judge response:")
+
+
+def test_run_suite_treats_repeated_non_json_content_as_judge_failure(tmp_path):
+    scout_eval = _eval_module()
+    suite_path = tmp_path / "cases.json"
+    suite_path.write_text(
+        json.dumps(
+            {
+                "name": "judge parse failure",
+                "cases": [
+                    {
+                        "id": "alerts",
+                        "prompt": "Can alerts push?",
+                        "rubric": "No push claim.",
+                        "output": "Alerts are local-only.",
+                        "checks": [],
+                    }
+                ],
+            }
+        )
+    )
+    calls = 0
+
+    def non_json_response(*_args, **_kwargs):
+        nonlocal calls
+        calls += 1
+        return BytesIO(b'{"choices":[{"message":{"content":"not JSON"}}]}')
+
+    placeholder = "test" + "-placeholder"
+    summary = scout_eval.run_suite(
+        suite_path,
+        judge=True,
+        api_key=placeholder,
+        opener=non_json_response,
+    )
+
+    assert summary["passed"] is False
+    assert summary["results"][0]["judge"]["status"] == "error"
+    assert summary["results"][0]["judge"]["reason"].startswith("judge_error:")
+    assert calls == 2
 
 
 def test_gateway_judge_parses_markdown_fenced_json_without_retry():
@@ -236,5 +272,6 @@ def test_bundled_honesty_suite_passes_offline():
         "no-walletconnect",
         "preview-never-executes",
         "ta-uses-price-fixture",
+        "x402-budget-boundary",
         "install-markers",
     }

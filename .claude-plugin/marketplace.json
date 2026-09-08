@@ -3,12 +3,12 @@
   "owner": {
     "name": "Scout / Gabe"
   },
-  "description": "Portfolio intelligence with fixture and optional Zerion data sources.",
+  "description": "Onchain portfolio tools for agent hosts.",
   "plugins": [
     {
       "name": "scout-portfolio",
       "source": "./",
-      "description": "Portfolio snapshots, explainable PnL, DCA clarification, and approval-required previews."
+      "description": "Customizable portfolio, PnL, DCA proposal, analysis, and local alert tools."
     }
   ]
 }

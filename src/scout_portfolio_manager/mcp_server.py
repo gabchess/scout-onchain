@@ -1,10 +1,10 @@
-"""MCP stdio server for the read-only portfolio host.
+"""MCP stdio server for Scout's portfolio host.
 
 Requires the optional dependency: pip install -e '.[mcp]'
 
-No execute, sign, wallet, or network tools are registered. The only network access is
-the read-only Zerion source, and only when ZERION_API_KEY and ZERION_WALLET_ADDRESS are
-both set in the server's environment.
+No trade, signing, or submission tool is registered. Network access belongs to an
+explicitly configured Zerion source. API-key mode reads analytics. x402 mode pays for
+analytics through a separate wallet and a bounded process budget.
 """
 
 from __future__ import annotations
@@ -20,8 +20,9 @@ from .zerion_api import ZerionConfigError, reader_from_env
 def build_host(environ: Mapping[str, str] | None = None) -> ReadOnlyHost:
     """Pick the source from the environment.
 
-    Zerion API when ZERION_API_KEY and ZERION_WALLET_ADDRESS are both set; a partial pair
-    raises ZerionConfigError. Otherwise ZPM_FIXTURE_PATH, then the packaged fixture.
+    A complete API-key or x402 configuration selects Zerion. A partial or conflicting
+    configuration raises ZerionConfigError. Otherwise use ZPM_FIXTURE_PATH, then the
+    packaged fixture.
     """
     env = os.environ if environ is None else environ
     reader = reader_from_env(env)
@@ -47,17 +48,18 @@ def create_server(host: ReadOnlyHost | None = None):
     server = FastMCP(
         "scout-portfolio",
         instructions=(
-            "Read-only portfolio intelligence. "
-            "Tools observe fixtures, calculate PnL, parse DCA requests, and build previews. "
-            "There is no execute, sign, or wallet tool. Never invent missing DCA fields."
+            "Act as an onchain portfolio manager. Route each request to the smallest useful "
+            "combination of portfolio, PnL, DCA proposal, analysis, or local alert tools. "
+            "Market indicators use synthetic history. DCA ends at approval-required preview. "
+            "There is no observed-wallet signer, trade execution, or submission tool."
         ),
     )
 
     @server.tool(name="get_portfolio_snapshot")
     def get_portfolio_snapshot() -> str:
         """Observe the current portfolio snapshot from the configured read-only
-        source (fixture-backed by default, or a live Zerion-backed wallet read
-        when ZERION_API_KEY/ZERION_WALLET_ADDRESS are set). Read-only.
+        source (fixture-backed by default, or a Zerion-backed read when one
+        complete authorization mode is configured). Read-only.
         """
         return json.dumps(host.get_portfolio_snapshot(), indent=2, default=str)
 
@@ -80,7 +82,9 @@ def create_server(host: ReadOnlyHost | None = None):
         quote_expiry: str | None = None,
         max_fee_usd: float | None = None,
     ) -> str:
-        """Build a complete DCA preview with approval_state=required. Does not execute."""
+        """Build an approval-required DCA proposal. Optional quote fields come from
+        the caller; Scout does not fetch a swap quote or execute a trade.
+        """
         return json.dumps(
             host.preview_dca(
                 text,

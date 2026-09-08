@@ -11,7 +11,7 @@ When enabled, the adapter reads one wallet's positions and transaction history. 
 - reads the selected credential and wallet address at startup, holds the credential in memory, and excludes its value from package errors, results, representations, and log lines;
 - returns per-asset holdings and a mapped transaction ledger; the wallet address itself is sent to Zerion in the request path and appears in the returned snapshot, so treat results as containing personal wallet data;
 - stops the host process on a partial credential pair (one variable set, not both) rather than silently falling back to the fixture;
-- has no observed-wallet signing or trade path. x402 mode signs and pays data fees from a separate wallet, with a per-payment cap and no cumulative budget.
+- has no observed-wallet signing or trade path. x402 mode signs and pays analytics fees from a separate wallet, with per-payment and process-lifetime caps.
 
 ## What this component does not control
 

@@ -2,7 +2,7 @@
 
 ## Authority boundary
 
-The host and MCP server expose observation, calculation, parsing, preview, analysis, and alert tools. They contain no wallet connection or trade execution path. A DCA preview is a proposal with `approval_state=required`.
+The host and MCP server expose observation, calculation, parsing, proposal preview, analysis, and alert tools. They contain no observed-wallet connection or trade execution path. A DCA preview is a proposal with `approval_state=required`.
 
 `set_alert` is the one MCP tool with a local side effect. It writes rule data to `.scout/alerts.json`. It does not schedule work or send notifications.
 
@@ -11,11 +11,13 @@ The Zerion source reads positions and mapped transactions for one address. Autho
 | Mode | Secret | Authorized action |
 |:--|:--|:--|
 | API key | `ZERION_API_KEY` | Read Zerion endpoints |
-| x402 | `ZERION_X402_PRIVATE_KEY` | Sign and pay USDC data fees on Base |
+| x402 | `ZERION_X402_PRIVATE_KEY` | Sign and pay USDC analytics fees on Base |
 
-The observed wallet never signs. The x402 payment wallet does. Its default cap is `$0.05` per payment, with no cumulative session cap. The SDK can attempt paid recovery inside one top-level request. Use a dedicated wallet with a small balance. Inspect payment state before retrying an ambiguous failure.
+The observed wallet never signs. The x402 payment wallet does. Scout reserves the full configured payment cap before each SDK payment payload. This includes recovery attempts. The defaults are `$0.05` per payment and `$1.05` across one process lifetime.
 
-Asset indicators and DCA windows use synthetic price history. They are heuristic and have fixed low confidence.
+Reservations are conservative. Scout does not refund them after an ambiguous failure because a payment may have settled. A process restart creates a new budget. Use a dedicated wallet with a small balance and inspect its payment state before retrying.
+
+Asset indicators and DCA windows use synthetic price history. They are heuristic and have fixed low confidence. DCA quote fields are caller inputs or labeled fixture assumptions. Scout 0.4.0 does not fetch a swap quote.
 
 ## Secrets and data
 

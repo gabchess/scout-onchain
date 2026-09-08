@@ -13,6 +13,7 @@ from scout_portfolio_manager.host import (
 )
 from scout_portfolio_manager.zerion_api import (
     ZerionAPIAuthError,
+    ZerionAPIBudgetError,
     ZerionAPIError,
     ZerionAPIPaginationError,
     ZerionAPIRateLimitError,
@@ -189,6 +190,7 @@ class _FailingReader:
         (ZerionAPIError("missing", status=404), "not_found"),
         (ZerionAPIError("bad request", status=400), "api"),
         (ZerionAPIServerError("boom", status=503), "server"),
+        (ZerionAPIBudgetError("spent"), "budget"),
         (ZerionAPIPaginationError("bad cursor"), "pagination"),
     ],
 )
@@ -213,6 +215,7 @@ def test_observe_error_not_found_kind():
         (ZerionAPIServerError("boom", status=503), True),
         (ZerionAPITransportError("dropped"), True),
         (ZerionAPIAuthError("denied", status=401), False),
+        (ZerionAPIBudgetError("spent"), False),
         (ZerionAPIPaginationError("bad cursor"), False),
         (ZerionAPIError("missing", status=404), False),
         (ZerionAPIError("bad request", status=400), False),

@@ -11,7 +11,7 @@ README_MARKERS = (
     "START-HERE.md",
     "zpm-mcp",
     "docs/X402.md",
-    "no cumulative spend cap",
+    "approval_state=required",
 )
 
 
