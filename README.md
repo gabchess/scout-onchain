@@ -7,12 +7,12 @@
 <p align="center"><strong>Your agent should know what you own.</strong></p>
 
 <p align="center">
-  <a href="CLAIMS.md"><img alt="version 0.3.2" src="https://img.shields.io/badge/version-0.3.2-0B57D0" /></a>
+  <a href="CLAIMS.md"><img alt="version 0.3.3" src="https://img.shields.io/badge/version-0.3.3-0B57D0" /></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a>
   <a href="START-HERE.md"><img alt="read-only MCP" src="https://img.shields.io/badge/MCP-read--only-6e7781" /></a>
 </p>
 
-Read-only portfolio intelligence for agents: snapshots, explainable USD PnL, DCA clarification, and approval-required previews. Fixture-backed by default. Optional Zerion API for one wallet, read-only.
+Read-only portfolio intelligence for agents: 8 MCP tools, 264 offline tests, 0 execution paths. Snapshots, explainable USD PnL, DCA clarification, and approval-required previews. Fixture-backed by default; live Zerion is read-only and optional, one wallet.
 
 ## What Scout does
 
@@ -27,15 +27,15 @@ Eight MCP tools: `get_portfolio_snapshot`, `get_pnl`, `parse_dca_request`, `prev
 
 ## Safety
 
-Scout does not connect wallets, move funds, sign or submit transactions, or give investment advice. A preview is a proposal, not a trade.
+Scout does not connect wallets, move funds, sign or submit transactions, or give investment advice. A preview is a proposal, not a trade. The no-execute claim is a CI gate: [`tests/test_execution_boundary.py`](tests/test_execution_boundary.py) AST-scans the import graph and pins the tool set to the 8 read-only tools.
 
-Live stages: `observe -> calculate -> propose -> preview`. Execute and verify are not shipped. Buys and channel push alerts are roadmap. Zerion is env key + address only (not WalletConnect).
+Live stages: `observe -> calculate -> propose -> preview`. Execute and verify are not shipped. Buys and channel push alerts are roadmap. Zerion is env key + address only (not WalletConnect). Alerts are local on-demand files in `.scout/alerts.json`, not channel push.
 
-Full truth table: [`CLAIMS.md`](CLAIMS.md). Boundaries: [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Full truth table: [`CLAIMS.md`](CLAIMS.md). Per-host capability and evidence: [`HOST-MATRIX.md`](HOST-MATRIX.md). Boundaries: [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Install
 
-Give this repo folder or ZIP to your agent and point it at [`START-HERE.md`](START-HERE.md). Discovery is not install: confirm tools appear before trusting the host.
+Give this repo folder or ZIP to your agent and point it at [`START-HERE.md`](START-HERE.md). Discovery is not install: confirm tools appear before trusting the host. The first ask after install: "Show me what I own and what it did."
 
 | Route | Path |
 |:--|:--|
@@ -61,7 +61,7 @@ uv sync --extra test --extra mcp
 uv run pytest -q
 ```
 
-Fixture example: 1 ETH bought at $2,000, valued at $2,250 ($250 unrealized). Synthetic data, not live markets.
+264 tests, all offline against the fixture. Fixture example: 1 ETH bought at $2,000, valued at $2,250 ($250 unrealized). Synthetic data, not live markets.
 
 ```python
 from scout_portfolio_manager.host import ReadOnlyHost
@@ -121,6 +121,8 @@ Tools registered: `get_portfolio_snapshot`, `get_pnl`, `parse_dca_request`, `pre
 | Doc | Use |
 |:--|:--|
 | [`CLAIMS.md`](CLAIMS.md) | What is true today |
+| [`HOST-MATRIX.md`](HOST-MATRIX.md) | Per-host capability and evidence |
+| [`LICENSE-STATUS.md`](LICENSE-STATUS.md) | What MIT covers here, and what it does not |
 | [`AGENTS.md`](AGENTS.md) | Agent install map |
 | [`START-HERE.md`](START-HERE.md) | Exact install routes |
 | [`SECURITY.md`](SECURITY.md) | Security boundary |
@@ -132,4 +134,4 @@ Tools registered: `get_portfolio_snapshot`, `get_pnl`, `parse_dca_request`, `pre
 
 ## Status
 
-`0.3.1` early release: fixture host, optional analytics and local alerts, optional read-only Zerion, optional MCP. Treat API-backed observations as external data with freshness and authorization limits.
+`0.3.3` early release: fixture host, optional analytics and local alerts, optional read-only Zerion, optional MCP. Treat API-backed observations as external data with freshness and authorization limits.
