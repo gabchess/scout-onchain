@@ -7,7 +7,7 @@
 <p align="center"><strong>Your agent should know what you own.</strong></p>
 
 <p align="center">
-  <a href="CLAIMS.md"><img alt="version 0.3.3" src="https://img.shields.io/badge/version-0.3.3-0B57D0" /></a>
+  <a href="CLAIMS.md"><img alt="version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-0B57D0" /></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a>
   <a href="START-HERE.md"><img alt="read-only MCP" src="https://img.shields.io/badge/MCP-read--only-6e7781" /></a>
 </p>
@@ -90,7 +90,9 @@ Details: [`demo/zerion-portfolio-agent/README.md`](demo/zerion-portfolio-agent/R
 
 ## Optional Zerion (read-only)
 
-Both env vars required. Partial pair is a startup error. Keys never echo.
+Pick exactly one authorization mode. Both need `ZERION_WALLET_ADDRESS`. Partial config is a startup error. Credentials never echo.
+
+**Mode A: API key.** Free-tier key, rate-limited.
 
 | Variable | Required | Meaning |
 |:--|:--|:--|
@@ -104,6 +106,24 @@ export ZERION_API_KEY=$(cat ~/secrets/zerion-api-key)   # never paste inline
 export ZERION_WALLET_ADDRESS=0xYourWalletAddress
 uv run --extra mcp zpm-mcp
 ```
+
+**Mode B: x402 pay-per-call.** No API key, no signup: a small payment wallet pays about $0.01 USDC on Base per request, capped client-side before anything is signed. Needs the optional dependency group.
+
+| Variable | Required | Meaning |
+|:--|:--|:--|
+| `ZERION_X402_PRIVATE_KEY` | yes | Private key of a dedicated payment wallet on Base |
+| `ZERION_WALLET_ADDRESS` | yes | One wallet to observe |
+| `ZERION_X402_MAX_USD_PER_CALL` | no | Per-call spend cap (default `$0.05`) |
+| `ZERION_CHAIN` | no | Snapshot label (default `multi-chain`) |
+
+```bash
+pip install -e '.[x402,mcp]'
+export ZERION_X402_PRIVATE_KEY=$(cat ~/secrets/x402-payment-key)   # dedicated wallet, keep it small
+export ZERION_WALLET_ADDRESS=0xYourWalletAddress
+zpm-mcp
+```
+
+x402 boundaries: the payment wallet signs per-call data fees only; the observed wallet is never asked to sign anything. Setting both `ZERION_API_KEY` and `ZERION_X402_PRIVATE_KEY` is a startup error. A rejected payment returns a typed `payment` error and is not auto-retried, because retrying spends money again. Details: [`docs/X402.md`](docs/X402.md).
 
 API failure returns a typed error with `fallback: "none"`. The fixture is never substituted for a failed live call. See [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md).
 
@@ -134,4 +154,4 @@ Tools registered: `get_portfolio_snapshot`, `get_pnl`, `parse_dca_request`, `pre
 
 ## Status
 
-`0.3.3` early release: fixture host, optional analytics and local alerts, optional read-only Zerion, optional MCP. Treat API-backed observations as external data with freshness and authorization limits.
+`0.4.0` early release: fixture host, optional analytics and local alerts, optional read-only Zerion (API key or x402 pay-per-call), optional MCP. Treat API-backed observations as external data with freshness and authorization limits.

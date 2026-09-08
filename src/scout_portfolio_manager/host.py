@@ -34,6 +34,7 @@ from .zerion_api import (
     ZerionAPIAuthError,
     ZerionAPIError,
     ZerionAPIPaginationError,
+    ZerionAPIPaymentError,
     ZerionAPIRateLimitError,
     ZerionAPIServerError,
     ZerionAPITransportError,
@@ -727,6 +728,10 @@ def _observe_error(exc: ZerionAPIError) -> Dict[str, Any]:
     """Typed, credential-free observe failure. No fixture fallback happens here."""
     if isinstance(exc, ZerionAPIAuthError):
         kind = "authorization"
+    elif isinstance(exc, ZerionAPIPaymentError):
+        # x402 payment rejected or settlement failed. Not retryable blindly:
+        # retrying spends money again for the same failure.
+        kind = "payment"
     elif isinstance(exc, ZerionAPIRateLimitError):
         kind = "rate_limit"
     elif isinstance(exc, ZerionAPIServerError):

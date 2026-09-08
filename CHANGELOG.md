@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.4.0 - 2026-09-08
+
+Adds an optional x402 pay-per-call route to the read-only Zerion source. Same
+endpoints, same read-only boundary; access is paid per request in USDC on Base
+instead of authorized by API key.
+
+### Added
+
+- `src/scout_portfolio_manager/x402_source.py`: x402-backed transport for
+  `ZerionAPIReader`. Enabled by `ZERION_X402_PRIVATE_KEY` +
+  `ZERION_WALLET_ADDRESS`. Per-call spend cap via
+  `ZERION_X402_MAX_USD_PER_CALL` (default `$0.05`), enforced by the x402 SDK
+  before any payment is signed.
+- `ZerionAPIPaymentError` and a typed `payment` observe-error kind for HTTP
+  402 responses. Not auto-retried: a retry would spend money again for the
+  same failure.
+- Optional dependency group `x402` (`pip install -e '.[x402]'`): the Coinbase
+  x402 Python SDK and `eth-account`. The default install stays
+  dependency-light.
+- `docs/X402.md`: setup, boundaries, cost math, and error handling for the
+  pay-per-call mode.
+- `tests/test_x402_source.py`: env gating, exclusive-mode conflict, spend-cap
+  validation, typed transport errors, and credential-free error text, all
+  offline against an injected session.
+
+### Changed
+
+- `ZerionAPIConfig.api_key` accepts `None` for x402 mode; the reader sends no
+  `Authorization` header when the key is absent.
+- `zerion_api.reader_from_env` routes to the x402 source when
+  `ZERION_X402_PRIVATE_KEY` is set. Setting both it and `ZERION_API_KEY` is a
+  startup error: one authorization mode per source.
+
+### Unchanged
+
+- Scout is still read-only. The only signature is the x402 data-fee payment
+  from the operator's dedicated payment wallet. The observed wallet never
+  signs. No execute, sign, or submit tool is registered.
+
 ## 0.3.3 - 2026-09-07
 
 Docs-completeness cut: adds the finished-pack artifacts that were missing at the

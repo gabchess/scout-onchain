@@ -77,7 +77,12 @@ Check all environment combinations:
 - blank/whitespace values: treated as absent or invalid as documented;
 - both Zerion variables plus `ZPM_FIXTURE_PATH`: Zerion wins;
 - configured Zerion request failure: no fixture fallback;
-- configured wallet is the wallet in the resulting snapshot.
+- configured wallet is the wallet in the resulting snapshot;
+- `ZERION_X402_PRIVATE_KEY` + `ZERION_WALLET_ADDRESS`: x402 reader mode (no Authorization header; access settled per request);
+- `ZERION_X402_PRIVATE_KEY` without `ZERION_WALLET_ADDRESS`: loud configuration error;
+- `ZERION_API_KEY` and `ZERION_X402_PRIVATE_KEY` together: loud configuration error (one authorization mode);
+- invalid `ZERION_X402_MAX_USD_PER_CALL`: loud configuration error;
+- HTTP 402 in x402 mode: typed `payment` error, not retryable.
 
 ### Host and MCP boundary
 
