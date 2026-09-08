@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "scout-portfolio-manager"
 version = "0.4.0"
-description = "Portfolio intelligence for AI agents, with fixture and Zerion data sources"
+description = "Customizable onchain portfolio manager for AI agents"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE.md", "LICENSE-STATUS.md"]

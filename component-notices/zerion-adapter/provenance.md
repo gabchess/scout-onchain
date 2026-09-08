@@ -8,7 +8,7 @@ The adapter code is original to this repository. It targets Zerion's public `GET
 
 Transaction pagination stops at `ZerionAPIConfig.max_pages`, which defaults to 20 pages of 100. The quantity parser accepts a bare number or a `{"float": ...}` object. Automated tests use injected responses and make no live Zerion call.
 
-x402 has a per-payment cap and no cumulative Scout budget. Its SDK contract is tested offline. Live paid behavior remains unverified in this repository.
+x402 has per-payment and process-lifetime caps. Scout's budget hook and SDK contract are tested offline. Live paid behavior remains unverified in this repository.
 
 ## Evidence boundary
 

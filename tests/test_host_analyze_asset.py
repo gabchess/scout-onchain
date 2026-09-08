@@ -27,7 +27,9 @@ def _snapshot(*, observed_at=None, holdings=None, transactions=None) -> Portfoli
         holdings=(
             holdings if holdings is not None else [Holding(asset="ETH", quantity=1, value_usd=2250)]
         ),
-        transactions=transactions if transactions is not None else [
+        transactions=transactions
+        if transactions is not None
+        else [
             Transaction(
                 id="buy-1",
                 kind="buy",

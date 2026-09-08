@@ -30,6 +30,7 @@
     "claude_code_command": "/portfolio-intelligence"
   },
   "capabilities": {
+    "route_user_intent": true,
     "observe": true,
     "calculate": true,
     "propose": true,
@@ -38,6 +39,7 @@
     "execute": false,
     "observed_wallet_sign": false,
     "x402_payment_sign": true,
+    "x402_process_budget": true,
     "submit": false,
     "verify_settlement": false,
     "technical_analysis": true,
@@ -49,11 +51,10 @@
     "demo_ui": "0.1.0"
   },
   "exclusions": {
-    "fake_execution_adapter": "src/scout_portfolio_manager/adapters.py:FakeExecutionAdapter is test-only domain scaffolding for isolated unit tests; never imported by host.py or mcp_server.py, never wired to any tool surface, does not touch funds.",
     "live_zerion_key": "No Zerion API key, payment private key, or wallet address ships in this repo. The operator chooses API-key or x402 authorization and supplies the matching variables.",
     "demo_data_source": "demo/zerion-portfolio-agent reads the synthetic portfolio and price-history fixtures; it makes no live Zerion call."
   },
   "data_boundary": "No repository database or hosted retention service; integrating hosts and API providers have separate policies.",
-  "release_notes": "Early release. See WHAT-BROKE.md and RELEASE-MANIFEST.json.",
+  "release_notes": "See CHANGELOG.md, WHAT-BROKE.md, and RELEASE-MANIFEST.json.",
   "evidence_boundary": "Proves what surfaces and sources are wired into this build, and what was deliberately left out; does not prove those surfaces behave correctly at runtime, or that an excluded item is absent from a fork of this tree."
 }

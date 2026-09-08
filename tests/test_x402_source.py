@@ -15,10 +15,15 @@ import pytest
 
 from scout_portfolio_manager.host import ReadOnlyHost
 from scout_portfolio_manager.x402_source import (
+    DEFAULT_MAX_PAYMENTS_PER_SESSION,
     DEFAULT_MAX_USD_PER_CALL,
+    DEFAULT_MAX_USD_PER_SESSION,
     X402_KEY_ENV,
     X402_MAX_ENV,
+    X402_SESSION_MAX_ENV,
+    X402SpendBudget,
     parse_max_usd_per_call,
+    parse_max_usd_per_session,
     x402_transport,
 )
 from scout_portfolio_manager.x402_source import (
@@ -28,6 +33,7 @@ from scout_portfolio_manager.zerion_api import (
     API_KEY_ENV,
     WALLET_ENV,
     ZerionAPIAuthError,
+    ZerionAPIBudgetError,
     ZerionAPIPaymentError,
     ZerionConfigError,
     reader_from_env,
@@ -119,6 +125,38 @@ def test_default_cap_is_five_cents():
     assert DEFAULT_MAX_USD_PER_CALL == "$0.05"
 
 
+def test_default_session_budget_matches_one_nominal_max_page_snapshot():
+    assert DEFAULT_MAX_PAYMENTS_PER_SESSION == 21
+    assert DEFAULT_MAX_USD_PER_SESSION == "$1.05"
+
+
+@pytest.mark.parametrize("value", ["$0.05", "$1.05", "$10"])
+def test_valid_session_money_strings_pass_through(value):
+    assert parse_max_usd_per_session(value) == value
+
+
+def test_invalid_session_budget_is_a_loud_config_error():
+    with pytest.raises(ZerionConfigError) as caught:
+        parse_max_usd_per_session("unlimited")
+    assert X402_SESSION_MAX_ENV in str(caught.value)
+
+
+def test_budget_reserves_the_full_cap_and_stops_before_overspend():
+    budget = X402SpendBudget.from_strings("$0.05", "$0.10")
+    budget.reserve_payment()
+    budget.reserve_payment()
+    with pytest.raises(ZerionAPIBudgetError):
+        budget.reserve_payment()
+    assert budget.status() == {
+        "max_usd_per_payment": "$0.05",
+        "max_usd_per_session": "$0.10",
+        "reserved_usd": "$0.10",
+        "remaining_usd": "$0.00",
+        "reserved_payments": 2,
+        "accounting": "conservative_max_per_payment",
+    }
+
+
 # --- env gating ---------------------------------------------------------------
 
 
@@ -131,7 +169,9 @@ def test_top_level_reader_routes_to_x402_when_key_set(monkeypatch):
     from scout_portfolio_manager import x402_source
 
     monkeypatch.setattr(
-        x402_source, "build_payment_session", lambda key, cap: FakeSession()
+        x402_source,
+        "build_payment_session",
+        lambda key, cap, spend_budget=None: FakeSession(),
     )
     reader = reader_from_env(x402_env())
     assert reader is not None
@@ -158,16 +198,34 @@ def test_both_authorization_modes_is_a_startup_error():
 
 def test_invalid_spend_cap_is_a_startup_error():
     with pytest.raises(ZerionConfigError):
-        x402_reader_from_env(
-            x402_env(**{X402_MAX_ENV: "free"}), session=FakeSession()
-        )
+        x402_reader_from_env(x402_env(**{X402_MAX_ENV: "free"}), session=FakeSession())
 
 
 def test_custom_spend_cap_accepted():
-    reader = x402_reader_from_env(
-        x402_env(**{X402_MAX_ENV: "$0.10"}), session=FakeSession()
-    )
+    reader = x402_reader_from_env(x402_env(**{X402_MAX_ENV: "$0.10"}), session=FakeSession())
     assert reader is not None
+    assert reader.spend_budget["max_usd_per_payment"] == "$0.10"
+    assert reader.spend_budget["max_usd_per_session"] == "$2.10"
+
+
+def test_custom_session_budget_accepted():
+    reader = x402_reader_from_env(
+        x402_env(**{X402_SESSION_MAX_ENV: "$0.25"}), session=FakeSession()
+    )
+    assert reader.spend_budget["max_usd_per_session"] == "$0.25"
+
+
+def test_session_budget_smaller_than_payment_cap_is_rejected():
+    with pytest.raises(ZerionConfigError, match=X402_SESSION_MAX_ENV):
+        x402_reader_from_env(
+            x402_env(
+                **{
+                    X402_MAX_ENV: "$0.10",
+                    X402_SESSION_MAX_ENV: "$0.05",
+                }
+            ),
+            session=FakeSession(),
+        )
 
 
 def test_transport_injection_refused_in_x402_mode():
@@ -204,6 +262,7 @@ def test_host_reports_snapshot_from_x402_source():
     assert snap["status"] == "ok"
     assert snap["snapshot"]["source"]["kind"] == "zerion_api"
     assert snap["snapshot"]["wallet_address"] == WALLET
+    assert snap["x402_spend_budget"]["remaining_usd"] == "$1.05"
 
 
 # --- typed errors ----------------------------------------------------------------
@@ -239,6 +298,24 @@ def test_transport_exception_maps_to_transport_error():
         reader.snapshot()
     # The injected transport is an untrusted boundary: raw text never leaks.
     assert "connection reset" not in str(caught.value)
+
+
+def test_wrapped_budget_stop_maps_to_typed_budget_error():
+    pytest.importorskip("x402")
+    from x402.http.clients.requests import PaymentError
+
+    budget = X402SpendBudget.from_strings("$0.05", "$0.05")
+    budget.reserve_payment()
+    try:
+        budget.reserve_payment()
+    except ZerionAPIBudgetError as cause:
+        try:
+            raise PaymentError("wrapped SDK failure") from cause
+        except PaymentError as wrapped:
+            session = FakeSession(raise_exc=wrapped)
+    transport = x402_transport(session)
+    with pytest.raises(ZerionAPIBudgetError):
+        transport(Request("https://api.zerion.io/v1/wallets/x/positions/"), 10.0)
 
 
 def test_sdk_payment_error_maps_to_non_retryable_payment_without_leaking():
@@ -290,7 +367,9 @@ def test_mcp_build_host_prefers_x402_source(monkeypatch):
     from scout_portfolio_manager import mcp_server, x402_source
 
     monkeypatch.setattr(
-        x402_source, "build_payment_session", lambda key, cap: FakeSession()
+        x402_source,
+        "build_payment_session",
+        lambda key, cap, spend_budget=None: FakeSession(),
     )
     monkeypatch.setenv(X402_KEY_ENV, X402_KEY)
     monkeypatch.setenv(WALLET_ENV, WALLET)
@@ -338,10 +417,16 @@ def test_real_sdk_session_builds_with_spend_cap():
     from scout_portfolio_manager.x402_source import build_payment_session
 
     ephemeral = Account.create()
-    session = build_payment_session(ephemeral.key.hex(), "$0.05")
+    budget = X402SpendBudget.from_strings("$0.05", "$0.05")
+    session = build_payment_session(ephemeral.key.hex(), "$0.05", spend_budget=budget)
     assert session is not None
     # A real requests.Session with the x402 payment adapters mounted.
     assert hasattr(session, "get")
+    client = session.get_adapter("https://")._client
+    hook = client._before_payment_creation_hooks[-1]
+    hook(None)
+    with pytest.raises(ZerionAPIBudgetError):
+        hook(None)
 
 
 def test_real_sdk_rejects_invalid_private_key_without_leaking():

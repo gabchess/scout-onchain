@@ -15,15 +15,18 @@
     "name": "Zerion API",
     "authorization": [
       "api_key",
-      "x402 pay-per-call (USDC on Base, per-payment cap)"
+      "x402 pay-per-call (USDC on Base, bounded per payment and process)"
     ],
-    "scope": "per-asset positions and mapped transaction history for one wallet",
+    "scope": "portfolio analytics from per-asset positions and mapped transaction history for one wallet",
     "enabled_by_default": false
   },
   "execution_boundary": {
     "wallet_connection": false,
     "observed_wallet_signing": false,
     "x402_payment_signing": true,
+    "x402_process_budget": true,
+    "dca_proposal": true,
+    "swap_quote_fetch": false,
     "trade_submission": false,
     "trade_execution": false,
     "settlement_verification": false
@@ -38,11 +41,18 @@
   "known_limits": [
     "Synthetic fixture is not live data.",
     "API-backed observations depend on endpoint access, authorization, freshness, and availability.",
-    "x402 has a per-payment cap but no cumulative session budget in Scout.",
+    "x402 budget reservations are conservative and reset with the process.",
     "No live paid x402 request is verified by this repository.",
     "No production SLA or Zerion endorsement is claimed."
   ],
   "evidence_boundary": "This manifest describes source identity, package boundaries, and local build records. It does not prove publication, live provider behavior, security on an installer's machine, or data freshness.",
   "release_artifact_policy": "The local builder adds an entry after creating a verified ZIP. A build record is not publication evidence.",
-  "release_artifacts": []
+  "release_artifacts": [
+    {
+      "path": "dist/scout-portfolio-0.4.0.zip",
+      "sha256": "545078065c1b664d5c95d943a4fe77ab78f98e949192fb6e1b9bac58f3f55be2",
+      "version": "0.4.0",
+      "built_at": "2026-09-08T22:27:47Z"
+    }
+  ]
 }

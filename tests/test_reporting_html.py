@@ -1,9 +1,7 @@
 from pathlib import Path
-from types import SimpleNamespace
-
-import pytest
 
 from scout_portfolio_manager.host import ReadOnlyHost
+from scout_portfolio_manager.portfolio import FixturePortfolioReader
 from scout_portfolio_manager.reporting_html import build_report, render_report
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "portfolio.json"
@@ -85,9 +83,7 @@ def test_render_report_carries_pinned_strings_verbatim():
         snapshot=snapshot, pnl=pnl, analyses=analyses, windows=windows, alerts=alerts
     )
     assert "This is analysis, not financial advice." in html
-    assert (
-        "Heuristic indicators, not backtested; treat as descriptive, not predictive." in html
-    )
+    assert "Heuristic indicators, not backtested; treat as descriptive, not predictive." in html
 
 
 def test_render_report_performs_no_network_or_fetch_markup():
@@ -109,9 +105,41 @@ def test_build_report_runs_the_full_chain_against_real_fixtures():
     assert "ETH" in html
 
 
-def test_build_report_blocks_x402_without_a_cumulative_budget():
-    fake_reader = SimpleNamespace(authorization_mode="x402")
-    host = ReadOnlyHost(fake_reader)
+def test_build_report_observes_the_wallet_exactly_once():
+    class CountingReader:
+        def __init__(self):
+            self.calls = 0
+            self.fixture = FixturePortfolioReader(FIXTURE)
 
-    with pytest.raises(RuntimeError, match="no cumulative spend budget"):
-        build_report(host)
+        def snapshot(self):
+            self.calls += 1
+            return self.fixture.snapshot()
+
+    reader = CountingReader()
+    html = build_report(ReadOnlyHost(reader))
+
+    assert reader.calls == 1
+    assert "ETH" in html
+
+
+def test_build_report_accepts_x402_and_displays_budget():
+    class X402Reader:
+        authorization_mode = "x402"
+
+        def __init__(self):
+            self.fixture = FixturePortfolioReader(FIXTURE)
+
+        @property
+        def spend_budget(self):
+            return {
+                "max_usd_per_session": "$1.05",
+                "reserved_usd": "$0.10",
+                "remaining_usd": "$0.95",
+            }
+
+        def snapshot(self):
+            return self.fixture.snapshot()
+
+    html = build_report(ReadOnlyHost(X402Reader()))
+    assert "x402 $0.95 left" in html
+    assert "$0.10 reserved of $1.05" in html

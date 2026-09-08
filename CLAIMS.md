@@ -1,19 +1,20 @@
 # Claim status
 
-Source: `gabchess/scout-onchain` 0.4.0. Update this table when behavior or evidence changes.
+Source: `gabchess/scout-onchain` 0.4.0. Each status names the strongest evidence in this repository.
 
 | Claim | Status | Evidence and limit |
 |:--|:--|:--|
-| Reads Zerion holdings and transaction history | TESTED OFFLINE | Injected-response tests cover mapped positions and transaction `links.next`. |
+| Reads Zerion holdings and transaction history | TESTED OFFLINE | Injected-response tests cover positions and paginated transactions. No current live API-key call is recorded. |
 | Calculates portfolio PnL | VERIFIED WITH FIXTURE | `get_pnl` uses observed buys for cost basis and leaves missing basis unknown. |
-| Analyzes markets and DCA windows | FIXTURE ONLY | `analyze_asset` and `dca_windows` use synthetic price history with fixed low confidence. |
-| Sends alerts to channels | ROADMAP | `set_alert` writes a local file that `check_alerts` evaluates on demand. |
-| Connects an observed wallet | OUT OF SCOPE | Zerion receives an address without a WalletConnect flow or observed-wallet signer. |
-| Uses x402 for paid Zerion reads | IMPLEMENTED, LIVE UNVERIFIED | Offline SDK construction confirms wiring without proving paid live behavior; the payment wallet can sign and spend USDC. |
-| Caps x402 spend | PER PAYMENT ONLY | The default is `$0.05`, with no cumulative budget and up to 21 top-level requests per snapshot at the default page limit. |
-| Creates automated buys | ROADMAP | Public host surfaces stop at preview while the fake execution adapter remains test scaffolding. |
-| Records approval | UNAVAILABLE | `approval_state=required` is a preview label without an approver identity or registry. |
-| Runs through MCP | PARTIAL BY HOST | Claude Code uses the root MCP config, Codex attaches stdio beside generated skills, and generic clients run `zpm-mcp`. |
+| Offers several agent routes | VERIFIED IN PACKAGE | The host and MCP registry expose portfolio, PnL, DCA proposal, analysis, DCA-window, and local-alert tools. |
+| Builds DCA proposals | VERIFIED WITH FIXTURE | Complete previews require approval and expose no execution action. Optional quote fields come from the caller. |
+| Analyzes markets and DCA windows | FIXTURE ONLY | These tools use bundled synthetic price history with fixed low confidence. |
+| Checks alerts | LOCAL ON DEMAND | `set_alert` writes `.scout/alerts.json`; `check_alerts` evaluates rules when called. No channel delivery is present. |
+| Uses x402 for paid Zerion reads | IMPLEMENTED, LIVE UNVERIFIED | The real SDK session builds offline. The payment wallet can sign and spend USDC. No paid live request is recorded. |
+| Caps x402 spend | TESTED OFFLINE | The defaults are `$0.05` per payment and `$1.05` per process. Scout reserves before every SDK payment payload, including recovery. |
+| Signs with the observed wallet | ABSENT | The observed wallet is an address input. The only signer is the separate x402 payment wallet when configured. |
+| Executes trades | ABSENT | Public tools stop at proposal preview. The runtime tree contains no execution adapter. |
+| Runs through MCP | TESTED LOCALLY | The registry is pinned to the public tool set. Host-specific activation still needs inspection after installation. |
 | Ships under MIT | VERIFIED IN TREE | See [`LICENSE.md`](LICENSE.md) and [`LICENSE-STATUS.md`](LICENSE-STATUS.md). |
 
-The runtime stages are observe, calculate, propose, and preview. Execution and settlement verification are outside the public tool surface.
+Scout's public stages are observe, calculate, propose, and preview. Payment for data access belongs to the x402 source boundary.

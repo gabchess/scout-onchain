@@ -1,50 +1,44 @@
-# Reference: the watch chain and report contract
+# Watch report contract
 
-## Tool chain, in call order
+## Calculation path
 
-| Step | Tool | Boundary | Called |
-|---|---|---|---|
-| 1 | `get_portfolio_snapshot` | observe | once |
-| 2 | `get_pnl` | calculate | once |
-| 3 | `analyze_asset` | calculate | once per held asset |
-| 4 | `dca_windows` | propose | once per held asset |
-| 5 | `check_alerts` | calculate | once |
+`build_report(host)` calls `host.build_report_data()`. The host performs one wallet snapshot, then derives these panels in memory:
 
-No tool in this chain writes, signs, submits, or schedules anything. `set_alert` is not
-part of the chain itself; call it separately (CLI, MCP tool call, or `preview_dca`'s own
-Python fallback pattern) before a `watch` run to have `check_alerts` evaluate it.
+| Panel | Boundary | Input |
+|:--|:--|:--|
+| Portfolio | observe | Shared snapshot |
+| PnL | calculate | Holdings and mapped transactions |
+| Asset analysis | calculate | Shared snapshot plus bundled price history |
+| DCA windows | propose | Asset analysis |
+| Alerts | calculate | Saved rules plus shared analysis and PnL |
 
-The chain repeats snapshot reads through PnL, analysis, windows, and alerts.
-`build_report` refuses an x402-backed host until Scout has a cumulative spend
-budget. This prevents an on-demand report or loop tick from multiplying paid calls.
+No report step writes a transaction or schedules work. `set_alert` is outside the report chain and writes only `.scout/alerts.json`.
 
-## `render_report`'s inputs
+In x402 mode, each payment payload reserves the full configured per-payment cap. A recovery payload consumes another reservation. The rendered header shows the remaining process budget.
+
+## `render_report` inputs
 
 ```python
 def render_report(
     *,
-    snapshot: dict,   # host.get_portfolio_snapshot()["snapshot"]
-    pnl: dict,        # host.get_pnl() full response
-    analyses: dict,   # {asset: host.analyze_asset(asset)}
-    windows: dict,    # {asset: host.dca_windows(asset)}
-    alerts: dict,     # host.check_alerts() full response
+    snapshot: dict,
+    pnl: dict,
+    analyses: dict,
+    windows: dict,
+    alerts: dict,
+    x402_spend_budget: dict | None = None,
 ) -> str: ...
 ```
 
-Pure rendering: no I/O, no network call of its own, regardless of how the host was
-constructed upstream. `build_report(host)` in the same module runs the chain and calls
-`render_report` for you.
+Rendering performs no I/O or network call.
 
 ## Output file
 
-- Default path: `./scout-report.html`, overridable via `SCOUT_REPORT_PATH`.
-- Overwritten on every run; no history is kept by this skill.
-- Self-contained: inline CSS, no external references, no `<script>` fetch calls.
-- Gitignored (`scout-report.html` in `.gitignore`): this is a generated deliverable for
-  whoever runs `watch`, not a repo artifact.
+- Default path: `./scout-report.html`, overridable with `SCOUT_REPORT_PATH`.
+- Each run overwrites the previous file.
+- The document contains inline CSS and no external request.
+- The path is gitignored.
 
 ## Alert storage
 
-Alert rules persist in `.scout/alerts.json` (gitignored), read fresh on every
-`check_alerts` call. A `/loop` tick is a new process each time; without this file, every
-rule would be forgotten between ticks.
+Alert rules persist in `.scout/alerts.json` and are read during each check. A new process uses the same file when it runs from the same working directory.

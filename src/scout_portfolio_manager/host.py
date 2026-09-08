@@ -1,7 +1,6 @@
 """Read-only host surface for agent runtimes.
 
-Exposes observe/calculate/propose/preview only. No execute tool exists here.
-FakeExecutionAdapter is test-only and is not part of this host or MCP surface.
+Exposes observe, calculate, propose, and preview operations. No execute tool exists here.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from . import __version__
-from .alerts import AlertStore, evaluate_alert
+from .alerts import AlertRule, AlertStore, evaluate_alert
 from .analytics import (
     distance_from_range_pct,
     drawdown_from_cost_basis_pct,
@@ -23,7 +22,7 @@ from .analytics import (
     rsi,
     sma,
 )
-from .contracts import Transaction
+from .contracts import PortfolioSnapshot, Transaction
 from .dca import DcaIntent, parse_dca_request
 from .dca_windows import SIZING_FRACTION, classify_window
 from .pnl import PnlResult, calculate_pnl
@@ -32,6 +31,7 @@ from .price_history import FixturePriceHistoryReader, PriceHistoryReader
 from .safety import build_preview
 from .zerion_api import (
     ZerionAPIAuthError,
+    ZerionAPIBudgetError,
     ZerionAPIError,
     ZerionAPIPaginationError,
     ZerionAPIPaymentError,
@@ -51,6 +51,7 @@ _error_kind_counts: "Counter[str]" = Counter()
 def error_kind_counts() -> Dict[str, int]:
     """Snapshot of in-process observe-error counts, keyed by error.kind."""
     return dict(_error_kind_counts)
+
 
 TOOL_NAMES = (
     "get_portfolio_snapshot",
@@ -201,8 +202,9 @@ class ReadOnlyHost:
                 "name": "preview_dca",
                 "version": __version__,
                 "description": (
-                    "Parse a DCA request and, if complete, build a full preview with "
-                    "approval_state=required. Does not execute, sign, or submit."
+                    "Parse a DCA request and, if complete, build a proposal with "
+                    "approval_state=required. Optional quote fields come from the caller. "
+                    "Scout does not fetch, execute, sign, or submit a swap."
                 ),
                 "inputSchema": {
                     "type": "object",
@@ -408,17 +410,24 @@ class ReadOnlyHost:
             snapshot = self.reader.snapshot()
         except ZerionAPIError as exc:
             return _observe_error(exc)
-        return {
-            "status": "ok",
-            "boundary": "observe",
-            "snapshot": snapshot.model_dump(mode="json"),
-        }
+        return self._with_source_budget(
+            {
+                "status": "ok",
+                "boundary": "observe",
+                "snapshot": snapshot.model_dump(mode="json"),
+            }
+        )
 
-    def get_pnl(self, asset: Optional[str] = None) -> Dict[str, Any]:
-        try:
-            snapshot = self.reader.snapshot()
-        except ZerionAPIError as exc:
-            return _observe_error(exc)
+    def _with_source_budget(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        budget = getattr(self.reader, "spend_budget", None)
+        if budget is not None:
+            result["x402_spend_budget"] = dict(budget)
+        return result
+
+    @staticmethod
+    def _pnl_from_snapshot(
+        snapshot: PortfolioSnapshot, asset: Optional[str] = None
+    ) -> Dict[str, Any]:
         target = asset.upper() if asset else None
         results: List[PnlResult] = []
         unknown: List[str] = []
@@ -446,6 +455,13 @@ class ReadOnlyHost:
             "unknown": unknown,
         }
 
+    def get_pnl(self, asset: Optional[str] = None) -> Dict[str, Any]:
+        try:
+            snapshot = self.reader.snapshot()
+        except ZerionAPIError as exc:
+            return _observe_error(exc)
+        return self._with_source_budget(self._pnl_from_snapshot(snapshot, asset))
+
     def analyze_asset(self, asset: str) -> Dict[str, Any]:
         """Heuristic TA indicators for one asset. Read-only, never raises on a data gap.
 
@@ -459,6 +475,11 @@ class ReadOnlyHost:
             snapshot = self.reader.snapshot()
         except ZerionAPIError as exc:
             return _observe_error(exc)
+
+        return self._with_source_budget(self._analysis_from_snapshot(snapshot, asset))
+
+    def _analysis_from_snapshot(self, snapshot: PortfolioSnapshot, asset: str) -> Dict[str, Any]:
+        """Calculate one asset analysis without observing the wallet again."""
 
         asset = asset.upper()
         unknown: List[str] = []
@@ -539,9 +560,29 @@ class ReadOnlyHost:
         """
         if risk_profile not in SIZING_FRACTION:
             raise ValueError(f"unknown risk_profile: {risk_profile!r}")
-        analysis = self.analyze_asset(asset)
-        if analysis["status"] != "ok":
-            return analysis
+        try:
+            snapshot = self.reader.snapshot()
+        except ZerionAPIError as exc:
+            return _observe_error(exc)
+        analysis = self._analysis_from_snapshot(snapshot, asset)
+        return self._with_source_budget(
+            self._window_from_analysis(
+                analysis,
+                risk_profile=risk_profile,
+                amount_usd=amount_usd,
+            )
+        )
+
+    @staticmethod
+    def _window_from_analysis(
+        analysis: Dict[str, Any],
+        *,
+        risk_profile: str,
+        amount_usd: Optional[float],
+    ) -> Dict[str, Any]:
+        """Build one DCA window from an already-computed analysis."""
+        if risk_profile not in SIZING_FRACTION:
+            raise ValueError(f"unknown risk_profile: {risk_profile!r}")
 
         indicators = analysis["indicators"]
         classification = classify_window(
@@ -585,27 +626,56 @@ class ReadOnlyHost:
     def check_alerts(self, asset: Optional[str] = None) -> Dict[str, Any]:
         """Evaluate stored alert rules on demand. Never runs in the background.
 
-        Calls analyze_asset (and get_pnl, for price_pct_below_cost_basis rules)
-        once per distinct asset among the matched rules, not once per rule, to
-        avoid redundant recomputation. An asset with no observed price history
-        or basis lands in "unknown", never silently dropped.
+        One wallet snapshot is shared across every matched rule. An asset with
+        no observed price history or basis lands in "unknown", never silently
+        dropped.
         """
         target = asset.upper() if asset else None
         rules = self._alert_store.list(asset=target)
+        if not rules:
+            return self._with_source_budget(self._empty_alert_result())
+        try:
+            snapshot = self.reader.snapshot()
+        except ZerionAPIError as exc:
+            return _observe_error(exc)
+        return self._with_source_budget(self._alerts_from_snapshot(snapshot, rules))
+
+    @staticmethod
+    def _empty_alert_result() -> Dict[str, Any]:
+        return {
+            "status": "ok",
+            "boundary": "calculate",
+            "fired": [],
+            "not_fired": [],
+            "unknown": [],
+            "not_financial_advice": NOT_FINANCIAL_ADVICE,
+        }
+
+    def _alerts_from_snapshot(
+        self,
+        snapshot: PortfolioSnapshot,
+        rules: Sequence[AlertRule],
+        *,
+        analyses: Optional[Dict[str, Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Evaluate alert rules from one shared wallet observation."""
+        if not rules:
+            return self._empty_alert_result()
         fired: List[Dict[str, Any]] = []
         not_fired: List[Dict[str, Any]] = []
         unknown: List[str] = []
 
         distinct_assets = sorted({rule.asset for rule in rules})
-        analyses: Dict[str, Dict[str, Any]] = {}
+        analysis_cache: Dict[str, Dict[str, Any]] = dict(analyses or {})
         pnls: Dict[str, Dict[str, Any]] = {}
         for a in distinct_assets:
-            analyses[a] = self.analyze_asset(a)
+            if a not in analysis_cache:
+                analysis_cache[a] = self._analysis_from_snapshot(snapshot, a)
             if any(r.asset == a and r.kind == "price_pct_below_cost_basis" for r in rules):
-                pnls[a] = self.get_pnl(asset=a)
+                pnls[a] = self._pnl_from_snapshot(snapshot, asset=a)
 
         for rule in rules:
-            analysis = analyses[rule.asset]
+            analysis = analysis_cache[rule.asset]
             if analysis["status"] != "ok":
                 unknown.append(f"could not observe {rule.asset} for rule {rule.id}")
                 continue
@@ -623,6 +693,43 @@ class ReadOnlyHost:
             "unknown": unknown,
             "not_financial_advice": NOT_FINANCIAL_ADVICE,
         }
+
+    def build_report_data(self) -> Dict[str, Any]:
+        """Observe once, then derive every watch-report panel from that snapshot."""
+        try:
+            snapshot = self.reader.snapshot()
+        except ZerionAPIError as exc:
+            return _observe_error(exc)
+
+        snapshot_json = snapshot.model_dump(mode="json")
+        pnl = self._pnl_from_snapshot(snapshot)
+        analyses: Dict[str, Dict[str, Any]] = {}
+        windows: Dict[str, Dict[str, Any]] = {}
+        for holding in snapshot.holdings:
+            asset = holding.asset
+            analysis = self._analysis_from_snapshot(snapshot, asset)
+            analyses[asset] = analysis
+            windows[asset] = self._window_from_analysis(
+                analysis,
+                risk_profile="balanced",
+                amount_usd=None,
+            )
+        alerts = self._alerts_from_snapshot(
+            snapshot,
+            self._alert_store.list(),
+            analyses=analyses,
+        )
+        return self._with_source_budget(
+            {
+                "status": "ok",
+                "boundary": "report",
+                "snapshot": snapshot_json,
+                "pnl": pnl,
+                "analyses": analyses,
+                "windows": windows,
+                "alerts": alerts,
+            }
+        )
 
     def parse_dca_request(self, text: str) -> Dict[str, Any]:
         parsed = parse_dca_request(text)
@@ -727,6 +834,8 @@ def _observe_error(exc: ZerionAPIError) -> Dict[str, Any]:
     """Typed, credential-free observe failure. No fixture fallback happens here."""
     if isinstance(exc, ZerionAPIAuthError):
         kind = "authorization"
+    elif isinstance(exc, ZerionAPIBudgetError):
+        kind = "budget"
     elif isinstance(exc, ZerionAPIPaymentError):
         # x402 payment rejected or settlement failed. Not retryable blindly:
         # retrying spends money again for the same failure.

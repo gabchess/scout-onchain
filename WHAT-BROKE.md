@@ -9,7 +9,6 @@ This file records important limits so the release is not mistaken for a producti
 - `retry_after_seconds` on rate-limit errors is exposed for callers. The API-key transport adds no retry loop. The x402 SDK performs its payment resend and can attempt recovery within one top-level request.
 - Positions and transactions responses are mapped defensively: a position with no resolvable symbol, or a transaction with an unmapped operation type, an unmapped transfer direction, or a missing quantity/value, is skipped with a logged warning rather than guessed at.
 - DCA parsing and previews do not submit, sign, execute, or verify settlement. A preview is not evidence that an order occurred.
-- The package contains a fake execution adapter for isolated domain behavior; it is not connected to the host or MCP server and does not touch funds.
 - No production deployment, uptime target, support SLA, investment advice, or Zerion endorsement is claimed.
-- x402 limits each payment, with no cumulative session budget. One snapshot can make 21 top-level API requests at the default page limit. The SDK can make an extra paid recovery attempt inside one request. `watch` blocks x402 until a cumulative budget exists.
+- x402 reserves against a process-lifetime budget before every payment payload. One nominal maximum-page snapshot can make 21 top-level API requests. SDK recovery consumes another reservation and can exhaust the budget before the snapshot completes.
 - x402 tests build the real SDK session offline. No live paid request is verified by this repository.

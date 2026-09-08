@@ -1,55 +1,34 @@
 # Changelog
 
-## Unreleased
-
-### Fixed
-
-- Regenerated `uv.lock` for 0.4.0 and added CI coverage for lock drift and the real x402 SDK import contract.
-- Mapped SDK payment-flow failures to non-retryable `payment` errors without exposing raw exception text.
-- Blocked the multi-read `watch` report in x402 mode until Scout has a cumulative spend budget.
-- Rebuilt the release archive contract around the complete portable tree, archive-local checksums, local-link checks, and deterministic extracted smoke tests.
-- Corrected stale aggregate-adapter, tool-count, Codex-runtime, alert-side-effect, and x402 authority claims.
-
-### Changed
-
-- Compressed the README and install guide around the user action, current boundary, and verified host routes.
-
 ## 0.4.0 - 2026-09-08
 
-Adds an optional x402 pay-per-call route to the read-only Zerion source. Same
-endpoints, same read-only boundary; access is paid per request in USDC on Base
-instead of authorized by API key.
+Makes Scout a clean, portable onchain portfolio manager for agent hosts. This release adds bounded x402 analytics access and keeps DCA work at proposal.
 
 ### Added
 
-- `src/scout_portfolio_manager/x402_source.py`: x402-backed transport for
-  `ZerionAPIReader`. Enabled by `ZERION_X402_PRIVATE_KEY` +
-  `ZERION_WALLET_ADDRESS`. Per-payment spend cap via
-  `ZERION_X402_MAX_USD_PER_CALL` (default `$0.05`), enforced by the x402 SDK
-  before any payment is signed.
-- `ZerionAPIPaymentError` and a typed `payment` observe-error kind for HTTP
-  402 responses. Scout adds no retry loop after the SDK returns a failure.
-- Optional dependency group `x402` (`pip install -e '.[x402]'`): the Coinbase
-  x402 Python SDK and `eth-account`. The default install stays
-  dependency-light.
-- `docs/X402.md`: setup, boundaries, cost math, and error handling for the
-  pay-per-call mode.
-- `tests/test_x402_source.py`: env gating, exclusive-mode conflict, spend-cap
-  validation, typed transport errors, and credential-free error text, all
-  offline against an injected session.
+- Optional x402 transport for Zerion analytics reads, enabled by `ZERION_X402_PRIVATE_KEY` and `ZERION_WALLET_ADDRESS`.
+- Per-payment and process-lifetime x402 budgets. The defaults are `$0.05` and `$1.05`.
+- Typed `payment` and `budget` observe errors with credential-safe messages.
+- Offline coverage for the real x402 SDK hook, SDK recovery accounting, and budget exhaustion.
 
 ### Changed
 
-- `ZerionAPIConfig.api_key` accepts `None` for x402 mode; the reader sends no
-  `Authorization` header when the key is absent.
-- `zerion_api.reader_from_env` routes to the x402 source when
-  `ZERION_X402_PRIVATE_KEY` is set. Setting both it and `ZERION_API_KEY` is a
-  startup error: one authorization mode per source.
+- The watch report now shares one wallet snapshot across every panel and supports x402 with visible budget status.
+- Portfolio skills now route holdings, PnL, market context, DCA proposals, and local alert requests from one product contract.
+- DCA remains an approval-required proposal in fixture, API-key, and x402 configurations.
+- CI uses current major versions for GitHub checkout and Python setup actions.
+- Release packaging checks generated host files, local links, checksums, extracted smoke behavior, and reproducible bytes.
 
-### Trade boundary
+### Removed
 
-- Scout has no trade tool. The operator's dedicated x402 wallet signs data-fee
-  payments. The observed wallet never signs.
+- Unwired execution, settlement, ledger, intent, and duplicate reporting scaffolding.
+- Stale partner-facing copy and claims that x402 lacked a cumulative budget.
+
+### Limits
+
+- Market indicators use bundled synthetic price history with low confidence.
+- Scout 0.4.0 does not fetch swap quotes or execute DCA trades.
+- No paid live x402 request is verified by this repository.
 
 ## 0.3.3 - 2026-09-07
 
