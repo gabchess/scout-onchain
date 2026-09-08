@@ -2,9 +2,7 @@
 
 AlertStore persists rules to one local JSON file so a fresh `/loop` process
 (one process per tick) doesn't silently forget every rule between ticks. No
-locking: single-process, on-demand use only, matching the "no daemon"
-constraint (a concurrent multi-client store is a design question out of this
-ticket's scope; see TA-04's escalation trigger).
+locking: this store supports single-process, on-demand use only.
 """
 
 import json
@@ -29,7 +27,7 @@ class AlertRule(BaseModel):
 class AlertStore:
     """Reads/writes one JSON file of AlertRule records."""
 
-    def __init__(self, path: Union[str, Path]):
+    def __init__(self, path: Union[str, Path]) -> None:
         self.path = Path(path)
 
     def _read_all(self) -> List[AlertRule]:

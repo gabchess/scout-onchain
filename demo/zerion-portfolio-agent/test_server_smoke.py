@@ -1,8 +1,8 @@
 """Smoke tests for the demo HTTP server.
 
 Starts the real ``DemoHandler`` on an ephemeral port (never the hardcoded
-8787, to avoid CI port collisions) and exercises the four endpoints named in
-the demo's own README, plus two safety properties: a non-dict JSON body
+8787, to avoid CI port collisions) and exercises the endpoints named in the
+demo's own README, plus two safety properties: a non-dict JSON body
 returns 400 instead of crashing the request thread, and the server binds
 only to 127.0.0.1.
 

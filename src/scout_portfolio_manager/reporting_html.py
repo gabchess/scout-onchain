@@ -5,9 +5,7 @@ here: this runs with no server behind it, unlike the interactive demo. The
 demo's app.js is not reused (it fetches client-side); this module inlines
 already-computed tool output server-side instead. Visual structure and CSS
 classes are adapted from demo/zerion-portfolio-agent/static/{index.html,
-styles.css} per that ticket's escalation trigger: copied and trimmed into
-this module's own inline <style> block rather than editing the demo in
-place, so the interactive demo's own styling never risks breaking.
+styles.css} and inlined here.
 """
 
 from __future__ import annotations
@@ -22,6 +20,10 @@ from .mcp_server import build_host
 from .zerion_api import ZerionConfigError
 
 DEFAULT_REPORT_PATH = "scout-report.html"
+X402_WATCH_BLOCKED = (
+    "watch is disabled for x402 sources because one report makes multiple paid "
+    "snapshot calls and Scout has no cumulative spend budget"
+)
 
 
 def _esc(value: Any) -> str:
@@ -30,14 +32,14 @@ def _esc(value: Any) -> str:
 
 def _usd(value: Optional[float]) -> str:
     if value is None:
-        return "&mdash;"
+        return "n/a"
     sign = "-" if value < 0 else ""
     return f"{sign}${abs(value):,.2f}"
 
 
 def _pct(value: Optional[float]) -> str:
     if value is None:
-        return "&mdash;"
+        return "n/a"
     sign = "+" if value >= 0 else ""
     return f"{sign}{value:.2f}%"
 
@@ -68,7 +70,7 @@ _STYLE = """
   --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
   --bg-inset: rgba(6, 0, 60, 0.55);
   --text-dim: rgba(240, 240, 240, 0.62);
-  --attention: var(--zr-digital);
+  --attention: var(--zr-blue);
   --tint-mint-fill: rgba(63, 253, 238, 0.12);
   --tint-mint-line: rgba(63, 253, 238, 0.4);
   --tint-peach-fill: rgba(255, 117, 131, 0.12);
@@ -356,12 +358,12 @@ def _render_asset_ta_block(asset: str, analysis: Dict[str, Any], window: Dict[st
     range_low = _usd(range30.get("low"))
     range_high = _usd(range30.get("high"))
     rsi_14 = indicators.get("rsi_14")
-    rsi_html = "&mdash;" if rsi_14 is None else _esc(rsi_14)
+    rsi_html = "n/a" if rsi_14 is None else _esc(rsi_14)
     stats = (
         _stat("SMA 20", _usd(indicators.get("sma_20")))
         + _stat("EMA 12", _usd(indicators.get("ema_12")))
         + _stat("RSI 14", rsi_html)
-        + _stat("30d range", f"{range_low} &ndash; {range_high}")
+        + _stat("30d range", f"{range_low} to {range_high}")
         + _stat("Drawdown vs basis", _pct(drawdown), _sign_class(drawdown))
         + _stat("DCA window", _esc(window.get("label", "n/a")))
     )
@@ -479,23 +481,23 @@ def render_report(
       <div class="brand-mark" aria-hidden="true"></div>
       <div class="brand-text">
         <h1>Scout</h1>
-        <p>Full observe-through-alert report, generated {observed_at}</p>
+        <p>Portfolio report generated {observed_at}</p>
       </div>
     </div>
     <div class="topbar-badges">
-      <span class="badge badge-readonly">READ-ONLY</span>
+      <span class="badge badge-readonly">NO TRADE</span>
       <span class="badge badge-fixture">{source_kind.upper()} DATA</span>
     </div>
   </header>
 
   <section class="pipeline" aria-label="Agent boundary pipeline">
     <span class="stage stage-on">observe</span>
-    <span class="arrow">&rarr;</span>
+    <span class="arrow">then</span>
     <span class="stage stage-on">calculate</span>
-    <span class="arrow">&rarr;</span>
+    <span class="arrow">then</span>
     <span class="stage stage-on">propose</span>
-    <span class="arrow arrow-cut">&#8674;</span>
-    <span class="stage stage-off">execute &#128274;</span>
+    <span class="arrow arrow-cut">stop</span>
+    <span class="stage stage-off">execute unavailable</span>
     <span class="pipeline-note">
       Read-only. No execute, sign, or submit tool exists in this chain.
     </span>
@@ -527,6 +529,8 @@ def render_report(
 
 def build_report(host: ReadOnlyHost) -> str:
     """Run the full observe-through-alert chain once and render the report."""
+    if getattr(host.reader, "authorization_mode", None) == "x402":
+        raise RuntimeError(X402_WATCH_BLOCKED)
     snapshot_result = host.get_portfolio_snapshot()
     snapshot = snapshot_result.get("snapshot", {})
     pnl = host.get_pnl()

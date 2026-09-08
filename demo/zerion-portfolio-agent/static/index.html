@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scout: Zerion portfolio-manager agent demo</title>
+  <title>Scout portfolio demo</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -13,8 +13,8 @@
       <div class="brand-text">
         <h1>Scout</h1>
         <p>
-          A read-only agent for one wallet. It watches, calculates, analyzes,
-          and proposes a DCA plan. You approve.
+          Ask what one wallet owns and how it performed. Requests stop at
+          preview.
         </p>
       </div>
     </div>
@@ -41,7 +41,7 @@
       </section>
 
       <section class="card" id="ta-card">
-        <div class="card-head"><h2>This week</h2></div>
+        <div class="card-head"><h2>Current signal</h2></div>
         <div class="card-body" id="ta-body">
           <p class="loading">Loading&hellip;</p>
         </div>
@@ -57,9 +57,9 @@
 
     <div class="col">
       <section class="card" id="dca-windows-card">
-        <div class="card-head"><h2>Buy window</h2></div>
+        <div class="card-head"><h2>DCA context</h2></div>
         <div class="card-body">
-          <label class="risk-label" for="risk-profile-select">Risk</label>
+          <label class="risk-label" for="risk-profile-select">Sizing profile</label>
           <select id="risk-profile-select" aria-label="Risk profile">
             <option value="conservative">Conservative</option>
             <option value="balanced" selected>Balanced</option>
@@ -104,7 +104,7 @@
         <div class="card-head"><h2>Full report</h2></div>
         <div class="card-body">
           <a class="report-link" href="/api/report" target="_blank" rel="noopener">
-            Download report
+            Open report
           </a>
         </div>
       </section>

@@ -75,8 +75,7 @@ DEFAULT_ALERTS_PATH = Path(".scout") / "alerts.json"
 DEFAULT_MAX_PRICE_AGE_DAYS = 2
 
 #: analyze_asset and dca_windows never claim more than this. Nothing here is
-#: backtested, so confidence is a fixed constant, not a computed one (see
-#: docs/spec-scout-ta-and-watch-0.3.0.md's non-obvious decisions).
+#: backtested, so confidence is a fixed constant, not a computed one.
 TA_CONFIDENCE = "low"
 TA_DISCLOSURE = "Heuristic indicators, not backtested; treat as descriptive, not predictive."
 

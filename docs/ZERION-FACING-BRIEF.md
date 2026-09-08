@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This repository explores a portable, read-only portfolio-intelligence surface for agentic financial workflows: typed portfolio observations, explainable PnL, explicit DCA intent clarification, and approval-required previews.
+This repository explores a portable portfolio-intelligence surface for agent workflows. It reads portfolio data, explains PnL, clarifies DCA intent, and stops at preview.
 
 ## Available evidence
 
-The repository includes a synthetic fixture, a read-only host, an optional aggregate Zerion API adapter, an optional read-only MCP server, and tests for the documented behavior. The fixture is not a Zerion API response. API-backed behavior depends on the configured account, endpoint contract, authorization, and network availability.
+The repository includes a synthetic fixture, an eight-tool host, a Zerion positions and transactions adapter, and stdio MCP. Tests cover documented behavior offline. API-backed behavior depends on the configured access, endpoint contract, and network.
 
 ## What this project does not claim
 
@@ -14,6 +14,5 @@ This repository does not make claims about Zerion's architecture, SLOs, customer
 
 ## Questions for an integration owner
 
-- Which portfolio fields and freshness indicators are appropriate for an agent contract?
-- How should cost basis and quote expiry be represented when the data source is aggregate?
-- What authorization, rate-limit, and error semantics should an approved integration expose?
+- Which portfolio fields, freshness indicators, and cost-basis gaps belong in an agent contract?
+- What authorization, rate-limit, quote-expiry, and error semantics should an approved integration expose?

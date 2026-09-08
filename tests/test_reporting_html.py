@@ -1,4 +1,7 @@
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from scout_portfolio_manager.host import ReadOnlyHost
 from scout_portfolio_manager.reporting_html import build_report, render_report
@@ -104,3 +107,11 @@ def test_build_report_runs_the_full_chain_against_real_fixtures():
     html = build_report(host)
     assert "<html" in html
     assert "ETH" in html
+
+
+def test_build_report_blocks_x402_without_a_cumulative_budget():
+    fake_reader = SimpleNamespace(authorization_mode="x402")
+    host = ReadOnlyHost(fake_reader)
+
+    with pytest.raises(RuntimeError, match="no cumulative spend budget"):
+        build_report(host)

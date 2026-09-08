@@ -22,8 +22,8 @@ from pathlib import Path
 MANIFEST_FILENAME = "documentation-manifest.json"
 FORMAT = "cd-documentation-manifest/v1"
 CLAIM_BOUNDARY = (
-    "Fixture is the default; live Zerion is optional and read-only; "
-    "host and MCP have no execute, sign, or submit tool."
+    "Fixture is the default; Zerion observes one wallet; x402 can sign and pay "
+    "data fees; host and MCP have no trade execution tool."
 )
 
 

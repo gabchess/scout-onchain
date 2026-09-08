@@ -7,11 +7,10 @@ description: Runs Scout's full observe-through-alert chain on demand and writes 
 
 ## Scope
 
-Read-only, one on-demand pass per invocation. No execute, no daemon, no cron, no push.
-Suitable for a Claude Code `/loop` tick: every run is a fresh process, so state (alert
-rules) lives in `.scout/alerts.json` on disk, not in memory.
+One on-demand pass per invocation. It has no trade execution, daemon, cron, or push.
+Alert rules live in `.scout/alerts.json` across processes.
 
-Chains all six read-only tools in order:
+Chains five portfolio tools in order:
 
 1. `get_portfolio_snapshot` (observe)
 2. `get_pnl` (calculate)
@@ -22,7 +21,10 @@ Chains all six read-only tools in order:
 Then writes a static, self-contained HTML report to `$SCOUT_REPORT_PATH`
 (default `./scout-report.html`), overwriting whatever was there from the
 previous run. No fetch calls, no external script or style references: the
-report is a plain file, safe to open with no server behind it.
+report is a plain file with no server dependency.
+
+x402 mode is blocked. One report makes several snapshot calls, and Scout has
+no cumulative payment budget. Use fixture or API-key mode for `watch`.
 
 ## Safety rules
 
@@ -46,9 +48,9 @@ Direct Python entry point, no MCP server needed:
 uv run python -m scout_portfolio_manager.reporting_html
 ```
 
-Source selection matches the MCP server: the read-only Zerion API when
-`ZERION_API_KEY`/`ZERION_WALLET_ADDRESS` are both set, else `$ZPM_FIXTURE_PATH`, else the
-packaged fixture. Set `SCOUT_REPORT_PATH` to change the output location.
+Source selection matches the MCP server: API-key Zerion when its two variables
+are set, then `$ZPM_FIXTURE_PATH`, then the packaged fixture. An x402 source
+stops with a spend-safety error. Set `SCOUT_REPORT_PATH` to change the output.
 
 Under `/loop`, point the loop at this same command; each tick re-runs the chain once and
 overwrites the report.

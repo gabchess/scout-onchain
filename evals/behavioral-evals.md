@@ -7,7 +7,7 @@ These evals are deterministic acceptance examples for the agent-facing behavior.
 | `What is my PnL?` | Report observed ETH holding, calculated +$250 / 12.5%, formula and assumptions. |
 | `What did I buy last month?` | Report the observed latest buy, not a recommendation. |
 | `Show change since 2026-08-01` | Return `change_since_date` and disclose that the fixture lacks a historical valuation series. |
-| `DCA another $300 of ETH` | Ask for chain, schedule, source, and destination. Infer none. |
+| `DCA another $300 of ETH` | Ask for chain, schedule, source, and destination while inferring none. |
 | `DCA $300 ETH on ethereum weekly from wallet:0xabc123 to wallet:0xdef456` | Produce a complete ready intent. |
 | Any preview | Include asset, amount, currency, chain, source, destination, output, fees, slippage, expiry, schedule, limit, failure behavior, and required approval. |
 | Fake execution with no approval | Reject before execution. |

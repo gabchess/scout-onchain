@@ -8,10 +8,9 @@ receives the data. Zerion documents this as an alternative authorization
 method for the same endpoints, so this module reuses ``ZerionAPIReader``
 unchanged and only swaps the transport.
 
-Scout stays read-only. The only money that moves is the operator-configured
-payment wallet's per-call data fee, bounded by a client-side spend cap that
-the x402 SDK enforces before any payment payload is signed. The observed
-wallet (``ZERION_WALLET_ADDRESS``) is never asked to sign anything.
+The observed wallet remains an address-only input. A separate operator-funded
+payment wallet signs USDC data fees. The x402 SDK enforces a per-payment cap;
+Scout has no cumulative spend budget.
 
 Enable with ``ZERION_X402_PRIVATE_KEY`` + ``ZERION_WALLET_ADDRESS``. Setting
 both ``ZERION_API_KEY`` and ``ZERION_X402_PRIVATE_KEY`` is a configuration
@@ -23,6 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from decimal import Decimal, InvalidOperation
 from typing import Any, Mapping, Optional
 from urllib.request import Request
 
@@ -49,9 +49,7 @@ logger = logging.getLogger(__name__)
 X402_KEY_ENV = "ZERION_X402_PRIVATE_KEY"
 X402_MAX_ENV = "ZERION_X402_MAX_USD_PER_CALL"
 
-#: Default per-call spend cap. Zerion prices x402 calls at about $0.01 each;
-#: the cap leaves headroom for price changes while bounding worst-case loss
-#: per request. The x402 SDK enforces it before signing anything.
+#: Default per-payment spend cap. The x402 SDK enforces it before signing.
 DEFAULT_MAX_USD_PER_CALL = "$0.05"
 
 #: Money strings the x402 SDK accepts and we accept: "$" plus a positive
@@ -61,7 +59,7 @@ _MONEY_RE = re.compile(r"^\$(0|[1-9][0-9]*)(\.[0-9]+)?$")
 
 
 def parse_max_usd_per_call(value: str) -> str:
-    """Validate a per-call USD cap like ``$0.05``; return it unchanged.
+    """Validate a per-payment USD cap like ``$0.05``; return it unchanged.
 
     Raises ZerionConfigError on anything that is not a positive USD money
     string, so the spend cap can never silently degrade to "no cap".
@@ -71,8 +69,11 @@ def parse_max_usd_per_call(value: str) -> str:
             f"{X402_MAX_ENV} must be a positive USD amount like "
             f"{DEFAULT_MAX_USD_PER_CALL}; got an invalid value"
         )
-    amount = float(value.strip()[1:])
-    if amount <= 0:
+    try:
+        amount = Decimal(value.strip()[1:])
+    except InvalidOperation:
+        raise ZerionConfigError(f"{X402_MAX_ENV} must be a valid USD amount") from None
+    if not amount.is_finite() or amount <= 0:
         raise ZerionConfigError(f"{X402_MAX_ENV} must be greater than zero")
     return value.strip()
 
@@ -83,8 +84,8 @@ def build_payment_session(
     """Build a requests Session that settles x402 payments automatically.
 
     Lazy-imports the optional ``x402`` SDK so the default install stays
-    dependency-free. The private key never leaves this function: it is not
-    logged, not stored on any Scout object, and not included in errors.
+    dependency-free. The returned SDK session retains signing authority for
+    its lifetime. Scout does not log the key or include it in returned errors.
     """
     try:
         from eth_account import Account
@@ -108,19 +109,41 @@ def build_payment_session(
     return x402_requests(client)
 
 
+def _is_x402_payment_error(exc: Exception) -> bool:
+    """Identify SDK payment-flow failures without requiring x402 by default."""
+    try:
+        from x402.http.clients.requests import PaymentError
+    except ImportError:
+        return False
+    return isinstance(exc, PaymentError)
+
+
 def x402_transport(session: Any) -> Transport:
     """Adapt an x402-wrapped requests Session to the reader's transport slot.
 
     Mirrors ``ZerionAPIReader._request``'s typed-error contract so the host's
     observe boundary reports x402 failures with the same error kinds. A 402
-    that reaches this layer means the SDK already attempted payment and it
-    was rejected or failed to settle; it is never retried here.
+    that reaches this layer means the SDK could not complete the paid request.
+    Scout adds no retry loop around that result.
     """
 
     def transport(request: Request, timeout: float) -> Mapping[str, Any]:
         try:
-            response = session.get(request.full_url, timeout=timeout)
+            response = session.get(
+                request.full_url,
+                headers=dict(request.header_items()),
+                timeout=timeout,
+            )
         except Exception as exc:
+            if _is_x402_payment_error(exc):
+                # A signed request may already have reached the facilitator.
+                # Require inspection before another attempt. The raw SDK error
+                # can contain provider or signer detail, so do not chain it.
+                raise ZerionAPIPaymentError(
+                    "Zerion x402 payment could not be prepared or settled; "
+                    "inspect payment state before retrying",
+                    status=402,
+                ) from None
             raise ZerionAPITransportError("Zerion API x402 transport failed") from exc
         status = getattr(response, "status_code", None)
         if status == 200:
@@ -158,6 +181,8 @@ def x402_transport(session: Any) -> Transport:
                 status=status,
                 retry_after_seconds=ZerionAPIReader._parse_retry_after(headers),
             )
+        if not isinstance(status, int):
+            raise ZerionAPITransportError("Zerion API returned a response without HTTP status")
         raise ZerionAPIError(f"Zerion API returned HTTP {status}", status=status)
 
     return transport
@@ -189,11 +214,6 @@ def reader_from_env(
             f"{X402_KEY_ENV} and {WALLET_ENV} must both be set to enable the "
             f"x402 Zerion source; {WALLET_ENV} is missing. The fixture is not "
             "used as a fallback."
-        )
-    if not x402_key:
-        raise ZerionConfigError(
-            f"{X402_KEY_ENV} and {WALLET_ENV} must both be set to enable the "
-            f"x402 Zerion source; {X402_KEY_ENV} is missing."
         )
     max_usd = parse_max_usd_per_call(
         (environ.get(X402_MAX_ENV) or "").strip() or DEFAULT_MAX_USD_PER_CALL

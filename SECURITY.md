@@ -1,24 +1,32 @@
 # Security
 
-## Product boundary
+## Authority boundary
 
-- The default fixture and host are read-only.
-- The MCP server registers observation, calculation, parsing, and preview tools only.
-- No component connects a wallet, signs, submits, or executes a transaction.
-- The optional Zerion adapter performs a read-only aggregate portfolio request; it does not expose an execution rail.
-- The optional x402 mode (`ZERION_X402_PRIVATE_KEY`) settles per-request data fees from a dedicated payment wallet. It is the only signing the product does, it is capped client-side before signing (default `$0.05` per call), and the observed wallet never signs. Treat the payment wallet key as a hot secret: dedicated wallet, minimal balance.
-- A preview is a proposal and must not be represented as a completed transaction.
-- `analyze_asset`, `dca_windows`, `set_alert`, and `check_alerts` are read-only; their output is heuristic, not investment advice.
+The host and MCP server expose observation, calculation, parsing, preview, analysis, and alert tools. They contain no wallet connection or trade execution path. A DCA preview is a proposal with `approval_state=required`.
+
+`set_alert` is the one MCP tool with a local side effect. It writes rule data to `.scout/alerts.json`. It does not schedule work or send notifications.
+
+The Zerion source reads positions and mapped transactions for one address. Authorization has two modes:
+
+| Mode | Secret | Authorized action |
+|:--|:--|:--|
+| API key | `ZERION_API_KEY` | Read Zerion endpoints |
+| x402 | `ZERION_X402_PRIVATE_KEY` | Sign and pay USDC data fees on Base |
+
+The observed wallet never signs. The x402 payment wallet does. Its default cap is `$0.05` per payment, with no cumulative session cap. The SDK can attempt paid recovery inside one top-level request. Use a dedicated wallet with a small balance. Inspect payment state before retrying an ambiguous failure.
+
+Asset indicators and DCA windows use synthetic price history. They are heuristic and have fixed low confidence.
 
 ## Secrets and data
 
-- Never commit or paste API keys, private keys, seed phrases, or wallet secrets into source, fixtures, prompts, logs, or issue reports.
-- Configure API credentials through a customer-controlled secret manager or environment supplied by the host.
-- Contract validation rejects unknown fields, reducing the chance of accidentally carrying secret-bearing payloads.
-- Fixture data is synthetic. Do not replace it with personal wallet data in tests or examples.
+Keep API keys, private keys, seed phrases, and wallet secrets in a host-controlled secret manager or environment. Keep them out of source, fixtures, prompts, logs, and issue reports.
 
-## Reporting a vulnerability
+The package suppresses credential values in its errors and representations. The host, operating system, network stack, x402 SDK, and API provider have their own logging and retention behavior.
 
-Do not open a public issue containing credentials, personal wallet data, or an exploitable vulnerability. Contact the repository maintainers through the private security channel configured for the deployment or organization that runs this project. If no private channel has been provided, open a minimal public issue requesting a security contact without including sensitive details.
+Fixture data is synthetic. Real wallet addresses appear in Zerion request paths and snapshot results.
 
-This repository does not promise a response time or a supported production service. See [`SUPPORT.md`](SUPPORT.md) for general questions.
+## Report a vulnerability
+
+Use the private security channel configured by the operator or repository owner. If none exists, open a minimal issue asking for a security contact. Exclude exploit details, credentials, and personal wallet data.
+
+This repository has no response-time or production-support promise. See [`SUPPORT.md`](SUPPORT.md).

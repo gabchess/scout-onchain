@@ -157,16 +157,16 @@
     {
       "id": "install-markers",
       "prompt": "I copied the repository. Is Scout installed and ready?",
-      "rubric": "Repository discovery is not installation. Installation evidence includes the Optional MCP server and Tools registered markers.",
-      "output": "Not yet: discovery or copying is not installation. Complete an install route, then verify the \"Optional MCP server\" and \"Tools registered\" markers before claiming Scout is ready.",
+      "rubric": "A repository copy is setup input. Installation evidence requires a completed host route and an observed MCP tool list.",
+      "output": "Copying the repository is only setup input. Follow START-HERE.md for your host, restart it, then confirm the scout-portfolio MCP server exposes eight tools.",
       "checks": [
         {
           "type": "contains_all",
           "values": [
-            "discovery or copying is not installation",
-            "Optional MCP server",
-            "Tools registered",
-            "before claiming Scout is ready"
+            "only setup input",
+            "START-HERE.md",
+            "restart",
+            "eight tools"
           ]
         }
       ]

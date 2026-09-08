@@ -1,7 +1,7 @@
 # Show me: runtime shape
 
 ```text
-Synthetic fixture (default) or optional read-only API source
+Synthetic fixture (default) or optional Zerion source
   -> ReadOnlyHost.get_portfolio_snapshot()
   -> PortfolioSnapshot
   -> ReadOnlyHost.get_pnl()
@@ -22,6 +22,6 @@ The important boundary is:
 proposal != submission != confirmation != verification
 ```
 
-The host and MCP server do not connect to a wallet, sign, submit, or execute. The optional API adapter only observes an aggregate portfolio.
+The host and MCP server have no observed-wallet connection, trade-signing, submission, or execution path. Zerion mode reads per-asset positions and mapped transactions. x402 can sign and pay data fees from a separate payment wallet.
 
-Execution boundary: not implemented in this host. A DCA request ends at a complete, approval-required preview. Wallet handoff and execution are a future product direction, not a current capability.
+Execution boundary: not implemented in this host. A DCA request ends at a complete, approval-required preview. Wallet connection and execution are outside the current capability.

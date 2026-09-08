@@ -29,16 +29,18 @@ The 0.1.0 release's optional Zerion source returned a single synthetic aggregate
 
 **Recovery:** upgrade to 0.2.0 or later. There is no in-place migration; the 0.1.0 aggregate-only adapter is superseded, not configurable.
 
-## Open caveats (not a version-to-version regression)
+## Current caveats
 
-The `quantity` field shape on Zerion's positions and transactions responses (a bare float versus a `{"float": ...}` object) is unconfirmed against a real live payload as of this release. `_numeric_amount()` accepts both shapes defensively, but a live 429 rate limit was hit during development before this could be checked, and the one successful live transactions call used a wallet with zero items either way. If a live response fails to parse a `quantity` field, preserve the exact error and the (secret-scrubbed) response shape before opening an issue; see [`WHAT-BROKE.md`](WHAT-BROKE.md) for the full, current list of known limits.
+The parser accepts both a bare numeric `quantity` and Zerion's `{"float": ...}` object. Prior development inspection confirmed the object form. Current live compatibility remains outside CI. Preserve a secret-scrubbed response shape if mapping fails.
+
+x402 has a per-payment cap and no cumulative budget in 0.4.0. The `watch` report blocks x402 because it repeats snapshot reads. Paid integration status remains live unverified; see [`docs/X402.md`](docs/X402.md).
 
 ## Before opening an issue
 
 - Reproduce with the default synthetic fixture where possible.
 - Include the command, Python version, package version, and a minimal, complete error message.
 - Remove API keys, private keys, seed phrases, wallet addresses, and other personal data.
-- For API-backed behavior, note that the adapter is read-only and depends on the configured Zerion account and endpoint access.
+- For API-backed behavior, note the authorization mode and configured Zerion endpoint access.
 
 ## Questions and bugs
 

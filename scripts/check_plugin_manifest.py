@@ -7,15 +7,11 @@ import tomllib
 from pathlib import Path
 
 EXPECTED_ENTRY_POINT = "scout_portfolio_manager.mcp_server:main"
-EXPECTED_TOOLS = (
-    "get_portfolio_snapshot",
-    "get_pnl",
-    "parse_dca_request",
-    "preview_dca",
-    "analyze_asset",
-    "dca_windows",
-    "set_alert",
-    "check_alerts",
+README_MARKERS = (
+    "START-HERE.md",
+    "zpm-mcp",
+    "docs/X402.md",
+    "no cumulative spend cap",
 )
 
 
@@ -38,12 +34,9 @@ def check(root: Path) -> list[str]:
         errors.append(f"project.scripts.zpm-mcp must be {EXPECTED_ENTRY_POINT!r}")
     if "[project.optional-dependencies]" not in pyproject_path.read_text():
         errors.append("pyproject.toml must declare optional dependencies")
-    for marker in ("### Optional MCP server", "zpm-mcp", "Tools registered:"):
+    for marker in README_MARKERS:
         if marker not in readme:
             errors.append(f"README.md is missing plugin documentation marker: {marker}")
-    for tool in EXPECTED_TOOLS:
-        if f"`{tool}`" not in readme:
-            errors.append(f"README.md must document registered tool {tool}")
     return errors
 
 

@@ -1,13 +1,21 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "scout-portfolio-manager"
 version = "0.4.0"
-description = "Fixture-backed read-only portfolio intelligence"
+description = "Portfolio intelligence for AI agents, with fixture and Zerion data sources"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE.md", "LICENSE-STATUS.md"]
 requires-python = ">=3.11"
 dependencies = ["pydantic>=2.5,<3"]
+keywords = ["ai-agent", "mcp", "portfolio", "x402", "zerion"]
+
+[project.urls]
+Repository = "https://github.com/gabchess/scout-onchain"
+Issues = "https://github.com/gabchess/scout-onchain/issues"
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9"]
@@ -49,6 +57,6 @@ exclude = ["^tests/", "^build/"]
 module = ["scout_portfolio_manager.mcp_server"]
 ignore_missing_imports = true
 [[tool.mypy.overrides]]
-module = ["x402.*", "eth_account.*", "web3.*", "requests.*"]
+module = ["x402.*", "eth_account.*"]
 ignore_missing_imports = true
 follow_imports = "skip"

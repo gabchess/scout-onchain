@@ -5,7 +5,7 @@ from .contracts import BasisInput, Transaction
 
 
 class TransactionLedger:
-    def __init__(self):
+    def __init__(self) -> None:
         self._transactions: List[Transaction] = []
         self._basis: Dict[str, BasisInput] = {}
 

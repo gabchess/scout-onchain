@@ -1,5 +1,5 @@
-# zerion-brand-tokens attribution
+# Zerion brand-token attribution
 
-Color and typography values in `demo/zerion-portfolio-agent/static/styles.css` are Zerion's own brand identity, published at `design.zerion.io/color` and `design.zerion.io/typography`. They were transcribed, not designed, by this project's contributors; the source page is cited inline next to each value in the CSS file.
+Color and typography values in `demo/zerion-portfolio-agent/static/styles.css` come from Zerion's published color and typography pages. Project contributors created the semantic roles and layout values.
 
-Semantic role assignment (which Zerion color means "positive" versus "negative" in this demo's UI) and any value explicitly marked as a "house default" in that file are this project's own design decisions, not Zerion's.
+Use of these values does not claim Zerion endorsement.
