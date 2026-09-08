@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "scout-portfolio",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "release_kind": "early-public-release",
   "license": "MIT",
   "default_behavior": "fixture-backed and read-only",
@@ -60,6 +60,12 @@
       "sha256": "2931a9ed0da2dd6b5e3761d24195258c2cf3b3da160ef6702879a7910c569f08",
       "version": "0.3.2",
       "built_at": "2026-09-05T15:21:31Z"
+    },
+    {
+      "path": "dist/scout-portfolio-0.3.3.zip",
+      "sha256": "4c45805590ce7bb53111caaddd9bec8358349ff0161e98790be5cd3b1e340325",
+      "version": "0.3.3",
+      "built_at": "2026-09-08T00:05:18Z"
     }
   ]
 }

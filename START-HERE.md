@@ -1,10 +1,18 @@
 # Start here
 
-Version **0.3.1**.
+Version **0.3.3**.
 
 Give this repository folder or ZIP to your agent and ask it to install Scout from [`START-HERE.md`](START-HERE.md). Discovery is not the same as a successful install: verify tools appear before trusting the host.
 
 Scout is a read-only portfolio intelligence package: fixture-backed by default, with an optional read-only Zerion API adapter. This file is the exact install route for the harness you are on. Pick one.
+
+## The first ask
+
+After any route below, the first thing to say to Scout is:
+
+> **"Show me what I own and what it did."**
+
+That one sentence exercises the core chain: `get_portfolio_snapshot` (observe) then `get_pnl` (calculate), against the fixture unless you configured Zerion. If the host answers with numbers and names its data source, the install worked.
 
 ## What installing this package does and does not authorize
 
@@ -32,9 +40,10 @@ claude plugin install scout-portfolio@scout-portfolio-manager
 /plugin install scout-portfolio@scout-portfolio-manager
 ```
 
-Then try:
+Then try the first ask:
 
 ```text
+/portfolio-intelligence Show me what I own and what it did
 /portfolio-intelligence What is my PnL?
 /portfolio-intelligence Preview a DCA request for $300 of ETH every week
 ```

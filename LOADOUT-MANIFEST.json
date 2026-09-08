@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "product": "scout-portfolio",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "default_source": "synthetic fixture",
   "optional_sources": [
     "read-only Zerion aggregate portfolio API"
@@ -43,7 +43,7 @@
     "alerts": true
   },
   "component_versions": {
-    "product": "0.3.2",
+    "product": "0.3.3",
     "zerion_adapter": "0.2.0",
     "demo_ui": "0.1.0"
   },
