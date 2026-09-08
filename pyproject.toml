@@ -50,4 +50,5 @@ module = ["scout_portfolio_manager.mcp_server"]
 ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["x402.*", "eth_account.*", "web3.*", "requests.*"]
+ignore_missing_imports = true
 follow_imports = "skip"

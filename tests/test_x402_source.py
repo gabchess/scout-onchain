@@ -298,6 +298,7 @@ def test_real_sdk_session_builds_with_spend_cap():
     The key is generated per-run and discarded, so no credential-shaped
     literal ever lands in the repo (the secret scanner would catch one).
     """
+    pytest.importorskip("x402")
     from eth_account import Account
 
     from scout_portfolio_manager.x402_source import build_payment_session
@@ -310,6 +311,7 @@ def test_real_sdk_session_builds_with_spend_cap():
 
 
 def test_real_sdk_rejects_invalid_private_key_without_leaking():
+    pytest.importorskip("x402")
     from scout_portfolio_manager.x402_source import build_payment_session
 
     with pytest.raises(ZerionConfigError) as caught:
