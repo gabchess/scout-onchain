@@ -12,7 +12,7 @@
   <a href="START-HERE.md"><img alt="read-only MCP" src="https://img.shields.io/badge/MCP-read--only-6e7781" /></a>
 </p>
 
-Read-only portfolio intelligence for agents: 8 MCP tools, 264 offline tests, 0 execution paths. Snapshots, explainable USD PnL, DCA clarification, and approval-required previews. Fixture-backed by default; live Zerion is read-only and optional, one wallet.
+Read-only portfolio intelligence for your AI agent: ask what you own, what it did, and what it is worth, in plain language. Scout answers from a safe offline fixture by default; point it at one real wallet (read-only, optional) when you are ready. It can explain PnL, spot DCA windows, and set alerts, but it never signs, sends, or spends anything. Every proposal waits for your approval.
 
 ## What Scout does
 
@@ -61,7 +61,7 @@ uv sync --extra test --extra mcp
 uv run pytest -q
 ```
 
-264 tests, all offline against the fixture. Fixture example: 1 ETH bought at $2,000, valued at $2,250 ($250 unrealized). Synthetic data, not live markets.
+The full suite runs offline against the fixture, no keys, no network. Fixture example: 1 ETH bought at $2,000, valued at $2,250 ($250 unrealized). Synthetic data, not live markets.
 
 ```python
 from scout_portfolio_manager.host import ReadOnlyHost
