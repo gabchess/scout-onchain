@@ -1,0 +1,141 @@
+[
+  {
+    "id": "DFI-02",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. On Arbitrum, a hypothetical Aave-style account has 12 ETH worth $2,000 each, liquidation threshold 80%, and 10,000 units of stablecoin C priced at $1, threshold 85%. Debt is 20,000 units of stablecoin D at $1. Both collateral assets are enabled. Calculate current health factor. Under one simultaneous shock, ETH falls to $1,600, C falls to $0.90, and D rises to $1.05. Calculate stressed HF, the ETH price at HF=1 with the shocked stablecoin prices held fixed, and the D units that must be repaid from outside cash to reach HF=1.30 under the shock. Ignore fees and accrued interest.",
+    "criteria": [
+      {
+        "id": "DFI-02-c1",
+        "description": "Uses sum of collateral value times each asset's liquidation threshold divided by debt market value, including D's 5% appreciation.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-02-c2",
+        "description": "Current HF 1.385 and stressed HF 23010/21000=1.095714, tolerance .001.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-02-c3",
+        "description": "Boundary ETH price $1390.625 within $1 and labels HF=1 as the boundary, with liquidation eligibility below it.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-02-c4",
+        "description": "Required debt repayment is $3300 of stressed debt value, or 3142.857143 D units, within 1 D; does not confuse $3300 with 3300 D.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-02-c5",
+        "description": "Says stressed account remains above the fixture liquidation boundary but the residual buffer is limited.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Current weighted collateral is 24000*.8+10000*.85=27700; HF=1.385. Shock gives 19200*.8+9000*.85=23010 against $21000 debt, HF=1.095714. Solve 12*P*.8+7650=21000, so P=1390.625. Target debt value=23010/1.30=17700, repay $3300/1.05=3142.857143 D units from outside cash. Source supplies the HF mechanism; all thresholds and numerical results are fixture-derived.",
+    "sources": [
+      "https://aave.com/help/borrowing/liquidations"
+    ]
+  },
+  {
+    "id": "DFI-05",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A treasury owes $20,000 in Ethereum-settled dollars tomorrow. It has $8,000 immediately usable Ethereum cash; 7,000 Ethereum stablecoin U that can be sold at $0.98 with a further 1% execution haircut; $10,000 of Arbitrum lending claims, of which only $2,000 can currently be withdrawn; and $15,000 in an OP Mainnet Standard Bridge withdrawal initiated today. For this fixture no fast bridge, credit line, or cross-chain sale can complete before the deadline. Reserve $200 from Ethereum cash for gas. Calculate the amount usable tomorrow and the shortfall. Explain why the balance sheet's headline stablecoin holdings do not settle the obligation and specify a practical reserve policy for future deadlines.",
+    "criteria": [
+      {
+        "id": "DFI-05-c1",
+        "description": "Excludes the OP withdrawal and all Arbitrum holdings from tomorrow's Ethereum liquidity under the explicitly unavailable routing assumption; does not count lending claims as immediately available cash.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-05-c2",
+        "description": "Computes U proceeds 7000*.98*.99=$6791.40, total usable $14591.40 after gas, shortfall $5408.60; tolerance $1.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-05-c3",
+        "description": "Recognizes OP Standard Bridge withdrawal challenge delay, and lending withdrawal dependency on available liquidity.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-05-c4",
+        "description": "Reserve policy matches liability currency, chain and deadline, keeps gas available, and stress-tests conversion discounts or outages; does not merely target an arbitrary allocation percentage.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Tomorrow's usable balance is 8000+7000*.98*.99-200=14591.40, leaving 5408.60 unfunded. OP's standard withdrawal cannot meet a one-day deadline; Arbitrum cash cannot reach the required chain under this fixture even though $2000 is withdrawable there. Reserve sizing should cover dated obligations plus execution headroom in assets and locations that can settle them. Inventory face value alone does not establish liquidity.",
+    "sources": [
+      "https://docs.optimism.io/app-developers/guides/bridging/standard-bridge",
+      "https://www.aave.com/help/supplying/withdraw-tokens"
+    ]
+  },
+  {
+    "id": "DFI-06",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. On Solana, a hypothetical Token-2022 mint has six decimals, an active 150-basis-point transfer fee capped at 100 tokens per transfer, an active permanent delegate controlled by the issuer, and a transfer hook. A route transfers 10,000 tokens from your wallet into an intermediate account and immediately forwards that account's full spendable received amount to the vault. Ignore all other fees. Calculate the spendable amount arriving at the vault. The route simulator then reports that the hook denies the vault transfer. A website says 'the symbol is USDC, so treat it as cash.' Evaluate whether to include the deposit as an executable treasury allocation and what account facts need checking.",
+    "criteria": [
+      {
+        "id": "DFI-06-c1",
+        "description": "Applies min(1.5%*amount,100 tokens) at each of the two transfers: 10000 to 9900 to 9800 spendable tokens, tolerance .000001.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-06-c2",
+        "description": "Does not treat the deposit as executable after the transfer hook simulation denial; models the blocked route rather than assuming a fee adjustment fixes it.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-06-c3",
+        "description": "Identifies the permanent delegate's authority to transfer/burn holders' tokens and that the holder cannot revoke it at their own token account.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-06-c4",
+        "description": "Checks actual mint address, owner token program, extension and authority state, current fee configuration, hook requirements, route/vault support, and uses spendable balance instead of symbol or gross balance.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-06-c5",
+        "description": "Explains withheld transfer fees are separate from recipient spendable funds.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "First fee=min(150,100)=100; intermediate receives 9900 spendable. Second fee=min(148.5,100)=100; modeled vault receipt is 9800 only if the route executes. Here the hook denial blocks completion. The issuer's permanent delegate can transfer or burn accounts' tokens. Verify the mint/program, extensions and authorities, hook conditions and supported account setup; a ticker does not identify an asset. Withheld fees are unavailable as recipient spendable tokens.",
+    "sources": [
+      "https://solana.com/docs/tokens/extensions/transfer-fees",
+      "https://solana.com/docs/tokens/extensions/permanent-delegate",
+      "https://solana.com/docs/tokens/extensions"
+    ]
+  },
+  {
+    "id": "DFI-12",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A treasury holds $100,000 spot ETH in an Ethereum wallet and opens an equal $100,000 linear ETH short perpetual on Hyperliquid using a separate $10,000 isolated cash margin. The spot wallet cannot top up margin automatically. The supplied funding schedule requires the short to PAY 18% simple annualized on a constant $100,000 calculation notional for seven days. Total opening/closing execution fees are $120; ignore all other yield/costs. Calculate seven-day carry and return on the total $110,000 committed equity if prices end unchanged and the hedge survives. For a separate intraday stress before any funding/fees, spot and perp mark both rise 12%; maintenance margin is stipulated at 5% of the then-current perp notional. Compute isolated short equity and maintenance requirement and assess liquidation risk. Is flat combined spot-plus-perp price exposure enough to call this a cash reserve?",
+    "criteria": [
+      {
+        "id": "DFI-12-c1",
+        "description": "Seven-day funding cost 100000*.18*7/365=$345.20548, total carry -$465.20548 and ROE about -.422914%; tolerance $1/.01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-12-c2",
+        "description": "Uses funding payment direction as stipulated; does not assume shorts always receive funding or that 18% is earned on $10000 margin.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-12-c3",
+        "description": "At +12%, short unrealized P&L -$12000, theoretical isolated equity -$2000, then-current notional $112000 and maintenance $5600; states liquidation would trigger before reaching this end state.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-12-c4",
+        "description": "Recognizes external spot profit cannot collateralize the isolated perp automatically, so net delta-neutral portfolio exposure does not prevent local liquidation.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-12-c5",
+        "description": "Does not classify strategy as cash-equivalent solely from matched notionals; identifies funding variation and basis/mark or transfer/top-up risk and the need for accessible margin.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Funding=$345.20548 and total carry=-$465.20548, divided by $110000 gives -.422914%. At a 12% mark rise the short loses $12000. Its hypothetical remaining equity is -$2000 versus $5600 maintenance on $112000 notional, so liquidation would occur before this endpoint. The external spot gains $12000 but cannot automatically fund isolated margin. Funding and basis/mark moves plus collateral location make this unsuitable as an unconditional cash reserve.",
+    "sources": [
+      "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding",
+      "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations"
+    ]
+  }
+]

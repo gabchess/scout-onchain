@@ -9,3 +9,15 @@ Corrections clarify token-holder revocation limits, liquidation trigger interpre
 The rubric, criteria and reference answers are in [suite.json](suite.json). The answering host received only the prompts. [grades.json](grades.json) records criterion scores and response hashes; [the author report](author-report.md) sets the weighting and gates.
 
 To run another evaluation, follow [the protocol](../../docs/INDEPENDENT-EVALUATION.md). Keep a fresh suite private until its first run. One separate AI review provides bounded evidence and does not establish human expert approval or production performance.
+
+## Corrected runtime results
+
+The corrected runtime maps to public commit `565be97350a86fa7606aa9ed17bdf9058a5297eb`; [the recorded runtime proof](amended-source-proof.json) matches both amended runs.
+
+| Run | Case gates | Scope |
+|---|---|---|
+| Original unseen baseline | 11/12; suite gate failed | Twelve cases before correction |
+| [Exposed regression](REGRESSION.md) | 4/4 | Four previously seen cases |
+| [Fresh targeted holdout](HOLDOUT.md) | 6/6 | Six new cases after correction |
+
+All eight critical holdout criteria received full credit. Partial omissions remain around balance verification after finalization, evidence preservation after a wrong-recipient settlement, and basis/mark risk. The reviewer also documents a rubric-specificity caveat and a primary-source discrepancy. The separate AI review does not establish broad advice quality.

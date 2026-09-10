@@ -1,0 +1,37 @@
+{
+  "host": "codex-cli 0.153.3",
+  "model": "host default; no override supplied",
+  "python": "Python 3.11.16",
+  "source_revision": "7d2e5dd8ad5cd5045c57f2b7bdf1280b6fab3ff9",
+  "source_dirty": true,
+  "dependency_lock_sha256": "69bc2cb9418b45a92d735442fb6a80c68d11a6c73dfda2db5964b0566db1a7f0",
+  "runner_sha256": "794f15562bcd2dc8366704c65e8f4697db047f97044437d1a44e07aedaa769ab",
+  "suite_sha256": "0a57f534b42d167244b7654f39426930028d09920c3ddacf604bd96c071f09d9",
+  "context_sha256": "140cf457a73e06a2c5726e62dca054a0778f5e0ac37c5859966b12827eeda966",
+  "runtime_sha256": "5319d9d2619783c6f36939da93f82faf4105cd752b73a5594a107c63ecb3f254",
+  "mode": "injected Scout skills and real fixture MCP; native plugin activation untested",
+  "rubric_sent_to_host": false,
+  "cases": [
+    {
+      "id": "DFI-02",
+      "exit_code": 0,
+      "seconds": 30.6
+    },
+    {
+      "id": "DFI-05",
+      "exit_code": 0,
+      "seconds": 29.6
+    },
+    {
+      "id": "DFI-06",
+      "exit_code": 0,
+      "seconds": 32.5
+    },
+    {
+      "id": "DFI-12",
+      "exit_code": 0,
+      "seconds": 32.6
+    }
+  ],
+  "runtime_unchanged": true
+}

@@ -1,0 +1,1 @@
+{"tools": ["analyze_asset", "assess_defi_yield", "check_alerts", "dca_windows", "get_pnl", "get_portfolio_risk", "get_portfolio_snapshot", "get_zerion_preparation", "parse_dca_request", "plan_zerion_action", "prepare_zerion_transaction", "preview_dca", "search_defi_knowledge", "set_alert"], "fixture_call_passed": true}

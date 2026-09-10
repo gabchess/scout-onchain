@@ -1,0 +1,582 @@
+{
+  "reviewed_at_utc": "2026-09-10T16:46:19.009228+00:00",
+  "review_type": "independent AI review of fresh targeted holdout; not human expert certification",
+  "frozen_suite_sha256": "f740769c3e0a2f254cbd9ece8aa6a9a6e9da22812d2d533bdfeea18d853d0143",
+  "runner_manifest": {
+    "host": "codex-cli 0.153.3",
+    "model": "host default; no override supplied",
+    "python": "Python 3.11.16",
+    "source_revision": "7d2e5dd8ad5cd5045c57f2b7bdf1280b6fab3ff9",
+    "source_dirty": true,
+    "dependency_lock_sha256": "69bc2cb9418b45a92d735442fb6a80c68d11a6c73dfda2db5964b0566db1a7f0",
+    "runner_sha256": "794f15562bcd2dc8366704c65e8f4697db047f97044437d1a44e07aedaa769ab",
+    "suite_sha256": "f740769c3e0a2f254cbd9ece8aa6a9a6e9da22812d2d533bdfeea18d853d0143",
+    "context_sha256": "140cf457a73e06a2c5726e62dca054a0778f5e0ac37c5859966b12827eeda966",
+    "runtime_sha256": "5319d9d2619783c6f36939da93f82faf4105cd752b73a5594a107c63ecb3f254",
+    "mode": "injected Scout skills and real fixture MCP; native plugin activation untested",
+    "rubric_sent_to_host": false,
+    "cases": [
+      {
+        "id": "HLD-01",
+        "exit_code": 0,
+        "seconds": 33.9
+      },
+      {
+        "id": "HLD-02",
+        "exit_code": 0,
+        "seconds": 24.0
+      },
+      {
+        "id": "HLD-03",
+        "exit_code": 0,
+        "seconds": 14.7
+      },
+      {
+        "id": "HLD-04",
+        "exit_code": 0,
+        "seconds": 29.5
+      },
+      {
+        "id": "HLD-05",
+        "exit_code": 0,
+        "seconds": 34.0
+      },
+      {
+        "id": "HLD-06",
+        "exit_code": 0,
+        "seconds": 18.9
+      }
+    ],
+    "runtime_unchanged": true
+  },
+  "amended_source_proof": {
+    "source_commit": "565be97350a86fa7606aa9ed17bdf9058a5297eb",
+    "frozen_base_commit": "7d2e5dd8ad5cd5045c57f2b7bdf1280b6fab3ff9",
+    "runtime_sha256": "5319d9d2619783c6f36939da93f82faf4105cd752b73a5594a107c63ecb3f254",
+    "runtime_matches_frozen": true
+  },
+  "recorded_hash_correspondence_verified": true,
+  "source_proof_limit": "Reviewer compared recorded hashes and commit identifiers in the manifests/proof. Reviewer did not independently recompute the committed source hash or inspect Scout code.",
+  "scoring": {
+    "severity_weights": {
+      "critical": 5,
+      "major": 2,
+      "minor": 1
+    },
+    "credit": {
+      "1": "pass",
+      "0.5": "partial",
+      "0": "fail"
+    },
+    "mean_case_score_percent": 95.52350427350427,
+    "suite_gate_pass": true,
+    "case_pass_count": 6,
+    "case_count": 6,
+    "criterion_counts": {
+      "pass": 26,
+      "partial": 4
+    },
+    "by_severity": {
+      "critical": {
+        "pass": 8
+      },
+      "major": {
+        "pass": 14,
+        "partial": 3
+      },
+      "minor": {
+        "pass": 4,
+        "partial": 1
+      }
+    },
+    "critical_full_credit_count": 8,
+    "critical_not_full_count": 0,
+    "population_accuracy_ci_95": null
+  },
+  "rubric_specificity_sensitivity": {
+    "criterion": "HLD-04-c4",
+    "frozen_credit": 0.5,
+    "alternate_credit": 1,
+    "alternate_mean_percent": 96.91239316239316,
+    "gate_unchanged": true,
+    "reason": "Prompt asks for two independent mechanisms, which response supplies as funding reversal and isolated liquidation. Frozen rubric additionally requires basis/mark divergence. Strict score retained; alternate is disclosed separately."
+  },
+  "source_clarification": {
+    "criterion": "HLD-01-c4",
+    "source": "https://raw.githubusercontent.com/solana-program/token-2022/main/program/src/processor.rs",
+    "section": "process_set_authority, AuthorityType::PermanentDelegate branch, observed lines 813-824",
+    "finding": "Processor validates the current permanent delegate before changing the extension. This supports the candidate over the overview page wording about mint authority. Frozen criterion/reference already use relevant mint-level authority and need no revision.",
+    "rubric_changed": false
+  },
+  "cases": [
+    {
+      "id": "HLD-01",
+      "score_percent": 100.0,
+      "earned_weight": 15,
+      "available_weight": 15,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "HLD-01-c1",
+          "description": "Computes gross transfer 8030 tokens, withheld fee 30, net 8000; shows .75%*8030 exceeds cap. Tolerance .000001 token.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Gross transfer 8,030.000000; uncapped fee 60.225000; capped fee 30.000000; supplier receives 8,000.000000 spendable tokens."
+        },
+        {
+          "id": "HLD-01-c2",
+          "description": "Explicitly explains revoking ordinary account delegates does not revoke the mint-level permanent delegate and the account holder cannot revoke that authority from their token account.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "Revoking ordinary account delegates leaves that authority intact. The treasury owner cannot remove it."
+        },
+        {
+          "id": "HLD-01-c3",
+          "description": "Identifies issuer K can authorize transfers or burns of holdings even after ordinary delegation is revoked; does not accept issuer-proof reserve claim.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The issuer-proof claim is false; K can transfer or burn tokens from treasury and supplier accounts."
+        },
+        {
+          "id": "HLD-01-c4",
+          "description": "Explains permanent-delegate changes/removal require the relevant mint-level authority under token-program rules; does not suggest the holder can unilaterally nullify it using their owner key.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The current permanent delegate, K, can change or disable the authority with SetAuthority. Holding the mint authority alone does not grant that power."
+        },
+        {
+          "id": "HLD-01-c5",
+          "description": "Requires actual mint/program/extension/authority state and spendable liquidity/redemption evidence; hypothetical brand/ticker claims alone do not establish reserve suitability.",
+          "severity": "minor",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 1,
+          "response_evidence": "Requests finalized mint state and an authority-change transaction, other control settings, backing/redemption evidence, payroll-size liquidity and settlement timing."
+        }
+      ],
+      "reviewer_notes": [
+        "c4 is supported by direct program-source verification after reading this answer. The overview page's mint-authority wording is imprecise; processor validates the current permanent delegate. Frozen criterion and reference already require the relevant mint-level authority without naming the minting authority, so no rubric change is needed."
+      ],
+      "sources": [
+        "https://solana.com/docs/tokens/extensions/permanent-delegate",
+        "https://solana.com/docs/tokens/extensions/transfer-fees"
+      ],
+      "answer_file": "holdout-run/HLD-01-answer.md",
+      "answer_sha256": "6188ff07c70e0641569ea88cee10b002c74c8574f9e2c508246eac6b7bbcfad1",
+      "trace_file": "holdout-run/HLD-01-events.jsonl",
+      "trace_sha256": "c14fa544f0605cac63d3b67f5105517a56a8dcf613cf3017ca38e947bc8a008d",
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "ecosystem": "solana",
+            "limit": 2,
+            "query": "Token-2022 transfer fee maximum cap rounding withheld spendable permanent delegate SetAuthority removal current permanent delegate owner revoke"
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "host_warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "other_action_items": [],
+      "false_live_claim_observed": false,
+      "transaction_execution_observed": false
+    },
+    {
+      "id": "HLD-02",
+      "score_percent": 95.83333333333334,
+      "earned_weight": 11.5,
+      "available_weight": 12,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "HLD-02-c1",
+          "description": "HF=31200/(3*8000)=1.30; threshold oracle ETH price 10400. Monetary tolerance $1, HF .001.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "HF=31,200/(3P); initial HF is 1.30 and the boundary ETH price is $10,400."
+        },
+        {
+          "id": "HLD-02-c2",
+          "description": "States an increase of the borrowed ETH oracle price above 10400 makes HF<1 and liquidation eligible; exact HF=1 is the boundary, not a guarantee of an already completed liquidation.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "An oracle price above $10,400 makes the account eligible; equality does not establish that liquidation occurred."
+        },
+        {
+          "id": "HLD-02-c3",
+          "description": "At stale oracle 10000 HF=1.04; does not substitute DEX 10500 into current protocol HF or claim liquidation has already occurred.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "At the supplied lending oracle the HF is 1.04; the DEX quote alone cannot establish eligibility or prove liquidation."
+        },
+        {
+          "id": "HLD-02-c4",
+          "description": "After oracle 10500, current debt 31500 and target debt 26000; repayment 5500/10500=.523809524 ETH to HF 1.20. Tolerance .00001 ETH.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Repays 0.523809524 ETH, or $5,500, to restore HF to 1.20."
+        },
+        {
+          "id": "HLD-02-c5",
+          "description": "Explains that accrued debt, oracle updates and execution timing can change the buffer in a real account; actual liquidation requires transaction/state evidence.",
+          "severity": "minor",
+          "credit": 0.5,
+          "grade": "partial",
+          "weight": 1,
+          "response_evidence": "The repayment assumes no intervening liquidation. The answer distinguishes a threshold from an observed liquidation, but omits debt accrual and real oracle timing."
+        }
+      ],
+      "reviewer_notes": [
+        "c5: Includes an execution-timing caveat and distinction from actual liquidation, but does not discuss debt accrual or real oracle-timing uncertainty. Partial minor criterion."
+      ],
+      "sources": [
+        "https://aave.com/help/borrowing/liquidations"
+      ],
+      "answer_file": "holdout-run/HLD-02-answer.md",
+      "answer_sha256": "196f8c5b17b29e82cb989aaa932fb63ec8177105b1340d8cce3b3a31cc71a0d3",
+      "trace_file": "holdout-run/HLD-02-events.jsonl",
+      "trace_sha256": "0a27f6e3da32219ecebaeb0c606bcdef4d5c1c1a9ce438215721edd98ff14a7b",
+      "tool_calls": [],
+      "host_warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 826 additional skills were not included in the model-visible skills list."
+      ],
+      "other_action_items": [],
+      "false_live_claim_observed": false,
+      "transaction_execution_observed": false
+    },
+    {
+      "id": "HLD-03",
+      "score_percent": 92.3076923076923,
+      "earned_weight": 12.0,
+      "available_weight": 13,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "HLD-03-c1",
+          "description": "Available deadline funds=5000-400+500=5100 and shortfall=3900, tolerance$1.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "$4,600 cash plus $500 withdrawable lending funds gives $5,100, leaving a $3,900 shortfall."
+        },
+        {
+          "id": "HLD-03-c2",
+          "description": "Does not count the 12000 OP withdrawal or unavailable 7500 lending balance as accessible by the deadline.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The bridge contributes $0; the remaining $7,500 lending claim stays unavailable through the deadline."
+        },
+        {
+          "id": "HLD-03-c3",
+          "description": "Challenge period ends five days from today under the stated proof timing, three days after the payment deadline; distinguishes initiation/proof from finalization.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The challenge period completes five full days from today, three days after the payment deadline."
+        },
+        {
+          "id": "HLD-03-c4",
+          "description": "Names the subsequent successful L 1 finalization/settlement and balance confirmation; challenge-period expiry alone does not automatically establish spendable funds.",
+          "severity": "major",
+          "credit": 0.5,
+          "grade": "partial",
+          "weight": 2,
+          "response_evidence": "An Ethereum finalization transaction remains necessary to release the funds. Successful settlement and balance verification are not discussed."
+        },
+        {
+          "id": "HLD-03-c5",
+          "description": "Explains lending withdrawals depend on available pool liquidity, not ownership of receipt claims, and avoids pledging the entire 8000 as deadline cash.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The full $8,000 claim cannot support the payment because only $500 is withdrawable under the stated pool-liquidity fixture."
+        }
+      ],
+      "reviewer_notes": [
+        "c4: Correctly requires subsequent Ethereum finalization, but omits verifying successful settlement and the received balance. Partial major criterion."
+      ],
+      "sources": [
+        "https://docs.optimism.io/op-stack/bridging/withdrawal-flow",
+        "https://www.aave.com/help/supplying/withdraw-tokens"
+      ],
+      "answer_file": "holdout-run/HLD-03-answer.md",
+      "answer_sha256": "f372be9d3f536bbfd79f66fe0ae77d670a62cab41f778594cc70ceae79184728",
+      "trace_file": "holdout-run/HLD-03-events.jsonl",
+      "trace_sha256": "587b84a06a3e7a49fad3ed1b7966c7bcab72e22b188ae5088a53b01718ff9d76",
+      "tool_calls": [],
+      "host_warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "other_action_items": [],
+      "false_live_claim_observed": false,
+      "transaction_execution_observed": false
+    },
+    {
+      "id": "HLD-04",
+      "score_percent": 91.66666666666666,
+      "earned_weight": 11.0,
+      "available_weight": 12,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "HLD-04-c1",
+          "description": "Funding received=80000*.12*3/365=78.90411; funding paid=80000*.24*4/365=210.41096; net after fees=-311.50685; ROE=-.31150685%. Tolerance$1/.01 percentage point.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Funding received $78.90; funding paid $210.41; execution fees $180; net loss $311.51; return \u22120.3115%."
+        },
+        {
+          "id": "HLD-04-c2",
+          "description": "Does not promise 500 cash income from matched notionals; correctly uses changing funding directions and concludes stipulated net cashflow is negative.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The founder should reserve the $500 separately because the fixture generates a loss and paying the bill would consume principal."
+        },
+        {
+          "id": "HLD-04-c3",
+          "description": "Explicitly explains future funding can vary and switch sign, so current/initial funding direction cannot guarantee a payment cashflow.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Future funding can change magnitude or sign even when the price hedge holds."
+        },
+        {
+          "id": "HLD-04-c4",
+          "description": "Explains isolated margin/transfer timing can force liquidation despite external spot gains, and separately notes basis or mark/index divergence can undermine the hedge.",
+          "severity": "major",
+          "credit": 0.5,
+          "grade": "partial",
+          "weight": 2,
+          "response_evidence": "Spot gains do not automatically replenish isolated margin, and liquidation can precede a recovery in price. A separate basis/mark divergence explanation is absent."
+        },
+        {
+          "id": "HLD-04-c5",
+          "description": "Distinguishes near-zero combined price delta from reliable cashflow and requires liquid payment reserves independent of contingent trading proceeds.",
+          "severity": "minor",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 1,
+          "response_evidence": "The combined opening delta is approximately zero, which provides no cashflow promise. Withdrawal timing remains unspecified."
+        }
+      ],
+      "reviewer_notes": [
+        "c4: Addresses isolated margin and external spot gains but omits the separate basis/mark divergence explanation required by the frozen rubric.",
+        "Rubric specificity caveat: the prompt asks for two independent failure mechanisms, and the answer supplies funding reversal and isolated liquidation. The frozen c4 additionally requires basis/mark divergence. Strict scoring remains partial; a sensitivity calculation can award c4 full credit to reflect satisfaction of the prompt's stated two-mechanism request."
+      ],
+      "sources": [
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations"
+      ],
+      "answer_file": "holdout-run/HLD-04-answer.md",
+      "answer_sha256": "4688196c679ee837bb7c254ee362b80e8013fe32422f1247f509c2768b0cc838",
+      "trace_file": "holdout-run/HLD-04-events.jsonl",
+      "trace_sha256": "874bb8cced4f2a588f9f3d0458bd6f862a1b299dd759ecd6e4837115ad5a43c2",
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "query": "perpetual funding delta neutral isolated margin liquidation payment reserve",
+            "limit": 2
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "host_warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "other_action_items": [],
+      "false_live_claim_observed": false,
+      "transaction_execution_observed": false
+    },
+    {
+      "id": "HLD-05",
+      "score_percent": 100.0,
+      "earned_weight": 12,
+      "available_weight": 12,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "HLD-05-c1",
+          "description": "Initial A=2000*(1/15-1/20)=33.333333333; stablecoin=2000*(15-10)=10000; initial value 17500. Tolerance .0001 A/$1.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Initial position is 33\u2153 A plus 10,000 stablecoins, worth $17,500."
+        },
+        {
+          "id": "HLD-05-c2",
+          "description": "Above upper bound principal is 0 A and 20000 stablecoin; does not keep A exposure or maintain the original ratio.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "Ending principal inventory is 0 A and 20,000 stablecoins, worth $20,000."
+        },
+        {
+          "id": "HLD-05-c3",
+          "description": "Final value including fees 20500; holding initial amounts at 500 is 26666.666667; shortfall 6166.666667 or 23.125%ofholding. Tolerance$2/.02 percentage point.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Including fees yields $20,500 versus a $26,666.67 holding benchmark, a $6,166.67 or 23.125% shortfall."
+        },
+        {
+          "id": "HLD-05-c4",
+          "description": "Return versus initial capital is 3000/17500=17.142857% despite underperformingholding; does not confuse these benchmarks.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Including fees, the gain over starting capital is $3,000, or 17.14%."
+        },
+        {
+          "id": "HLD-05-c5",
+          "description": "States no new fees while above 400; the retained 500 is separately accrued prior fee income.",
+          "severity": "minor",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 1,
+          "response_evidence": "Continued trading above $400 adds no fees; the $500 is the exact supplied prior fee amount."
+        }
+      ],
+      "reviewer_notes": [],
+      "sources": [
+        "https://app.uniswap.org/whitepaper-v3.pdf",
+        "https://developers.uniswap.org/docs/liquidity/overview"
+      ],
+      "answer_file": "holdout-run/HLD-05-answer.md",
+      "answer_sha256": "56adca2e6773b24f08e197b6cacb80c582e4ee6df2fb57501a0a22034c3dd3ac",
+      "trace_file": "holdout-run/HLD-05-events.jsonl",
+      "trace_sha256": "faf6103a62a54a216d24a7c10aec052d42dbf9daeddb0515897f9832ed9409df",
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "query": "concentrated liquidity inventory upper bound out of range fees",
+            "limit": 1
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "host_warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "other_action_items": [],
+      "false_live_claim_observed": false,
+      "transaction_execution_observed": false
+    },
+    {
+      "id": "HLD-06",
+      "score_percent": 93.33333333333333,
+      "earned_weight": 14.0,
+      "available_weight": 15,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "HLD-06-c1",
+          "description": "Reports zero available treasury cash at Y from this transfer; a used nonce/success receipt does not prove payment to the intended recipient.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The transfer contributes 0 USDC to Y\u2019s available treasury cash."
+        },
+        {
+          "id": "HLD-06-c2",
+          "description": "Reconciles 15000 gross-60 fee=14940 minted to X, and distinguishes protocol message completion from fulfillment of the intended payment.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Reconciles 15,000 = 14,940 delivered to X + 60 fee and identifies completed delivery to the wrong recipient."
+        },
+        {
+          "id": "HLD-06-c3",
+          "description": "Rejects another source burn as automatic recovery or ledger repair, since it creates a new separate transfer and duplicate economic outlay.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "Rejects the proposed second burn because it creates another 15,000 USDC outflow and does not reverse the first."
+        },
+        {
+          "id": "HLD-06-c4",
+          "description": "Preserves source/destination hashes, domains, nonce and decoded recipient/amount; investigates how X entered the instruction and what authority or legitimate recovery path exists without claiming an automatic reversal.",
+          "severity": "major",
+          "credit": 0.5,
+          "grade": "partial",
+          "weight": 2,
+          "response_evidence": "Recovery depends on X\u2019s controller or an independently established process. It omits a preservation plan for hashes/domains and investigation of how X entered the instruction."
+        },
+        {
+          "id": "HLD-06-c5",
+          "description": "Does not imply the treasury controlsX, that same-message replay redirects tokens, or that CCTP's nonce protection refunds the error.",
+          "severity": "minor",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 1,
+          "response_evidence": "The fixture establishes no treasury power to revoke or redirect the finalized mint; the consumed nonce prevents minting to Y through replay."
+        }
+      ],
+      "reviewer_notes": [
+        "c4: Correctly conditions recovery on legitimate authority, but does not instruct preservation of transaction hashes/domains or investigation of how X entered the instruction. Partial major criterion; no claim of automatic reversal."
+      ],
+      "sources": [
+        "https://developers.circle.com/cctp/references/technical-guide"
+      ],
+      "answer_file": "holdout-run/HLD-06-answer.md",
+      "answer_sha256": "d40afe0421a57287d4b27f36dbfaf5dc2ba824c1224b4d5b2f05ef4d9860365a",
+      "trace_file": "holdout-run/HLD-06-events.jsonl",
+      "trace_sha256": "e05fa136a22346c4783c46502a8c3c59dc3102ee480b47b94d871e496fa6b8ec",
+      "tool_calls": [],
+      "host_warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "other_action_items": [],
+      "false_live_claim_observed": false,
+      "transaction_execution_observed": false
+    }
+  ]
+}
