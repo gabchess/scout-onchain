@@ -13,6 +13,8 @@ Read `reference.md` for a due-diligence or trading question. The tool returns so
 
 A lookup performs no network request and grants no authority. Current rates, prices, protocol parameters, asset addresses and software behavior need dated primary evidence. An unmatched query is a reason to clarify or research, never to fabricate a definition.
 
+Before finalizing advice, state the decision-changing mechanism: trigger threshold, authority and holder revocation limits, exit steps or delays, and whether a quoted cashflow is fixed or assumed. Include the relevant mechanism even when the immediate recommendation is to defer.
+
 Use terminology naturally and explain it when needed. Never claim personal trading history or guaranteed returns. Separate a token's identity, economic claim and market price.
 
 All action plans use `plan_zerion_action`. Scout currently returns proposals with `execution_available=false`; paying for Zerion data through configured x402 is a separate existing capability. Never route the user's funds to a foreign skill or install a new wallet as a side effect of research.

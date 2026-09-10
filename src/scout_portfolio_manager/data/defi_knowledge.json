@@ -1,5 +1,5 @@
 {
-  "version": "2026-09-10.1",
+  "version": "2026-09-10.2",
   "authorship": "Original Scout learning cards; referenced works inform concepts and retain their own licenses.",
   "cards": [
     {
@@ -222,7 +222,7 @@
         "debt",
         "liquidation"
       ],
-      "summary": "Lending protocols compare collateral value adjusted by liquidation rules with debt value. Exact formulas and collateral weights depend on the market.",
+      "summary": "Lending protocols compare collateral value adjusted by liquidation rules with debt value. Exact formulas and collateral weights depend on the market. Aave health factor below 1 makes a position eligible for liquidation; other protocols require their own trigger rules.",
       "decision_use": "Retrieve current collateral, debt, oracle prices and market parameters. Stress both collateral and debt prices, with accrued interest.",
       "pitfall": "A generic portfolio drawdown cannot calculate a health factor. Missing debt or protocol parameters must stay unknown.",
       "sources": [
@@ -230,6 +230,11 @@
           "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
           "title": "DeFi Native: concepts",
           "license": "MIT"
+        },
+        {
+          "url": "https://aave.com/help/borrowing/liquidations",
+          "title": "Aave: Health Factor and Liquidations",
+          "license": "reference-only; original summary"
         }
       ],
       "reviewed_at": "2026-09-10",
@@ -574,7 +579,7 @@
         "wrapped",
         "liquidity"
       ],
-      "summary": "Moving value across chains adds dependencies on message verification, finality, relayers and sometimes custodians. A bridged token can have a different claim from a native issuance.",
+      "summary": "Moving value across chains adds dependencies on message verification, finality, relayers and sometimes custodians. A bridged token can have a different claim from a native issuance. OP Stack canonical withdrawals require a proof and fault-challenge period before L1 finalization; faster liquidity routes have different risks.",
       "decision_use": "Map origin, destination, asset identity, bridge contract and return path. Check current status and destination gas.",
       "pitfall": "Splitting assets across chains can increase shared bridge exposure rather than reduce it.",
       "sources": [
@@ -582,6 +587,11 @@
           "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
           "title": "DeFi Native: concepts",
           "license": "MIT"
+        },
+        {
+          "url": "https://specs.optimism.io/protocol/withdrawals.html",
+          "title": "OP Stack: Withdrawals",
+          "license": "reference-only; original summary"
         }
       ],
       "reviewed_at": "2026-09-10",
@@ -909,7 +919,9 @@
       "aliases": [
         "Token-2022",
         "transfer hook",
-        "transfer fee"
+        "transfer fee",
+        "permanent delegate",
+        "mint authority"
       ],
       "keywords": [
         "solana",
@@ -918,14 +930,19 @@
         "freeze",
         "token"
       ],
-      "summary": "Token-2022 extends token behavior with optional features such as transfer fees or hooks. These features can alter amounts received or requirements for transfers.",
-      "decision_use": "Inspect mint extensions and all authorities before assessing tradability or accepting a quote.",
+      "summary": "Token-2022 extends token behavior with optional features such as transfer fees or hooks. These features can alter amounts received or requirements for transfers. A permanent delegate can transfer or burn tokens from any account for that mint; the token-account holder cannot revoke that mint-level authority for their account.",
+      "decision_use": "Inspect mint extensions and all authorities before assessing tradability or accepting a quote. Distinguish an ordinary revocable account delegate from a mint-level permanent delegate.",
       "pitfall": "A familiar ticker does not establish compatibility with a venue or the absence of transfer restrictions.",
       "sources": [
         {
           "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
           "title": "Solana Foundation developer skill",
           "license": "MIT"
+        },
+        {
+          "url": "https://solana.com/docs/tokens/extensions/permanent-delegate",
+          "title": "Solana: Permanent Delegate",
+          "license": "reference-only; original summary"
         }
       ],
       "reviewed_at": "2026-09-10",
@@ -1092,7 +1109,7 @@
         "liquidation"
       ],
       "summary": "Perpetual contracts maintain exposure without a fixed expiry and use funding payments or other mechanisms to track an index. Margin and liquidation use venue rules.",
-      "decision_use": "Separate price PnL, funding, fees and collateral risk. Inspect the mark price and maintenance requirements.",
+      "decision_use": "Separate price PnL, funding, fees and collateral risk. Inspect the mark price and maintenance requirements. Label a supplied funding schedule as a scenario; future funding magnitude and sign can change.",
       "pitfall": "Positive historical funding is not a locked return and can reverse while a position is open.",
       "sources": [
         {

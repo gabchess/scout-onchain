@@ -1,6 +1,6 @@
 # Start here
 
-Scout 0.4.0 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
+Scout 0.5.0 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
 
 After setup, ask:
 
@@ -120,7 +120,7 @@ API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positi
 
 The live source reads positions and mapped transactions. Call-time failure returns a typed error with `fallback: "none"`.
 
-Scout keeps DCA on the proposal side of the boundary in both modes. `preview_dca` can accept quote values from a host adapter. Version 0.4.0 does not call Zerion's swap quote endpoint or submit a trade.
+Scout keeps DCA on the proposal side of the boundary in both modes. `preview_dca` can accept quote values from a host adapter. The optional Zerion CLI preparation adapter can obtain unsigned proposals; Scout cannot submit a trade.
 
 ## Browser demo
 
@@ -132,9 +132,9 @@ Open `http://127.0.0.1:8787`. The demo reads the fixture and ignores Zerion envi
 
 ## Runtime boundary
 
-The eight tools cover portfolio observation, PnL, DCA parsing and proposal preview, asset analysis, DCA windows, and local alerts. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
+The fourteen tools cover portfolio observation, PnL, DCA proposals, asset analysis, local alerts, portfolio risk, assumed yield, DeFi reference lookup and Zerion action planning. Optional preparation produces an unsigned proposal and exposes its local status. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
 
-Live price history and pushed alerts are outside version 0.4.0. Trade approval, execution, and settlement are not part of this package.
+Live price history and pushed alerts are outside version 0.5.0. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.
 

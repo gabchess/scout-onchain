@@ -1,0 +1,72 @@
+{
+  "host": "codex-cli 0.153.3",
+  "model": "host default; no override supplied",
+  "suite_sha256": "1aeee631588f8d4db67a596fabf87642e4ae671c879d9d783476026663012804",
+  "context_sha256": "5dac7119f3b9fc18d1268bf161e47efa3ffba0c97007f3fbb414af7819b45358",
+  "runtime_sha256": "b5290ad63bfbb9789586c25626c01590fb36c846ad96acded173102d38408eda",
+  "mode": "injected Scout skills and real fixture MCP; native plugin activation untested",
+  "rubric_sent_to_host": false,
+  "cases": [
+    {
+      "id": "DFI-01",
+      "exit_code": 0,
+      "seconds": 33.3
+    },
+    {
+      "id": "DFI-02",
+      "exit_code": 0,
+      "seconds": 29.2
+    },
+    {
+      "id": "DFI-03",
+      "exit_code": 0,
+      "seconds": 29.9
+    },
+    {
+      "id": "DFI-04",
+      "exit_code": 0,
+      "seconds": 37.6
+    },
+    {
+      "id": "DFI-05",
+      "exit_code": 0,
+      "seconds": 19.3
+    },
+    {
+      "id": "DFI-06",
+      "exit_code": 0,
+      "seconds": 28.9
+    },
+    {
+      "id": "DFI-07",
+      "exit_code": 0,
+      "seconds": 36.5
+    },
+    {
+      "id": "DFI-08",
+      "exit_code": 0,
+      "seconds": 30.7
+    },
+    {
+      "id": "DFI-09",
+      "exit_code": 0,
+      "seconds": 30.7
+    },
+    {
+      "id": "DFI-10",
+      "exit_code": 0,
+      "seconds": 38.2
+    },
+    {
+      "id": "DFI-11",
+      "exit_code": 0,
+      "seconds": 34.7
+    },
+    {
+      "id": "DFI-12",
+      "exit_code": 0,
+      "seconds": 29.8
+    }
+  ],
+  "runtime_unchanged": true
+}

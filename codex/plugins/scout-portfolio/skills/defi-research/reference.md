@@ -22,6 +22,8 @@ Compare a base scenario with incentives removed, financing costs raised and rede
 
 Obtain supplied collateral, debt including accrued interest, oracle price, liquidation threshold, liquidation bonus and relevant market mode. Show net equity as supplied collateral minus debt, while keeping the collateral and debt amounts visible. Use the protocol's own health-factor formula. A multi-asset position requires each adjusted collateral contribution. A liquidation warning needs those inputs and a timestamp; the gross holdings shock tool cannot supply them.
 
+State the exact trigger inequality as well as the calculated margin. For Aave, health factor below 1 makes the position eligible for liquidation; the boundary at 1 is not proof a transaction occurred. Verify the actual market rules before applying this to another lending design.
+
 Check utilization and rate changes along with price risk. An apparently profitable loop can fail when financing cost rises or collateral liquidity falls. Match withdrawal expectations with available liquidity.
 
 ## An LP position
@@ -30,9 +32,17 @@ Identify pool, token contracts or mints, fee tier, range, share and current tick
 
 The common constant-product impermanent-loss expression `2*sqrt(r)/(1+r)-1` is a toy relative-price comparison for a full-range equal-value two-asset pool without fees. It does not price a concentrated position, a multi-asset pool or every path-dependent strategy. Use protocol-specific position data for those cases.
 
+## Token controls and exit timing
+
+For each token authority, explain what it can do, who controls it, and whether the holder can revoke or escape it. On Solana Token-2022, a permanent delegate is a mint-level authority that can transfer or burn tokens across the mint's token accounts. An individual token-account owner cannot revoke it for their account. Ordinary account-delegate revocation does not remove it. Check the current mint authority state and supported extensions before assessing any route.
+
+A withdrawal estimate needs the mechanism behind the delay and the next required user step. Separate queue time, proof/challenge time, finalization, liquidity, and bridge or venue risk. OP Stack canonical withdrawals require proving and a fault-challenge period before L1 finalization; a faster third-party exit has different liquidity and counterparty assumptions. Verify chain, bridge, protocol version and current parameters before quoting a deadline.
+
 ## A trading idea
 
 Write thesis, expected horizon, observable trigger, invalidation and allowed loss before selecting size. Distinguish missing information from a reason to transact. Evaluate spread, depth, financing, fees and likely slippage at the proposed size. Check correlated exposure already held.
+
+A supplied funding schedule is a scenario. Calculate its cashflows, then state that future funding can change magnitude or sign. Separate known schedule assumptions from variable funding, margin and liquidation risks.
 
 Backtests need time-ordered data, held-out periods, realistic fills, costs, survivorship treatment and a record of how many strategies were tried. Report maximum drawdown and sample size alongside returns. Paper and shadow runs are simulation evidence. A strong result earns another test; it does not authorize a trade or prove future return.
 

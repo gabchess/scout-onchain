@@ -6,7 +6,7 @@ Give an agent this repository folder or ZIP. Install Scout as its onchain portfo
 
 1. Claude Code: [`START-HERE.md`](START-HERE.md) Route 1 (`scout-portfolio@scout-portfolio-manager`).
 2. Codex: install Route 2 skills and attach the Route 2 stdio MCP command for tools.
-3. Plain Python: Route 3 (`uv sync` / venv). Package version **0.4.0**.
+3. Plain Python: Route 3 (`uv sync` / venv). Package version **0.5.0**.
 4. Cursor or any MCP client: adapt [`.mcp.json`](.mcp.json) into the host MCP config, replacing the plugin-root token with an absolute checkout path when the client does not expand it. Needs `uv` on PATH. Starts `zpm-mcp` over stdio.
 
 Discovery is not a successful install. Ask the host to list MCP tools or run `/portfolio-intelligence What is my PnL?`.

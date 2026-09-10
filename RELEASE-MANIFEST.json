@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "name": "scout-portfolio",
-  "version": "0.4.0",
-  "release_kind": "local-review-proposal",
-  "publication_status": "Unreleased Scout source proposal based on 0.4.0. A PR is not a release.",
+  "version": "0.5.0",
+  "release_kind": "release-candidate",
+  "publication_status": "0.5.0 release candidate. See GitHub Releases for publication status.",
   "license": "MIT",
   "default_behavior": "synthetic fixture with no network request",
   "primary_host": "Claude Code plugin, local marketplace",
@@ -51,10 +51,10 @@
   "release_artifact_policy": "The local builder adds an entry after creating a verified ZIP. A build record is not publication evidence.",
   "release_artifacts": [
     {
-      "path": "dist/scout-portfolio-0.4.0.zip",
-      "sha256": "bf325ac6a679472da01445d7d7d7b642b3db3885ada01923504342dae4b165aa",
-      "version": "0.4.0",
-      "built_at": "2026-09-10T14:57:05Z"
+      "path": "dist/scout-portfolio-0.5.0.zip",
+      "sha256": "e0d2fe220d279ea7401b886dfaa01684a2fc26ea7dee5c2d15de688c08ea7b42",
+      "version": "0.5.0",
+      "built_at": "2026-09-10T16:39:58Z"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Scout
 
-> **Local review proposal:** Adds portfolio risk, assumed yield scenarios, source-linked DeFi knowledge and Zerion action plans. Based on 0.4.0; unpublished. See [details](docs/knowledge/README.md).
+> **0.5.0 release candidate:** Adds portfolio risk, assumed yield scenarios, source-linked DeFi knowledge and Zerion action plans. Prepared for release; publication status is tracked on GitHub. See [details](docs/knowledge/README.md).
 
 <p align="center">
   <img src="docs/scout-mascot-corgi.png" width="180" height="180" alt="Scout, a corgi mascot for the onchain portfolio manager" />
@@ -9,7 +9,7 @@
 <p align="center"><strong>An onchain portfolio manager for AI agents.</strong></p>
 
 <p align="center">
-  <a href="CLAIMS.md"><img alt="version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-0B57D0" /></a>
+  <a href="CLAIMS.md"><img alt="version 0.5.0" src="https://img.shields.io/badge/version-0.5.0-0B57D0" /></a>
   <a href="LICENSE.md"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a>
   <a href="SECURITY.md"><img alt="DCA proposal only" src="https://img.shields.io/badge/DCA-proposal-6e7781" /></a>
 </p>
@@ -28,7 +28,7 @@ The host is customizable. It works with bundled sample data, a Zerion API key, o
 | Draft a weekly ETH DCA | Clarified intent and an approval-required proposal |
 | Check my alerts | One local, on-demand evaluation |
 
-Market indicators and DCA windows use bundled synthetic price history in 0.4.0. Scout labels that source and keeps confidence low.
+Market indicators and DCA windows use bundled synthetic price history in 0.5.0. Scout labels that source and keeps confidence low.
 
 Every DCA flow stops at a proposal. `preview_dca` returns `approval_state=required` and `execution_available=false`. Scout does not connect the observed wallet, sign a trade, or submit a transaction.
 

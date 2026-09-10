@@ -1,6 +1,6 @@
 # License status
 
-Rights position for the 0.3.x line. The license body itself lives in [`LICENSE.md`](LICENSE.md); this file says what it covers and what it does not.
+Rights position for the 0.5.0 release candidate. The license body itself lives in [`LICENSE.md`](LICENSE.md); this file says what it covers and what it does not.
 
 ## What the license covers
 

@@ -1,6 +1,6 @@
 # Claim status
 
-Source: `gabchess/scout-onchain` 0.4.0. Each status names the strongest evidence in this repository.
+Source: `gabchess/scout-onchain` 0.5.0. Each status names the strongest evidence in this repository.
 
 | Claim | Status | Evidence and limit |
 |:--|:--|:--|

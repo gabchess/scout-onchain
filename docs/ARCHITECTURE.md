@@ -25,7 +25,7 @@ Partial or conflicting configuration stops startup. A call-time API failure retu
 
 `ZerionAPIReader` maps per-asset positions and wallet transactions. Positions use one request. Transactions follow `links.next` for up to `max_pages`, which defaults to 20. A malformed, repeated, or off-host cursor raises `ZerionAPIPaginationError`. Missing asset symbols and unmapped operations are logged and skipped instead of invented.
 
-Asset indicators read `fixtures/price_history.json` in every mode. A live portfolio source does not make that price series live. DCA previews accept optional quote fields from the caller. The package does not call Zerion's swap quote endpoint in 0.4.0.
+Asset indicators read `fixtures/price_history.json` in every mode. A live portfolio source does not make that price series live. DCA previews accept optional quote fields from the caller. The optional Zerion CLI adapter can obtain unsigned swap and bridge proposals; its transaction semantics remain unverified.
 
 ## Authority and state
 

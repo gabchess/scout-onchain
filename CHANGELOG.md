@@ -1,11 +1,21 @@
 # Changelog
 
-## Unreleased local proposal
+## 0.5.0 - Release candidate
 
 - Add gross portfolio concentration and explicit uniform shock calculations.
 - Add assumed APR yield decomposition and Zerion-only nonexecuting action plans.
 - Add 48 original DeFi/portfolio learning cards and 1,059 attributed community glossary terms through bounded offline retrieval.
 - Keep fixture and source freshness visible, validate risk input before a possible paid read, and retain the existing trade-execution boundary.
+
+- Version runtime, Claude/Codex manifests and package artifacts consistently as 0.5.0.
+- Add independent, frozen DeFi scenarios, retained responses and a reusable fixture-host evaluation runner.
+- Clarify authority revocation, liquidation triggers, withdrawal delays and funding uncertainty after independent review.
+
+### Optional unsigned preparation and Grok compatibility
+
+- Added strict EVM intent validation, an opt-in Zerion CLI transport and persistent preparation status.
+- Corrected the Claude-compatible MCP plugin-root token for Grok Build.
+- Added model-host evaluations and strengthened debt, liquidity and payment instructions.
 
 ## 0.4.0 - 2026-09-08
 
@@ -192,9 +202,3 @@ Early release.
 - Documentation of the no-wallet, no-signing, no-submission, and no-execution boundary.
 
 Known limits: the default fixture isn't live data. The API adapter exposed only an aggregate observation, not yet a transaction ledger, as of this release. No production availability, endpoint compatibility, or support SLA is claimed.
-
-### Optional unsigned preparation and Grok compatibility
-
-- Added strict EVM intent validation, an opt-in Zerion CLI transport and persistent preparation status.
-- Corrected the Claude-compatible MCP plugin-root token for Grok Build.
-- Added model-host evaluations and strengthened debt, liquidity and payment instructions.
