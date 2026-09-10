@@ -74,5 +74,5 @@
   "data_boundary": "Optional preparation stores unsigned envelopes and request state in an operator-selected local SQLite database. No hosted retention service. Integrating hosts and providers have separate policies.",
   "release_notes": "See CHANGELOG.md, WHAT-BROKE.md, and RELEASE-MANIFEST.json.",
   "evidence_boundary": "Proves what surfaces and sources are wired into this build, and what was deliberately left out; does not prove those surfaces behave correctly at runtime, or that an excluded item is absent from a fork of this tree.",
-  "proposal_status": "0.5.0 release candidate; a source merge is not release publication."
+  "proposal_status": "Release identity: 0.5.0. Publication record is maintained in GitHub Releases."
 }

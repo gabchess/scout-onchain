@@ -25,7 +25,7 @@ Discovery is not a successful install. Ask the host to list MCP tools or run `/p
 - Call execute, sign, or submit. Those tools are not available.
 - Paste secrets into the repo, prompts, fixtures, or logs.
 
-## Unreleased advisory proposal
+## Knowledge and advisory tools
 
 Use `get_portfolio_risk` for gross observed allocation, `assess_defi_yield` for caller-supplied APR scenarios, and `search_defi_knowledge` for concepts. Preserve community-reference status. All portfolio action plans use `plan_zerion_action` with Zerion and execution unavailable. Knowledge and planning tools never purchase data; the risk tool uses one configured read, which can pay through existing x402 authorization. Read `docs/knowledge/README.md` before making capability claims.
 

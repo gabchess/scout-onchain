@@ -1,6 +1,6 @@
 # Scout
 
-> **0.5.0 release candidate:** Adds portfolio risk, assumed yield scenarios, source-linked DeFi knowledge and Zerion action plans. Prepared for release; publication status is tracked on GitHub. See [details](docs/knowledge/README.md).
+> **Scout 0.5.0:** Adds portfolio risk, assumed yield scenarios, source-linked DeFi knowledge and Zerion action plans. See [release downloads](https://github.com/gabchess/scout-onchain/releases/tag/v0.5.0) and [feature details](docs/knowledge/README.md).
 
 <p align="center">
   <img src="docs/scout-mascot-corgi.png" width="180" height="180" alt="Scout, a corgi mascot for the onchain portfolio manager" />

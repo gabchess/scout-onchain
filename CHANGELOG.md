@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 - Release candidate
+## 0.5.0 - 2026-09-10
 
 - Add gross portfolio concentration and explicit uniform shock calculations.
 - Add assumed APR yield decomposition and Zerion-only nonexecuting action plans.

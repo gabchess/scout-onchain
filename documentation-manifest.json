@@ -6,15 +6,15 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "eb4f3e80212a857f76249a50b5ec66e1b924630b02a33a99d3f13fca4e6776c1"
+      "sha256": "d0af812273aa76700e3646bc8041d65ee4f22b6ca03b0dbbd2393dd7ade554c3"
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "4eb3bac767236449da5ed514be169a763af8ec2119537d9cb80c8929f3e921fa"
+      "sha256": "2fec803075ba4d230cc4b3508d0f30ea35ee66c95188cd4a3d5033be4e2616bb"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "199932f568d6baf402502e735cb39f0ca49c4fe7d956a2f49d39dd70d39e5369"
+      "sha256": "a12cea3f6b2f8ad6483e0cf4540cbf0ad823a7064f22fe3825a6a5cb6f9b5f15"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
@@ -26,7 +26,7 @@
     },
     {
       "path": "LICENSE-STATUS.md",
-      "sha256": "8b150d0932b3fcf6b13d2206031a17e7fa8412f07b005af10ba4738a4726c3de"
+      "sha256": "d0ced7ecacbddc3724e573085c0e39c663ed0bacbaa4c5cfc45d6517f97f87b2"
     },
     {
       "path": "LICENSE.md",
@@ -34,7 +34,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "894dd16a62806a710f558e9663231166732ed9bf1a7c1a7f150b8dbc5f1ccdc0"
+      "sha256": "648d160f2bf912a2cfcdae964d3ee202a99b1191764d2cbb9e0bba325358af95"
     },
     {
       "path": "SECURITY.md",
@@ -82,7 +82,7 @@
     },
     {
       "path": "docs/knowledge/README.md",
-      "sha256": "67f55d745ad0e702c7088c30905042e6ef0e4edd0130145aecf79a25f142ff9e"
+      "sha256": "1f7236b93db6c64588d76f73f3d09314d6a6c7a2359c73cb21d611b2fdf660d1"
     },
     {
       "path": "docs/superpowers/plans/2026-09-10-scout-knowledge.md",

@@ -17,9 +17,9 @@ Source: `gabchess/scout-onchain` 0.5.0. Each status names the strongest evidence
 | Runs through MCP | TESTED LOCALLY | The registry is pinned to the public tool set. Host-specific activation still needs inspection after installation. |
 | Ships under MIT | VERIFIED IN TREE | See [`LICENSE.md`](LICENSE.md) and [`LICENSE-STATUS.md`](LICENSE-STATUS.md). |
 
-## 0.5.0 advisory release candidate
+## 0.5.0 advisory features
 
-The working proposal adds source-linked knowledge retrieval, gross portfolio concentration and shock calculations, assumed yield scenarios, and a Zerion-only action planner. These additions are tested offline. The glossary includes 1,059 community entries whose individual definitions remain unverified; the 48 original cards cover a limited set of concepts. Complete DeFi risk coverage and broad model-performance improvement remain unestablished.
+Version 0.5.0 adds source-linked knowledge retrieval, gross portfolio concentration and shock calculations, assumed yield scenarios, and a Zerion-only action planner. These additions are tested offline. The glossary includes 1,059 community entries whose individual definitions remain unverified; the 48 original cards cover a limited set of concepts. Complete DeFi risk coverage and broad model-performance improvement remain unestablished.
 
 Portfolio actions remain unavailable. The official Zerion AI CLI provides capabilities outside Scout, including signing and trading. This proposal does not call them. Host-global behavior across other installed plugins is outside Scout's tool boundary.
 
