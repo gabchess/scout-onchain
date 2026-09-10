@@ -2,8 +2,8 @@
   "schema_version": 1,
   "name": "scout-portfolio",
   "version": "0.4.0",
-  "release_kind": "early-public-source",
-  "publication_status": "This manifest does not assert a published GitHub release.",
+  "release_kind": "local-review-proposal",
+  "publication_status": "Unreleased Scout source proposal based on 0.4.0. A PR is not a release.",
   "license": "MIT",
   "default_behavior": "synthetic fixture with no network request",
   "primary_host": "Claude Code plugin, local marketplace",
@@ -26,10 +26,11 @@
     "x402_payment_signing": true,
     "x402_process_budget": true,
     "dca_proposal": true,
-    "swap_quote_fetch": false,
+    "swap_quote_fetch": "optional Zerion CLI preparation only; disabled by default",
     "trade_submission": false,
     "trade_execution": false,
-    "settlement_verification": false
+    "settlement_verification": false,
+    "unsigned_zerion_preparation": true
   },
   "honesty_artifacts": [
     "WHAT-BROKE.md",
@@ -50,9 +51,9 @@
   "release_artifacts": [
     {
       "path": "dist/scout-portfolio-0.4.0.zip",
-      "sha256": "545078065c1b664d5c95d943a4fe77ab78f98e949192fb6e1b9bac58f3f55be2",
+      "sha256": "70c7bbd56eda47cca5d6d45464ed6922fdce0af7d9380c62b3fbd3cda1088ef6",
       "version": "0.4.0",
-      "built_at": "2026-09-08T22:27:47Z"
+      "built_at": "2026-09-10T14:48:17Z"
     }
   ]
 }

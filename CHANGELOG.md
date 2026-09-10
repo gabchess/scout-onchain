@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased local proposal
+
+- Add gross portfolio concentration and explicit uniform shock calculations.
+- Add assumed APR yield decomposition and Zerion-only nonexecuting action plans.
+- Add 48 original DeFi/portfolio learning cards and 1,059 attributed community glossary terms through bounded offline retrieval.
+- Keep fixture and source freshness visible, validate risk input before a possible paid read, and retain the existing trade-execution boundary.
+
 ## 0.4.0 - 2026-09-08
 
 Makes Scout a clean, portable onchain portfolio manager for agent hosts. This release adds bounded x402 analytics access and keeps DCA work at proposal.
@@ -185,3 +192,9 @@ Early release.
 - Documentation of the no-wallet, no-signing, no-submission, and no-execution boundary.
 
 Known limits: the default fixture isn't live data. The API adapter exposed only an aggregate observation, not yet a transaction ledger, as of this release. No production availability, endpoint compatibility, or support SLA is claimed.
+
+### Optional unsigned preparation and Grok compatibility
+
+- Added strict EVM intent validation, an opt-in Zerion CLI transport and persistent preparation status.
+- Corrected the Claude-compatible MCP plugin-root token for Grok Build.
+- Added model-host evaluations and strengthened debt, liquidity and payment instructions.

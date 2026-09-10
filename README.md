@@ -1,5 +1,7 @@
 # Scout
 
+> **Local review proposal:** Adds portfolio risk, assumed yield scenarios, source-linked DeFi knowledge and Zerion action plans. Based on 0.4.0; unpublished. See [details](docs/knowledge/README.md).
+
 <p align="center">
   <img src="docs/scout-mascot-corgi.png" width="180" height="180" alt="Scout, a corgi mascot for the onchain portfolio manager" />
 </p>
@@ -56,7 +58,7 @@ Open `http://127.0.0.1:8787`.
 
 ## Use Zerion
 
-API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; Scout 0.4.0 does not fetch a swap quote itself.
+API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; the standard analytics flow does not fetch a swap quote itself.
 
 x402 access needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the `x402` dependency extra. This route pays for analytics reads from a separate Base wallet. It does not authorize trading.
 
@@ -67,3 +69,11 @@ The x402 suite runs without sending funds. This repository has no verified paid 
 ## Evidence
 
 [`CLAIMS.md`](CLAIMS.md) records what is tested. [`SECURITY.md`](SECURITY.md) explains each authority boundary. The package is [MIT licensed](LICENSE.md).
+
+## DeFi research and optional preparation
+
+Scout adds source-linked Ethereum and Solana knowledge, portfolio exposure analysis and transparent yield arithmetic. Community glossary entries carry provenance and require current primary-source checks for operational decisions. See [knowledge coverage](docs/knowledge/README.md).
+
+An optional Zerion CLI adapter prepares unsigned EVM swap, transfer and bridge proposals. It starts disabled and has no signing or broadcast path. Read [configuration and evidence limits](docs/ZERION-PREPARATION.md) before enabling it.
+
+Grok Build accepts the Claude plugin layout in this repository. Grok Bot distribution has a separate validation path; see [Grok compatibility](docs/GROK.md).

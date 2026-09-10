@@ -19,6 +19,12 @@ EXPECTED_TOOLS = frozenset(
         "dca_windows",
         "set_alert",
         "check_alerts",
+        "get_portfolio_risk",
+        "assess_defi_yield",
+        "search_defi_knowledge",
+        "plan_zerion_action",
+        "prepare_zerion_transaction",
+        "get_zerion_preparation",
     }
 )
 

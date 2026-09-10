@@ -8,6 +8,10 @@ After setup, ask:
 
 A working install returns a portfolio and PnL with the data source named.
 
+## Try the local knowledge proposal
+
+After attaching Scout's MCP server, try `/portfolio-intelligence Review my concentration with a 30% downside scenario` or `/defi-research Explain a PDA and its signing rules`. The default is fixture data. `search_defi_knowledge` and `assess_defi_yield` need no wallet configuration. See [proposal details](docs/knowledge/README.md).
+
 ## Install scope
 
 Installation copies local files, registers the skills or plugin, and can start the fixture-backed MCP process. Live Zerion reads begin when the operator supplies a complete API-key or x402 configuration. The synthetic fixture remains the default.
@@ -133,3 +137,7 @@ The eight tools cover portfolio observation, PnL, DCA parsing and proposal previ
 Live price history and pushed alerts are outside version 0.4.0. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.
+
+## Optional unsigned preparation
+
+The 14-tool registry includes two disabled-by-default preparation tools. Follow [ZERION-PREPARATION.md](docs/ZERION-PREPARATION.md) to configure them. For Grok compatibility and the separate Bot distribution question, read [GROK.md](docs/GROK.md).

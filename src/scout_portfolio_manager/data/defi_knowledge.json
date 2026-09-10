@@ -1,0 +1,1398 @@
+{
+  "version": "2026-09-10.1",
+  "authorship": "Original Scout learning cards; referenced works inform concepts and retain their own licenses.",
+  "cards": [
+    {
+      "id": "portfolio-concentration",
+      "title": "Portfolio concentration",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "HHI",
+        "effective positions",
+        "concentration"
+      ],
+      "keywords": [
+        "portfolio",
+        "exposure",
+        "weights",
+        "diversification",
+        "holdings"
+      ],
+      "summary": "Position weights describe where observed capital sits. HHI is the sum of squared fractional weights; its inverse is an effective position count. A portfolio split equally between two labels has HHI 0.5.",
+      "decision_use": "Use get_portfolio_risk, then inspect underlying collateral and shared counterparties before deciding whether the portfolio is diversified.",
+      "pitfall": "Several tickers can depend on the same asset or issuer. HHI on gross labels does not capture debt, correlation or liquidity.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "portfolio-lookthrough",
+      "title": "Look-through exposure",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "look through",
+        "claim stack",
+        "gross exposure",
+        "net exposure"
+      ],
+      "keywords": [
+        "portfolio",
+        "wrapped",
+        "collateral",
+        "liabilities",
+        "leverage"
+      ],
+      "summary": "A vault share, LP receipt or liquid staking token is a claim on underlying positions. Map the claim through each wrapper and include borrowing liabilities to understand economic exposure.",
+      "decision_use": "Ask for Zerion position detail, collateral, debt and ownership links. Preserve unknown exposures if the adapter only provides token labels.",
+      "pitfall": "Adding receipt value and its underlying assets can double-count the same capital.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "yield-components",
+      "title": "Yield components",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "reward APR",
+        "base APR",
+        "yield decomposition",
+        "organic yield"
+      ],
+      "keywords": [
+        "yield",
+        "apy",
+        "apr",
+        "emissions",
+        "incentives",
+        "fees"
+      ],
+      "summary": "A yield headline can mix borrower interest, trading fees, token rewards and price changes. Each component has a payer, payment asset and measurement window.",
+      "decision_use": "Use assess_defi_yield with dated user inputs. Inspect rewards ending, variable borrowing cost and entry/exit fees separately.",
+      "pitfall": "A quoted APY may already include compounding or rewards. Adding either again overstates the result.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "apr-apy",
+      "title": "APR and APY",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "APR",
+        "APY",
+        "compounding"
+      ],
+      "keywords": [
+        "yield",
+        "rate",
+        "annual",
+        "interest"
+      ],
+      "summary": "APR is a rate before a specified compounding schedule. APY includes that schedule. For periodic compounding, APY equals (1 + APR/n)^n - 1, with APR expressed as a fraction.",
+      "decision_use": "State the rate convention and period before comparing two products. Scout yield scenarios use simple APR with no compounding.",
+      "pitfall": "An annualized short sample does not promise the same rate for a year.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "vault-shares",
+      "title": "Vault shares and ERC-4626",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "ERC-4626",
+        "vault shares",
+        "share price"
+      ],
+      "keywords": [
+        "vault",
+        "deposit",
+        "redeem",
+        "curator",
+        "assets"
+      ],
+      "summary": "A tokenized vault converts deposited assets into shares. Returns depend on the assets behind each share, valuation rules, fees and withdrawal conditions.",
+      "decision_use": "Identify the venue, vault contract, allocator, collateral and distributor. Check assets per share and redemption limits.",
+      "pitfall": "A share balance is not an immediately withdrawable asset balance. Thin vaults can have donation-related pricing risks.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "withdrawal-queue",
+      "title": "Withdrawal queues",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "redemption queue",
+        "withdrawal queue",
+        "ERC-7540"
+      ],
+      "keywords": [
+        "exit",
+        "liquidity",
+        "delay",
+        "vault"
+      ],
+      "summary": "Some positions require a withdrawal request followed by later settlement. The time to receive spendable assets can differ from the time a share is sold or burned.",
+      "decision_use": "Compare the user cash deadline with queue rules, claim steps and available secondary-market depth.",
+      "pitfall": "Displayed NAV and instant exit proceeds can diverge, especially when many depositors leave together.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "curator-risk",
+      "title": "Curator and governance risk",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "curator",
+        "timelock",
+        "allocator"
+      ],
+      "keywords": [
+        "governance",
+        "upgrade",
+        "keys",
+        "permissions",
+        "vault"
+      ],
+      "summary": "A vault curator can select collateral, limits or allocation routes. Governance and upgrade roles may have different powers and delays.",
+      "decision_use": "Map each power to a controller and timelock; inspect who can halt, withdraw or change collateral.",
+      "pitfall": "Brand recognition and an audit do not prove that control roles or current parameters are acceptable.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "lending-health",
+      "title": "Lending health factor",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "health factor",
+        "liquidation threshold",
+        "LTV",
+        "LLTV"
+      ],
+      "keywords": [
+        "borrow",
+        "collateral",
+        "debt",
+        "liquidation"
+      ],
+      "summary": "Lending protocols compare collateral value adjusted by liquidation rules with debt value. Exact formulas and collateral weights depend on the market.",
+      "decision_use": "Retrieve current collateral, debt, oracle prices and market parameters. Stress both collateral and debt prices, with accrued interest.",
+      "pitfall": "A generic portfolio drawdown cannot calculate a health factor. Missing debt or protocol parameters must stay unknown.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "verify-current"
+    },
+    {
+      "id": "borrow-utilization",
+      "title": "Borrow utilization",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "utilization",
+        "kink rate"
+      ],
+      "keywords": [
+        "lending",
+        "borrow",
+        "rate",
+        "liquidity",
+        "withdrawal"
+      ],
+      "summary": "Utilization measures how much available supply has been borrowed. Higher utilization can raise borrow rates and reduce immediately withdrawable liquidity.",
+      "decision_use": "Check current utilization, rate-curve parameters and exit liquidity before evaluating a leveraged carry trade.",
+      "pitfall": "The initial borrowing APR can change after entry, including because of the user own trade size.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "leverage-loop",
+      "title": "Recursive lending loops",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "looping",
+        "recursive leverage",
+        "leveraged yield"
+      ],
+      "keywords": [
+        "borrow",
+        "deposit",
+        "collateral",
+        "loop"
+      ],
+      "summary": "A loop repeatedly borrows against supplied collateral and reinvests the proceeds. It magnifies exposure and couples yield to borrowing costs and liquidation rules.",
+      "decision_use": "Show gross supplied capital, debt and equity. Test incentive removal, rate increases and collateral depegs together.",
+      "pitfall": "The deposit APY alone hides financing cost and forced-sale risk.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "oracle-risk",
+      "title": "Oracle risk",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "oracle",
+        "TWAP",
+        "stale oracle"
+      ],
+      "keywords": [
+        "price",
+        "feed",
+        "liquidation",
+        "manipulation",
+        "heartbeat"
+      ],
+      "summary": "An oracle delivers a value used by a protocol. It can represent a market price, a computed exchange rate or an administrator report, each with different failure modes.",
+      "decision_use": "Check update cadence, deviation rules, fallback behavior and whether liquidations use the same price the user sees.",
+      "pitfall": "A valid transaction containing an old or manipulable price can still cause a harmful liquidation.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "stablecoin-risk",
+      "title": "Stablecoin and depeg risk",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "stablecoin",
+        "depeg",
+        "peg",
+        "synthetic dollar"
+      ],
+      "keywords": [
+        "reserves",
+        "issuer",
+        "redemption",
+        "usdc",
+        "usdt",
+        "stable"
+      ],
+      "summary": "A stablecoin targets a reference value through reserves, collateral or a strategy. The holder claim and redemption route determine what happens when the peg breaks.",
+      "decision_use": "Identify issuer, assets, liabilities and who absorbs losses. Check redemption eligibility and secondary-market depth.",
+      "pitfall": "Stable price history does not remove issuer, freeze, custody or collateral risk.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "liquid-staking",
+      "title": "Liquid staking tokens",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "LST",
+        "LSD",
+        "liquid staking",
+        "stETH",
+        "JitoSOL"
+      ],
+      "keywords": [
+        "staking",
+        "validator",
+        "redemption",
+        "slashing",
+        "eth",
+        "sol"
+      ],
+      "summary": "A liquid staking token represents a claim linked to staked assets and their rewards. A market sale and protocol redemption can produce different proceeds and timing.",
+      "decision_use": "Separate staking return, exchange-rate movement, fees and discount risk. Map validator concentration and exit queues.",
+      "pitfall": "Holding the base asset and its staking wrapper creates overlapping exposure.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "restaking",
+      "title": "Restaking",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "restaking",
+        "LRT",
+        "AVS"
+      ],
+      "keywords": [
+        "staking",
+        "slashing",
+        "operator",
+        "correlated",
+        "risk"
+      ],
+      "summary": "Restaking commits already-staked economic security to additional services. New operator or slashing conditions can add loss paths to the original staking position.",
+      "decision_use": "Map which services can impose losses, withdrawal delays and who controls allocations.",
+      "pitfall": "Several reward sources can share one collateral pool, so returns need not diversify the risk.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "amm",
+      "title": "Automated market makers",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "AMM",
+        "constant product",
+        "liquidity pool"
+      ],
+      "keywords": [
+        "swap",
+        "reserves",
+        "liquidity",
+        "price",
+        "impact"
+      ],
+      "summary": "An AMM prices trades against pooled inventory using a rule. In a simple constant-product pool, the product of two reserve balances stays approximately constant before fees.",
+      "decision_use": "Inspect pool depth and the actual route quote at the proposed size.",
+      "pitfall": "TVL is not the same as executable depth around the current price.",
+      "sources": [
+        {
+          "url": "https://github.com/solanabr/solana-glossary/tree/a91baa510c4db974dfab86669439c6db39a55daf/packages/glossary/data/terms",
+          "title": "SolanaBR glossary",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "impermanent-loss",
+      "title": "Impermanent loss",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "IL",
+        "impermanent loss",
+        "divergence loss"
+      ],
+      "keywords": [
+        "lp",
+        "liquidity",
+        "fees",
+        "pool",
+        "relative",
+        "price"
+      ],
+      "summary": "When relative asset prices change, an LP position rebalances and can be worth less than holding the starting assets. Fees can offset this difference, but do not guarantee it.",
+      "decision_use": "Compare LP total return with the same initial assets held outside the pool, including rewards, fees and withdrawal cost.",
+      "pitfall": "The word impermanent does not mean the loss disappears when withdrawing. Concentrated ranges change the payoff.",
+      "sources": [
+        {
+          "url": "https://github.com/solanabr/solana-glossary/tree/a91baa510c4db974dfab86669439c6db39a55daf/packages/glossary/data/terms",
+          "title": "SolanaBR glossary",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "concentrated-liquidity",
+      "title": "Concentrated liquidity",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "CLMM",
+        "concentrated liquidity",
+        "price range"
+      ],
+      "keywords": [
+        "lp",
+        "range",
+        "rebalance",
+        "ticks",
+        "liquidity"
+      ],
+      "summary": "A concentrated LP position supplies inventory inside selected price bounds. Outside its range it may hold mostly one asset and stop earning the expected trading fees.",
+      "decision_use": "Ask for range, current tick, fee accrual and rebalance costs; simulate path-dependent outcomes.",
+      "pitfall": "A high displayed fee APR can come from a short active window and ignore inventory loss.",
+      "sources": [
+        {
+          "url": "https://github.com/solanabr/solana-glossary/tree/a91baa510c4db974dfab86669439c6db39a55daf/packages/glossary/data/terms",
+          "title": "SolanaBR glossary",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "slippage",
+      "title": "Slippage and price impact",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "slippage",
+        "price impact",
+        "minimum output"
+      ],
+      "keywords": [
+        "quote",
+        "swap",
+        "spread",
+        "execution",
+        "mev"
+      ],
+      "summary": "Price impact is the change caused by trade size against liquidity. Slippage is the difference between a quoted expectation and final execution. A minimum-output bound limits one part of that uncertainty.",
+      "decision_use": "Check quote timestamp, size, route, fees and minimum received before any Zerion handoff.",
+      "pitfall": "Raising slippage to force a transaction through can make an unfavorable fill acceptable to the contract.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "mev",
+      "title": "MEV and sandwich attacks",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "MEV",
+        "sandwich attack",
+        "frontrunning"
+      ],
+      "keywords": [
+        "transaction",
+        "ordering",
+        "swap",
+        "mempool",
+        "bundle"
+      ],
+      "summary": "Transaction ordering can create value for searchers, block builders or validators. A sandwich places trades around a victim swap to exploit its price impact and tolerance.",
+      "decision_use": "Use the available quote protections and assess route liquidity. Treat protection claims as provider-specific.",
+      "pitfall": "Private submission or a low tolerance reduces some paths without proving every form of MEV is removed.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "bridge-risk",
+      "title": "Bridge risk",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "bridge risk",
+        "cross-chain bridge",
+        "bridged token"
+      ],
+      "keywords": [
+        "bridge",
+        "finality",
+        "relayer",
+        "wrapped",
+        "liquidity"
+      ],
+      "summary": "Moving value across chains adds dependencies on message verification, finality, relayers and sometimes custodians. A bridged token can have a different claim from a native issuance.",
+      "decision_use": "Map origin, destination, asset identity, bridge contract and return path. Check current status and destination gas.",
+      "pitfall": "Splitting assets across chains can increase shared bridge exposure rather than reduce it.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "finality",
+      "title": "Finality and confirmations",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "finality",
+        "confirmation",
+        "reorg"
+      ],
+      "keywords": [
+        "settlement",
+        "block",
+        "transaction",
+        "status"
+      ],
+      "summary": "A transaction being accepted, included and finalized are different observations. Finality assumptions depend on the chain and any cross-chain route.",
+      "decision_use": "Retain the transaction hash and verify the relevant terminal state with the provider before saying complete.",
+      "pitfall": "A timeout leaves an unknown outcome; resubmitting without reconciliation can duplicate an action.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "ethereum-gas",
+      "title": "Ethereum gas",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "gas",
+        "gwei",
+        "EIP-1559",
+        "base fee"
+      ],
+      "keywords": [
+        "ethereum",
+        "transaction",
+        "fee",
+        "priority"
+      ],
+      "summary": "Gas measures EVM work. Fee cost depends on gas used and the effective price per gas, with base and priority components under EIP-1559.",
+      "decision_use": "Get a current estimate on the selected chain and keep native gas available.",
+      "pitfall": "A gas figure in a skill is a historical example. Fees differ across chains and time.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "verify-current"
+    },
+    {
+      "id": "l2-risk",
+      "title": "Layer 2 risk",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "L2",
+        "rollup",
+        "sequencer"
+      ],
+      "keywords": [
+        "ethereum",
+        "settlement",
+        "fraud",
+        "validity",
+        "bridge",
+        "withdrawal"
+      ],
+      "summary": "A rollup executes transactions with settlement mechanisms anchored to another chain. Sequencing, proofs, upgrades and withdrawal paths create distinct dependencies.",
+      "decision_use": "Identify the actual rollup, bridge and exit conditions for each holding.",
+      "pitfall": "Using the same token symbol on two networks does not imply equal settlement or liquidity risk.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "token-approval",
+      "title": "Token approvals and permits",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "allowance",
+        "approval",
+        "permit",
+        "Permit2",
+        "EIP-712"
+      ],
+      "keywords": [
+        "spender",
+        "token",
+        "authorize",
+        "signature"
+      ],
+      "summary": "An ERC-20 allowance lets a spender transfer tokens within granted conditions. Typed-data signatures can authorize permissions without immediately sending an onchain transaction.",
+      "decision_use": "Inspect spender, token, amount, chain, deadline and the meaning of each signed message.",
+      "pitfall": "A signature request can grant financial authority even when it is described as a login or contains no gas fee.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "erc-20",
+      "title": "ERC-20 decimals and identity",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "ERC-20",
+        "token decimals"
+      ],
+      "keywords": [
+        "token",
+        "symbol",
+        "contract",
+        "address",
+        "units"
+      ],
+      "summary": "ERC-20 token balances are integers scaled by decimals. Asset identity depends on the contract and chain; symbols are display labels.",
+      "decision_use": "Resolve contract and decimals from current trusted metadata before quoting amounts or planning actions.",
+      "pitfall": "Assuming every token has 18 decimals can create orders many powers of ten too large.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "erc-4337",
+      "title": "Account abstraction",
+      "ecosystem": "ethereum",
+      "aliases": [
+        "ERC-4337",
+        "account abstraction",
+        "paymaster"
+      ],
+      "keywords": [
+        "smart",
+        "account",
+        "useroperation",
+        "bundler",
+        "gas"
+      ],
+      "summary": "Account abstraction supports programmable account validation and transaction handling. A paymaster may sponsor eligible fees under its own rules.",
+      "decision_use": "Identify the wallet implementation, bundler, supported chain and sponsorship limits.",
+      "pitfall": "A sponsored fee does not make the transaction free of asset, approval or contract risk.",
+      "sources": [
+        {
+          "url": "https://github.com/austintgriffith/ethskills/tree/06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+          "title": "ETH Skills",
+          "license": "NOASSERTION: README says MIT; no root license file"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "x402",
+      "title": "x402 data payments",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "x402",
+        "HTTP 402",
+        "paid data"
+      ],
+      "keywords": [
+        "zerion",
+        "analytics",
+        "payment",
+        "budget",
+        "receipt"
+      ],
+      "summary": "x402 lets an HTTP resource request payment before serving data. In Scout the configured payment wallet pays for Zerion analytics within its spend limits.",
+      "decision_use": "Separate data budget from investment capital. Inspect accepted network, recipient, amount, expiry and payment result.",
+      "pitfall": "Paying for portfolio data grants no authority to trade the observed portfolio.",
+      "sources": [
+        {
+          "url": "https://github.com/zeriontech/zerion-ai/tree/7a873d1c91d4cdfb24bbe79fd8cfabb72544bb6a",
+          "title": "Zerion AI source",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "verify-current"
+    },
+    {
+      "id": "solana-account",
+      "title": "Solana accounts",
+      "ecosystem": "solana",
+      "aliases": [
+        "account model",
+        "rent exemption"
+      ],
+      "keywords": [
+        "solana",
+        "owner",
+        "data",
+        "lamports",
+        "program"
+      ],
+      "summary": "Solana stores state in accounts with lamports, data and an owner program. Program ownership determines which program can change the data under runtime rules.",
+      "decision_use": "Distinguish the wallet address, data accounts and the program that controls each account.",
+      "pitfall": "Account ownership by a program is different from possession of a wallet signing key.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-pda",
+      "title": "Program derived addresses",
+      "ecosystem": "solana",
+      "aliases": [
+        "PDA",
+        "program derived address",
+        "bump"
+      ],
+      "keywords": [
+        "solana",
+        "seeds",
+        "signer",
+        "program"
+      ],
+      "summary": "A PDA is derived from seeds and a program ID and has no ordinary private key. The deriving program can authorize for it through runtime rules using matching seeds.",
+      "decision_use": "Check the program ID, seeds, bump and ownership constraints when reviewing a PDA-controlled position.",
+      "pitfall": "A PDA-looking address alone proves neither ownership nor that the intended program validated its seeds.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-cpi",
+      "title": "Cross-program invocation",
+      "ecosystem": "solana",
+      "aliases": [
+        "CPI",
+        "cross program invocation"
+      ],
+      "keywords": [
+        "solana",
+        "program",
+        "instruction",
+        "privilege"
+      ],
+      "summary": "A CPI lets one Solana program invoke another while passing selected accounts and privileges. Caller checks and downstream program behavior both affect the result.",
+      "decision_use": "Trace the target program and each writable or signer account in a transaction.",
+      "pitfall": "A trusted top-level program does not make every downstream account or invoked program trustworthy.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-token-account",
+      "title": "Solana token accounts",
+      "ecosystem": "solana",
+      "aliases": [
+        "ATA",
+        "associated token account",
+        "token account"
+      ],
+      "keywords": [
+        "solana",
+        "mint",
+        "token",
+        "owner",
+        "balance"
+      ],
+      "summary": "A token account holds a balance for one mint and has an authority. An associated token account is the conventional derived account for a wallet, mint and token program.",
+      "decision_use": "Resolve mint, token program and recipient token account before preparing a transfer.",
+      "pitfall": "The recipient wallet address and its token account address are distinct concepts.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-token-2022",
+      "title": "Token-2022 extensions",
+      "ecosystem": "solana",
+      "aliases": [
+        "Token-2022",
+        "transfer hook",
+        "transfer fee"
+      ],
+      "keywords": [
+        "solana",
+        "mint",
+        "extensions",
+        "freeze",
+        "token"
+      ],
+      "summary": "Token-2022 extends token behavior with optional features such as transfer fees or hooks. These features can alter amounts received or requirements for transfers.",
+      "decision_use": "Inspect mint extensions and all authorities before assessing tradability or accepting a quote.",
+      "pitfall": "A familiar ticker does not establish compatibility with a venue or the absence of transfer restrictions.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "verify-current"
+    },
+    {
+      "id": "solana-compute",
+      "title": "Compute units and priority fees",
+      "ecosystem": "solana",
+      "aliases": [
+        "CU",
+        "compute units",
+        "priority fee"
+      ],
+      "keywords": [
+        "solana",
+        "transaction",
+        "budget",
+        "micro",
+        "lamports"
+      ],
+      "summary": "Solana transactions have compute budgets, and priority pricing is expressed per compute unit. Requested compute limits can affect fee cost.",
+      "decision_use": "Use simulation and a current fee estimate for the exact transaction shape.",
+      "pitfall": "A copied priority fee is not a reliable estimate under different congestion or compute settings.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-blockhash",
+      "title": "Recent blockhash expiry",
+      "ecosystem": "solana",
+      "aliases": [
+        "blockhash",
+        "lastValidBlockHeight",
+        "durable nonce"
+      ],
+      "keywords": [
+        "solana",
+        "expiry",
+        "retry",
+        "transaction"
+      ],
+      "summary": "A recent blockhash gives a transaction a limited validity window. A durable nonce provides a different validity mechanism with its own account state.",
+      "decision_use": "Track the signed transaction, signature status and last valid block height before deciding whether a retry is safe.",
+      "pitfall": "A client timeout alone does not prove that a signed transaction failed to land.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-commitment",
+      "title": "Solana commitment levels",
+      "ecosystem": "solana",
+      "aliases": [
+        "processed",
+        "confirmed",
+        "finalized",
+        "commitment"
+      ],
+      "keywords": [
+        "solana",
+        "confirmation",
+        "transaction",
+        "status"
+      ],
+      "summary": "Solana RPC commitment levels describe confidence in observed ledger state. Processed, confirmed and finalized results have different rollback exposure.",
+      "decision_use": "Report the commitment used for balances and transaction verification.",
+      "pitfall": "Mixing a processed balance with finalized history can create an apparent accounting mismatch.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-wsol",
+      "title": "Wrapped SOL",
+      "ecosystem": "solana",
+      "aliases": [
+        "wSOL",
+        "wrapped SOL"
+      ],
+      "keywords": [
+        "solana",
+        "native",
+        "token",
+        "account",
+        "sync",
+        "close"
+      ],
+      "summary": "Wrapped SOL represents native SOL within the token-account model so programs can handle it alongside other tokens.",
+      "decision_use": "Account for wrapping, synchronization and closing steps in a transaction preview.",
+      "pitfall": "A token-account balance and native lamports can require separate handling; avoid counting the same SOL twice.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "solana-authorities",
+      "title": "Solana mint authorities",
+      "ecosystem": "solana",
+      "aliases": [
+        "mint authority",
+        "freeze authority",
+        "close authority"
+      ],
+      "keywords": [
+        "solana",
+        "token",
+        "permissions",
+        "supply",
+        "risk"
+      ],
+      "summary": "Mint and freeze authorities can affect supply and account usability. Other authority types control account operations or extension behavior.",
+      "decision_use": "Inspect current authorities and whether they are revoked, multisig-controlled or upgradeable.",
+      "pitfall": "A revoked mint authority alone does not establish that a token is safe to trade.",
+      "sources": [
+        {
+          "url": "https://github.com/solana-foundation/solana-dev-skill/tree/69935cfc19298b7db6e6f7471f56ff79369214da",
+          "title": "Solana Foundation developer skill",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "verify-current"
+    },
+    {
+      "id": "perpetuals",
+      "title": "Perpetual futures and funding",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "perps",
+        "perpetual",
+        "funding rate"
+      ],
+      "keywords": [
+        "leverage",
+        "mark",
+        "price",
+        "margin",
+        "liquidation"
+      ],
+      "summary": "Perpetual contracts maintain exposure without a fixed expiry and use funding payments or other mechanisms to track an index. Margin and liquidation use venue rules.",
+      "decision_use": "Separate price PnL, funding, fees and collateral risk. Inspect the mark price and maintenance requirements.",
+      "pitfall": "Positive historical funding is not a locked return and can reverse while a position is open.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "basis-trade",
+      "title": "Cash-and-carry basis",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "basis",
+        "cash and carry",
+        "delta neutral"
+      ],
+      "keywords": [
+        "funding",
+        "futures",
+        "spot",
+        "hedge",
+        "carry"
+      ],
+      "summary": "A basis trade pairs offsetting exposures to earn a price or funding difference. Profit depends on financing, execution and maintaining the hedge.",
+      "decision_use": "Identify both legs, margin locations, basis convergence assumptions and a path to unwind each side.",
+      "pitfall": "Small directional delta does not remove liquidation, custody, funding or cross-venue risk.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "position-sizing",
+      "title": "Position sizing and risk budget",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "position sizing",
+        "risk budget",
+        "R multiple"
+      ],
+      "keywords": [
+        "trade",
+        "loss",
+        "stop",
+        "position",
+        "size"
+      ],
+      "summary": "A trading risk budget defines an acceptable planned loss before choosing position size. For a simple spot trade, size depends on the distance to invalidation plus realistic costs.",
+      "decision_use": "Record thesis, invalidation, size cap, liquidity and expected holding period before a proposal.",
+      "pitfall": "Stops are instructions whose fills can slip. Planned loss is not a guaranteed maximum loss.",
+      "sources": [
+        {
+          "url": "https://github.com/gabchess/Vibe-Trading/blob/ff6695912c1d6b7b8405bcd0e0f9b99ae7893e41/agent/SKILL.md",
+          "title": "Vibe-Trading research workflow",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "backtest",
+      "title": "Backtest validity",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "backtest",
+        "walk forward",
+        "lookahead",
+        "overfitting"
+      ],
+      "keywords": [
+        "strategy",
+        "trading",
+        "evaluation",
+        "leakage",
+        "costs"
+      ],
+      "summary": "A backtest evaluates rules on historical observations under a fill and cost model. Separating development data from later test data reduces selection bias.",
+      "decision_use": "Use time-ordered holdouts, fees, slippage and realistic availability of assets and signals.",
+      "pitfall": "Trying many strategies and reporting only the winner overstates the evidence, even when its chart looks strong.",
+      "sources": [
+        {
+          "url": "https://github.com/gabchess/Vibe-Trading/blob/ff6695912c1d6b7b8405bcd0e0f9b99ae7893e41/agent/SKILL.md",
+          "title": "Vibe-Trading research workflow",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "drawdown",
+      "title": "Drawdown and recovery",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "drawdown",
+        "maximum drawdown",
+        "recovery"
+      ],
+      "keywords": [
+        "portfolio",
+        "loss",
+        "peak",
+        "equity"
+      ],
+      "summary": "Drawdown is the fall from a prior equity peak. After a 50% loss, recovering the original value requires a 100% gain on the remaining capital.",
+      "decision_use": "Use a dated equity series that accounts for deposits and withdrawals before comparing strategies.",
+      "pitfall": "PnL from acquisition cost and peak-to-trough drawdown measure different things.",
+      "sources": [
+        {
+          "url": "https://github.com/gabchess/Vibe-Trading/blob/ff6695912c1d6b7b8405bcd0e0f9b99ae7893e41/agent/SKILL.md",
+          "title": "Vibe-Trading research workflow",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "liquidity-risk",
+      "title": "Exit liquidity and market depth",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "exit liquidity",
+        "market depth",
+        "liquidity risk"
+      ],
+      "keywords": [
+        "spread",
+        "orderbook",
+        "slippage",
+        "trade",
+        "size"
+      ],
+      "summary": "Liquidity describes the ability to trade a particular size at a particular cost and time. Depth can disappear during stress when it is needed most.",
+      "decision_use": "Compare the user planned exit size with executable quotes and withdrawal capacity.",
+      "pitfall": "High volume or TVL can coexist with a costly exit; printed metrics can include activity that is hard to realize.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "trade-journal",
+      "title": "Trade thesis and journal",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "trade journal",
+        "invalidation",
+        "trading plan"
+      ],
+      "keywords": [
+        "strategy",
+        "discipline",
+        "review",
+        "thesis",
+        "exit"
+      ],
+      "summary": "A journal records the reason for a trade, expected holding period, entry criteria, invalidation and later outcomes. It helps separate a repeatable rule from a lucky result.",
+      "decision_use": "Write the plan before entry; review decisions against information available at that time.",
+      "pitfall": "Rewriting the thesis after a loss makes strategy evaluation unreliable.",
+      "sources": [
+        {
+          "url": "https://github.com/gabchess/Vibe-Trading/blob/ff6695912c1d6b7b8405bcd0e0f9b99ae7893e41/agent/SKILL.md",
+          "title": "Vibe-Trading research workflow",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "zerion-action",
+      "title": "Zerion action boundary",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "Zerion",
+        "action boundary",
+        "prepare",
+        "review"
+      ],
+      "keywords": [
+        "swap",
+        "bridge",
+        "transfer",
+        "payment",
+        "execute"
+      ],
+      "summary": "Zerion AI supplies its own wallet and action workflows. Scout currently produces portfolio proposals and does not call its trading CLI.",
+      "decision_use": "Keep Scout action plans on Zerion. A future adapter must bind a specific intent, approval, quote expiry and verified outcome.",
+      "pitfall": "Installing the official Zerion plugin alongside Scout gives the host additional tools; Scout cannot police every other plugin.",
+      "sources": [
+        {
+          "url": "https://github.com/zeriontech/zerion-ai/tree/7a873d1c91d4cdfb24bbe79fd8cfabb72544bb6a",
+          "title": "Zerion AI source",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "verify-current"
+    },
+    {
+      "id": "rwa-claims",
+      "title": "Tokenized real-world claims",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "RWA",
+        "tokenized treasury",
+        "NAV"
+      ],
+      "keywords": [
+        "redemption",
+        "issuer",
+        "custody",
+        "fund",
+        "asset"
+      ],
+      "summary": "A token can represent a claim on offchain assets whose settlement, valuation and redemption depend on an issuer and legal agreements.",
+      "decision_use": "Read eligibility, claim priority, pricing cadence, redemption windows and custody arrangements.",
+      "pitfall": "A transferable token does not guarantee that every buyer has a direct right to redeem the underlying asset.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "principal-yield",
+      "title": "Principal and yield tokens",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "PT",
+        "YT",
+        "principal token",
+        "yield token"
+      ],
+      "keywords": [
+        "maturity",
+        "discount",
+        "duration",
+        "yield"
+      ],
+      "summary": "Some systems split a yield-bearing claim into a principal claim and a claim on yield until maturity. Each side inherits the underlying asset and protocol risks.",
+      "decision_use": "Inspect maturity, redemption units, underlying exchange-rate behavior and exit liquidity.",
+      "pitfall": "A discounted principal token can carry depeg or redemption risk even when the implied rate looks fixed.",
+      "sources": [
+        {
+          "url": "https://github.com/emlai/defi-native-skill/blob/902734ad83f387cc7e4d84815ae655efce162d43/references/concepts.md",
+          "title": "DeFi Native: concepts",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    },
+    {
+      "id": "correlation",
+      "title": "Correlation and shared risks",
+      "ecosystem": "cross-chain",
+      "aliases": [
+        "correlation",
+        "beta",
+        "diversification"
+      ],
+      "keywords": [
+        "portfolio",
+        "asset",
+        "exposure",
+        "risk"
+      ],
+      "summary": "Correlation measures how a pair of returns move together over a chosen period. Shared collateral, leverage and liquidity channels can align losses during stress.",
+      "decision_use": "Use comparable return series and inspect common issuers, chains and debt dependencies alongside historical correlation.",
+      "pitfall": "An effective position count based on weights does not measure correlation-adjusted diversification.",
+      "sources": [
+        {
+          "url": "https://github.com/gabchess/Vibe-Trading/blob/ff6695912c1d6b7b8405bcd0e0f9b99ae7893e41/agent/SKILL.md",
+          "title": "Vibe-Trading research workflow",
+          "license": "MIT"
+        }
+      ],
+      "reviewed_at": "2026-09-10",
+      "freshness": "conceptual"
+    }
+  ]
+}

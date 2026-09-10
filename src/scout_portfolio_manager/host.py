@@ -10,9 +10,11 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 from . import __version__
+from .advisory import assess_yield, plan_zerion_action, portfolio_risk, validate_shock_pct
+from .advisory_manifest import ADVISORY_TOOL_NAMES, advisory_manifest
 from .alerts import AlertRule, AlertStore, evaluate_alert
 from .analytics import (
     distance_from_range_pct,
@@ -25,6 +27,7 @@ from .analytics import (
 from .contracts import PortfolioSnapshot, Transaction
 from .dca import DcaIntent, parse_dca_request
 from .dca_windows import SIZING_FRACTION, classify_window
+from .knowledge import search_knowledge
 from .pnl import PnlResult, calculate_pnl
 from .portfolio import FixturePortfolioReader, PortfolioReader
 from .price_history import FixturePriceHistoryReader, PriceHistoryReader
@@ -39,6 +42,7 @@ from .zerion_api import (
     ZerionAPIServerError,
     ZerionAPITransportError,
 )
+from .zerion_prepare import PreparationIntent, PreparationService
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +66,7 @@ TOOL_NAMES = (
     "dca_windows",
     "set_alert",
     "check_alerts",
-)
+) + ADVISORY_TOOL_NAMES
 
 #: Default local path for AlertStore, relative to the process's current
 #: working directory when no alerts_path is given. Gitignored: this is
@@ -119,7 +123,9 @@ class ReadOnlyHost:
         *,
         price_history_path: Optional[Union[str, Path]] = None,
         alerts_path: Optional[Union[str, Path]] = None,
+        preparation: PreparationService | None = None,
     ):
+        self.preparation = preparation or PreparationService()
         self.reader: PortfolioReader = (
             FixturePortfolioReader(source) if isinstance(source, (str, Path)) else source
         )
@@ -346,10 +352,20 @@ class ReadOnlyHost:
                     "additionalProperties": False,
                 },
             },
-        ]
+        ] + advisory_manifest(__version__)
 
     def call_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         arguments = arguments or {}
+        if name in ADVISORY_TOOL_NAMES:
+            methods: Dict[str, Callable[..., Dict[str, Any]]] = {
+                "get_portfolio_risk": self.get_portfolio_risk,
+                "assess_defi_yield": self.assess_defi_yield,
+                "search_defi_knowledge": self.search_defi_knowledge,
+                "plan_zerion_action": self.plan_zerion_action,
+                "prepare_zerion_transaction": self.prepare_zerion_transaction,
+                "get_zerion_preparation": self.get_zerion_preparation,
+            }
+            return methods[name](**arguments)
         if name == "get_portfolio_snapshot":
             return self.get_portfolio_snapshot()
         if name == "get_pnl":
@@ -404,6 +420,94 @@ class ReadOnlyHost:
                 "execution requires a separate authority decision"
             )
         raise ValueError(f"unknown tool: {name}")
+
+    def get_portfolio_risk(self, shock_pct: float = -30.0) -> Dict[str, Any]:
+        """Calculate concentration from one configured-source read; validate before spending."""
+        shock = validate_shock_pct(shock_pct)
+        try:
+            snapshot = self.reader.snapshot()
+        except ZerionAPIError as exc:
+            return _observe_error(exc)
+        result = portfolio_risk(snapshot, shock_pct=shock)
+        observed = snapshot.observed_at
+        if observed.tzinfo is not None:
+            age = (datetime.now(timezone.utc) - observed).total_seconds()
+            result["freshness"].update(
+                age_seconds=age,
+                max_age_seconds=900,
+                state="future_timestamp" if age < 0 else "stale" if age > 900 else "recent",
+            )
+        else:
+            result["freshness"].update(state="unknown_timezone", max_age_seconds=900)
+        result.update(status="ok", boundary="calculate", execution_available=False)
+        return self._with_source_budget(result)
+
+    def assess_defi_yield(
+        self,
+        principal_usd: float,
+        base_apr_pct: float,
+        reward_apr_pct: float = 0.0,
+        borrow_apr_pct: float = 0.0,
+        fees_usd: float = 0.0,
+        days: float = 365,
+    ) -> Dict[str, Any]:
+        """Calculate a scenario on caller assumptions without reading any wallet."""
+        result = assess_yield(
+            principal_usd, base_apr_pct, reward_apr_pct, borrow_apr_pct, fees_usd, days
+        )
+        result.update(status="ok", boundary="calculate", execution_available=False)
+        return result
+
+    def search_defi_knowledge(
+        self,
+        query: str,
+        ecosystem: str | None = None,
+        limit: int = 5,
+    ) -> Dict[str, Any]:
+        return search_knowledge(query, ecosystem=ecosystem, limit=limit)
+
+    def plan_zerion_action(
+        self,
+        action: str,
+        asset: str | None = None,
+        amount: float | None = None,
+        chain: str | None = None,
+        destination: str | None = None,
+    ) -> Dict[str, Any]:
+        result = plan_zerion_action(action, asset, amount, chain, destination)
+        result.update(status="proposal_only", boundary="propose")
+        return result
+
+    def prepare_zerion_transaction(
+        self,
+        request_id: str,
+        action: str,
+        chain: str,
+        source_wallet: str,
+        asset: str,
+        amount: str,
+        target_asset: str | None = None,
+        destination: str | None = None,
+        destination_chain: str | None = None,
+        slippage_bps: int = 50,
+    ) -> Dict[str, Any]:
+        request = PreparationIntent.model_validate(
+            dict(
+                action=action,
+                chain=chain,
+                source_wallet=source_wallet,
+                asset=asset,
+                amount=amount,
+                target_asset=target_asset,
+                destination=destination,
+                destination_chain=destination_chain,
+                slippage_bps=slippage_bps,
+            )
+        )
+        return self.preparation.prepare(request_id, request)
+
+    def get_zerion_preparation(self, request_id: str) -> Dict[str, Any]:
+        return self.preparation.get_status(request_id)
 
     def get_portfolio_snapshot(self) -> Dict[str, Any]:
         try:
