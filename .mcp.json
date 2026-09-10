@@ -2,9 +2,17 @@
   "mcpServers": {
     "scout-portfolio": {
       "command": "uv",
-      "args": ["run", "--project", "${CLAUDE_PLUGIN_ROOT:-.}", "--extra", "mcp", "zpm-mcp"],
+      "args": [
+        "run",
+        "--frozen",
+        "--project",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "--extra",
+        "mcp",
+        "zpm-mcp"
+      ],
       "env": {
-        "ZPM_FIXTURE_PATH": "${CLAUDE_PLUGIN_ROOT:-.}/fixtures/portfolio.json"
+        "ZPM_FIXTURE_PATH": "${CLAUDE_PLUGIN_ROOT}/fixtures/portfolio.json"
       }
     }
   }

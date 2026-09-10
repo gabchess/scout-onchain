@@ -29,3 +29,9 @@ The browser demo at `demo/zerion-portfolio-agent/` uses a color and typography p
 ## Evidence boundary
 
 This artifact declares contents and provenance; it does not prove runtime behavior on any machine other than the one that produced it.
+
+## Knowledge proposal sources
+
+The 48 Scout learning cards are original concise explanations with reference URLs. ETH Skills is reference-only: its README says MIT but the inspected upstream has no root license file. The official Solana documentation glossary is reference-only and has not been copied. DeFi Native (emlai), Vibe-Trading and the Solana Foundation skill retain their source identities in [SOURCE-LOCK.json](docs/knowledge/SOURCE-LOCK.json).
+
+The bundled `data/solana_glossary.json` adapts all 1,059 terms from Superteam Brazil's MIT-licensed [SolanaBR glossary](https://github.com/solanabr/solana-glossary) at revision `a91baa510c4db974dfab86669439c6db39a55daf`. Definitions are marked community_reference_unverified. The complete notice is in [component-notices/solanabr-solana-glossary.LICENSE](component-notices/solanabr-solana-glossary.LICENSE) and embedded in the JSON so wheel distributions retain it. No upstream glossary runtime, MCP server, hosted service or action tools are installed.

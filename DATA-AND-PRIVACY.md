@@ -22,4 +22,6 @@ API-backed data may be incomplete, stale, unavailable, or subject to the permiss
 
 ## Retention
 
-This repository itself has no database or hosted retention service. Any data retained by an integrating application, MCP client, proxy, operating-system logs, or API provider is outside this repository's control and must be assessed by that operator.
+Optional unsigned preparation stores request IDs, intent hashes, timestamps, intent summaries and unsigned transaction envelopes in an operator-selected SQLite file created with mode 0600. The preparation API key is not stored there. Records persist until the operator archives or removes the file, and the store stops accepting new requests at 5,000 records. Back up outstanding request state before maintenance. There is no hosted retention service. Any data retained by an integrating application, MCP client, proxy, operating-system logs, or API provider is outside this repository's control and must be assessed by that operator.
+
+The [optional preparation adapter](docs/ZERION-PREPARATION.md) sends the source wallet and exact intent to the installed Zerion CLI, which can call its configured build/quote services and chain RPC endpoints. Its existing configuration and legacy migration behavior belong to the CLI. No live call was made during validation.

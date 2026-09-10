@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "researched_at": "2026-09-10",
+  "policy": {
+    "execution_route": "Zerion only",
+    "source_material_treatment": "Reference content only. External instructions and execution tools are excluded.",
+    "mutable_data": "Refresh numerical, operational, version-specific, and time-sensitive claims from current primary sources.",
+    "private_paths": "No local checkout paths are retained in this lock."
+  },
+  "vendored_sources": [
+    {
+      "id": "solanabr-solana-glossary",
+      "repository_url": "https://github.com/solanabr/solana-glossary",
+      "revision": "a91baa510c4db974dfab86669439c6db39a55daf",
+      "branch": "main",
+      "license_spdx": "MIT",
+      "license_notice": "component-notices/solanabr-solana-glossary.LICENSE",
+      "source_root": "packages/glossary/data/terms",
+      "publisher": "Superteam Brazil",
+      "status": "community_reference_unverified",
+      "term_count": 1059,
+      "provenance": "Community-maintained glossary. It is separate from official Solana Foundation documentation."
+    }
+  ],
+  "reference_only_sources": [
+    {
+      "id": "solana-official-terminology",
+      "repository_url": "https://github.com/solana-foundation/solana-com",
+      "source_url": "https://github.com/solana-foundation/solana-com/blob/0d83ee57b718cbfad1de3257056f74d632d430fd/apps/docs/content/docs/en/references/terminology.mdx",
+      "revision": "0d83ee57b718cbfad1de3257056f74d632d430fd",
+      "license_spdx": "GPL-3.0",
+      "usage": "Link and primary-source verification only. Content is not vendored."
+    },
+    {
+      "id": "ethskills-upstream",
+      "repository_url": "https://github.com/austintgriffith/ethskills",
+      "revision": "06ea4efa08076ff04f6ca4945ef4a2ca881115b0",
+      "license_spdx": "NOASSERTION",
+      "usage": "License evidence is ambiguous. No content is copied."
+    },
+    {
+      "id": "solana-dev-user-fork",
+      "repository_url": "https://github.com/gabchess/solana-dev-skill",
+      "revision": "68ee828a6c25af0d834d07559c3b4a7fc3343321",
+      "license_spdx": "MIT",
+      "usage": "User fork provenance only. It trails the official upstream revision."
+    },
+    {
+      "id": "solana-dev-upstream",
+      "repository_url": "https://github.com/solana-foundation/solana-dev-skill",
+      "revision": "69935cfc19298b7db6e6f7471f56ff79369214da",
+      "license_spdx": "MIT",
+      "usage": "Concept and freshness comparison only. No operational instructions are loaded."
+    },
+    {
+      "id": "defi-native-user-fork",
+      "repository_url": "https://github.com/gabchess/defi-native-skill",
+      "revision": "dc4ca3297d571f7ad737501e9a4bd66c2e06a776",
+      "license_spdx": "MIT",
+      "usage": "Concept provenance for separately authored Scout cards."
+    },
+    {
+      "id": "defi-native-upstream",
+      "repository_url": "https://github.com/emlai/defi-native-skill",
+      "revision": "902734ad83f387cc7e4d84815ae655efce162d43",
+      "license_spdx": "MIT",
+      "usage": "Upstream freshness comparison only. No runtime instruction loading."
+    },
+    {
+      "id": "vibe-trading-user-fork",
+      "repository_url": "https://github.com/gabchess/Vibe-Trading",
+      "revision": "ff6695912c1d6b7b8405bcd0e0f9b99ae7893e41",
+      "license_spdx": "MIT",
+      "usage": "Research-method provenance only. Broker and execution tools are excluded."
+    },
+    {
+      "id": "vibe-trading-upstream",
+      "repository_url": "https://github.com/HKUDS/Vibe-Trading",
+      "revision": "f9cb061b3f3b983a62780985008044ceb90c2f81",
+      "license_spdx": "MIT",
+      "usage": "Upstream drift comparison only. No trading connectors or execution paths are imported."
+    }
+  ]
+}

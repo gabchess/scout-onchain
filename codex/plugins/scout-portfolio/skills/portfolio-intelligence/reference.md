@@ -19,4 +19,4 @@ Zerion snapshots contain per-asset positions and mapped transactions with `sourc
 
 x402 uses a separate Base payment wallet for analytics. The defaults are `$0.05` per payment and `$1.05` per process. Scout reserves budget before every SDK payment payload, including recovery. Read `docs/X402.md` before enabling it.
 
-`preview_dca` accepts optional quote output, fee, slippage, expiry, and max-fee values supplied by the caller. Missing values become labeled fixture assumptions. Scout does not fetch or execute a Zerion swap quote in 0.4.0.
+`preview_dca` accepts optional quote output, fee, slippage, expiry, and max-fee values supplied by the caller. Missing values become labeled fixture assumptions. Optional Zerion CLI preparation is described in `docs/ZERION-PREPARATION.md`; Scout cannot execute the resulting proposal.

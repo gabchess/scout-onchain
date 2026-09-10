@@ -1,5 +1,7 @@
 # Scout
 
+> **Scout 0.5.0:** Adds portfolio risk, assumed yield scenarios, source-linked DeFi knowledge and Zerion action plans. See [release downloads](https://github.com/gabchess/scout-onchain/releases/tag/v0.5.0) and [feature details](docs/knowledge/README.md).
+
 <p align="center">
   <img src="docs/scout-mascot-corgi.png" width="180" height="180" alt="Scout, a corgi mascot for the onchain portfolio manager" />
 </p>
@@ -7,7 +9,7 @@
 <p align="center"><strong>An onchain portfolio manager for AI agents.</strong></p>
 
 <p align="center">
-  <a href="CLAIMS.md"><img alt="version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-0B57D0" /></a>
+  <a href="CLAIMS.md"><img alt="version 0.5.0" src="https://img.shields.io/badge/version-0.5.0-0B57D0" /></a>
   <a href="LICENSE.md"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a>
   <a href="SECURITY.md"><img alt="DCA proposal only" src="https://img.shields.io/badge/DCA-proposal-6e7781" /></a>
 </p>
@@ -26,7 +28,7 @@ The host is customizable. It works with bundled sample data, a Zerion API key, o
 | Draft a weekly ETH DCA | Clarified intent and an approval-required proposal |
 | Check my alerts | One local, on-demand evaluation |
 
-Market indicators and DCA windows use bundled synthetic price history in 0.4.0. Scout labels that source and keeps confidence low.
+Market indicators and DCA windows use bundled synthetic price history in 0.5.0. Scout labels that source and keeps confidence low.
 
 Every DCA flow stops at a proposal. `preview_dca` returns `approval_state=required` and `execution_available=false`. Scout does not connect the observed wallet, sign a trade, or submit a transaction.
 
@@ -56,7 +58,7 @@ Open `http://127.0.0.1:8787`.
 
 ## Use Zerion
 
-API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; Scout 0.4.0 does not fetch a swap quote itself.
+API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; the standard analytics flow does not fetch a swap quote itself.
 
 x402 access needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the `x402` dependency extra. This route pays for analytics reads from a separate Base wallet. It does not authorize trading.
 
@@ -67,3 +69,11 @@ The x402 suite runs without sending funds. This repository has no verified paid 
 ## Evidence
 
 [`CLAIMS.md`](CLAIMS.md) records what is tested. [`SECURITY.md`](SECURITY.md) explains each authority boundary. The package is [MIT licensed](LICENSE.md).
+
+## DeFi research and optional preparation
+
+Scout adds source-linked Ethereum and Solana knowledge, portfolio exposure analysis and transparent yield arithmetic. Community glossary entries carry provenance and require current primary-source checks for operational decisions. See [knowledge coverage](docs/knowledge/README.md).
+
+An optional Zerion CLI adapter prepares unsigned EVM swap, transfer and bridge proposals. It starts disabled and has no signing or broadcast path. Read [configuration and evidence limits](docs/ZERION-PREPARATION.md) before enabling it.
+
+Grok Build accepts the Claude plugin layout in this repository. Grok Bot distribution has a separate validation path; see [Grok compatibility](docs/GROK.md).

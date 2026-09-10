@@ -1,0 +1,6 @@
+{
+  "source_commit": "565be97350a86fa7606aa9ed17bdf9058a5297eb",
+  "frozen_base_commit": "7d2e5dd8ad5cd5045c57f2b7bdf1280b6fab3ff9",
+  "runtime_sha256": "5319d9d2619783c6f36939da93f82faf4105cd752b73a5594a107c63ecb3f254",
+  "runtime_matches_frozen": true
+}

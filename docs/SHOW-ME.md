@@ -22,7 +22,7 @@ user request
 
 Portfolio snapshots can use the bundled fixture or Zerion. API-key mode reads positions and mapped transactions. x402 mode pays for analytics from a separate Base wallet and reports its remaining process budget.
 
-DCA proposals may use quote values supplied by the host. Scout 0.4.0 does not fetch a Zerion swap quote. Market indicators use bundled synthetic history with low confidence.
+DCA proposals may use quote values supplied by the host. Optional Zerion CLI preparation can obtain an unsigned proposal. Market indicators use bundled synthetic history with low confidence.
 
 The runtime boundary is fixed:
 

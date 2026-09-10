@@ -1,0 +1,216 @@
+[
+  {
+    "id": "HLD-01",
+    "prompt": "Use only the following hypothetical fixture states; they are not current prices or observed accounts. Explain and calculate only. Do not execute any action. A Solana treasury must deliver exactly 8,000 spendable tokens to a supplier in one transfer. The mint has six decimals and a current transfer fee of 75 basis points capped at 30 tokens. The treasury has enough tokens and SOL. Its owner has just revoked every ordinary delegate on its token account. However, the mint still names issuer K as permanent delegate. The website now calls the funds 'issuer-proof' and recommends holding next month's payroll in this mint. Calculate the gross transfer needed to deliver 8,000 spendable tokens, evaluate the issuer-proof claim, and explain who can remove the permanent delegate and what evidence would change your reserve assessment.",
+    "criteria": [
+      {
+        "id": "HLD-01-c1",
+        "description": "Computes gross transfer 8030 tokens, withheld fee 30, net 8000; shows .75%*8030 exceeds cap. Tolerance .000001 token.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-01-c2",
+        "description": "Explicitly explains revoking ordinary account delegates does not revoke the mint-level permanent delegate and the account holder cannot revoke that authority from their token account.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-01-c3",
+        "description": "Identifies issuer K can authorize transfers or burns of holdings even after ordinary delegation is revoked; does not accept issuer-proof reserve claim.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-01-c4",
+        "description": "Explains permanent-delegate changes/removal require the relevant mint-level authority under token-program rules; does not suggest the holder can unilaterally nullify it using their owner key.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-01-c5",
+        "description": "Requires actual mint/program/extension/authority state and spendable liquidity/redemption evidence; hypothetical brand/ticker claims alone do not establish reserve suitability.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Fee=min(.0075*8030,30)=30 tokens, so gross 8030 yields spendable 8000. Ordinary account delegation and mint-level permanent delegation are distinct. The account owner cannot revoke the permanent delegate locally; issuer K still has transfer/burn authority. Any change or removal must be validly authorized at mint level under the program's authority rules. Until verified, issuer-proof is false. Check mint identity, program and extensions, authority state, fees and actual exit/redemption access.",
+    "sources": [
+      "https://solana.com/docs/tokens/extensions/permanent-delegate",
+      "https://solana.com/docs/tokens/extensions/transfer-fees"
+    ]
+  },
+  {
+    "id": "HLD-02",
+    "prompt": "Use only the following hypothetical fixture states; they are not current prices or observed accounts. Explain and calculate only. Do not execute any action. A hypothetical lending account supplies 40,000 stablecoin units at an oracle price of $1, all enabled as collateral with a 78% liquidation threshold. It borrows 3 ETH. Ignore interest and fees. At an ETH oracle price of $8,000, calculate HF. Solve the debt-asset oracle price at HF=1 and state which side of that boundary makes the account liquidation eligible. Later a DEX reports ETH at $10,500 while the lending oracle still reports $10,000. Calculate the oracle-based HF and say what can and cannot be concluded about liquidation now. If the oracle updates to $10,500, how much ETH must be repaid from outside funds to restore HF=1.20?",
+    "criteria": [
+      {
+        "id": "HLD-02-c1",
+        "description": "HF=31200/(3*8000)=1.30; threshold oracle ETH price 10400. Monetary tolerance $1, HF .001.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-02-c2",
+        "description": "States an increase of the borrowed ETH oracle price above 10400 makes HF<1 and liquidation eligible; exact HF=1 is the boundary, not a guarantee of an already completed liquidation.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-02-c3",
+        "description": "At stale oracle 10000 HF=1.04; does not substitute DEX 10500 into current protocol HF or claim liquidation has already occurred.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-02-c4",
+        "description": "After oracle 10500, current debt 31500 and target debt 26000; repayment 5500/10500=.523809524 ETH to HF 1.20. Tolerance .00001 ETH.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-02-c5",
+        "description": "Explains that accrued debt, oracle updates and execution timing can change the buffer in a real account; actual liquidation requires transaction/state evidence.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Adjusted collateral=40000*.78=31200. Initial HF=1.30. BoundaryP=31200/3=10400; higher debt price takes HF below 1. At oracle 10000 HF=1.04 even though DEX price is 10500. This does not prove a liquidation happened. An update to 10500 gives HF=.990476. To get 1.20, remaining dollar debt=26000, repay 5500/10500=.523809524 ETH. Real execution and oracle timing remain separate evidence.",
+    "sources": [
+      "https://aave.com/help/borrowing/liquidations"
+    ]
+  },
+  {
+    "id": "HLD-03",
+    "prompt": "Use only the following hypothetical fixture states; they are not current prices or observed accounts. Explain and calculate only. Do not execute any action. A company owes 9,000 Ethereum dollars in two days. Its Ethereum cash is $5,000, with $400 reserved for gas and emergencies. It also owns an $8,000 Ethereum lending claim, but the pool currently has only $500 available to withdraw and no replenishment is assumed before the deadline. A $12,000 OP Standard Bridge withdrawal was initiated and proved on Ethereum two days ago. For this fixture the required challenge period is seven full days after that proof, and no finalization transaction has happened. There is no fast route or loan. Calculate spendable Ethereum funds at the deadline and the shortfall. Give the earliest challenge-period completion relative to today, the remaining settlement step, and whether the full lending claim can support the scheduled payment.",
+    "criteria": [
+      {
+        "id": "HLD-03-c1",
+        "description": "Available deadline funds=5000-400+500=5100 and shortfall=3900, tolerance$1.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-03-c2",
+        "description": "Does not count the 12000 OP withdrawal or unavailable 7500 lending balance as accessible by the deadline.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-03-c3",
+        "description": "Challenge period ends five days from today under the stated proof timing, three days after the payment deadline; distinguishes initiation/proof from finalization.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-03-c4",
+        "description": "Names the subsequent successful L 1 finalization/settlement and balance confirmation; challenge-period expiry alone does not automatically establish spendable funds.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-03-c5",
+        "description": "Explains lending withdrawals depend on available pool liquidity, not ownership of receipt claims, and avoids pledging the entire 8000 as deadline cash.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Spendable funds are 5000-400+500=5100, leaving 3900. The OP proof is two days old, so five days remain in the stated seven-day window. Deadline is two days away. After the window, finalize the withdrawal on Ethereum and verify successful receipt/balance. The supplied claim exceeds currently withdrawable liquidity by 7500; ownership of the receipt does not make that 7500 settleable by the payment deadline.",
+    "sources": [
+      "https://docs.optimism.io/op-stack/bridging/withdrawal-flow",
+      "https://www.aave.com/help/supplying/withdraw-tokens"
+    ]
+  },
+  {
+    "id": "HLD-04",
+    "prompt": "Use only the following hypothetical fixture states; they are not current prices or observed accounts. Explain and calculate only. Do not execute any action. An $80,000 spot ETH holding is hedged with an $80,000 linear short perpetual. Separate isolated margin is $20,000, so total committed equity is $100,000. Both legs end at their starting prices. For a seven-day fixture, shorts RECEIVE 12% simple annualized funding for the first three days and PAY 24% for the next four, always on the fixed $80,000 calculation notional. Execution fees total $180. Use 365 days. Calculate net seven-day P&L and return on committed equity. A founder proposes funding a $500 bill next week from this trade because 'negative delta means stable cashflow.' Assess the proposal and give two independent ways the hedge could fail as a payment reserve even while its opening notionals match.",
+    "criteria": [
+      {
+        "id": "HLD-04-c1",
+        "description": "Funding received=80000*.12*3/365=78.90411; funding paid=80000*.24*4/365=210.41096; net after fees=-311.50685; ROE=-.31150685%. Tolerance$1/.01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-04-c2",
+        "description": "Does not promise 500 cash income from matched notionals; correctly uses changing funding directions and concludes stipulated net cashflow is negative.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-04-c3",
+        "description": "Explicitly explains future funding can vary and switch sign, so current/initial funding direction cannot guarantee a payment cashflow.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-04-c4",
+        "description": "Explains isolated margin/transfer timing can force liquidation despite external spot gains, and separately notes basis or mark/index divergence can undermine the hedge.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-04-c5",
+        "description": "Distinguishes near-zero combined price delta from reliable cashflow and requires liquid payment reserves independent of contingent trading proceeds.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "First funding leg pays the treasury 78.90411; second costs 210.41096. Net after 180 executionfees=-311.50685, or-.31150685% of 100000. There is no 500 profit to fund the bill. Matching spot and short notionals roughly offsets a common price move; funding can change sign and basis/mark behavior can differ. Isolated collateral can be liquidated before external spot gains are transferred. Keep payment liquidity outside this contingent cashflow.",
+    "sources": [
+      "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding",
+      "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations"
+    ]
+  },
+  {
+    "id": "HLD-05",
+    "prompt": "Use only the following hypothetical fixture states; they are not current prices or observed accounts. Explain and calculate only. Do not execute any action. For a concentrated-liquidity control case, token 0 is an invented asset A and token 1 is a dollar stablecoin. Price means dollars per A. A position has L=2000, bounds 100 and 400, and starts at 225. Later price is 500. Assume stablecoin=$1 and ignore decimal scaling. The position has earned exactly$500 in stablecoin fees before reaching the upper bound and earns no other yield. Compute the starting amounts/value, ending principal inventory/value, final value including retained fees, and shortfall against holding the initial amounts at 500. Does continued trading above 400 add fees to this position? Keep performance versus starting capital separate from performance versus holding.",
+    "criteria": [
+      {
+        "id": "HLD-05-c1",
+        "description": "Initial A=2000*(1/15-1/20)=33.333333333; stablecoin=2000*(15-10)=10000; initial value 17500. Tolerance .0001 A/$1.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-05-c2",
+        "description": "Above upper bound principal is 0 A and 20000 stablecoin; does not keep A exposure or maintain the original ratio.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-05-c3",
+        "description": "Final value including fees 20500; holding initial amounts at 500 is 26666.666667; shortfall 6166.666667 or 23.125%ofholding. Tolerance$2/.02 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-05-c4",
+        "description": "Return versus initial capital is 3000/17500=17.142857% despite underperformingholding; does not confuse these benchmarks.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-05-c5",
+        "description": "States no new fees while above 400; the retained 500 is separately accrued prior fee income.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Initialx=2000*(1/15-1/20)=33.333333333 A andy=2000*(15-10)=10000 stablecoin, value 17500. Above upper, x=0,y=2000*(20-10)=20000. Including 500 fees gives 20500. Holding gives 33.333333333*500+10000=26666.666667, a 6166.666667 or 23.125%shortfall. The LP gained 17.142857%versus initial capital. Outside above 400 it earns no new fees.",
+    "sources": [
+      "https://app.uniswap.org/whitepaper-v3.pdf",
+      "https://developers.uniswap.org/docs/liquidity/overview"
+    ]
+  },
+  {
+    "id": "HLD-06",
+    "prompt": "Use only the following hypothetical fixture states; they are not current prices or observed accounts. Explain and calculate only. Do not execute any action. For a settlement-evidence control case, a CCTP V 2 burn of 15,000 USDC on Ethereum is finalized. The intended Base treasury recipient is address Y. A worker has a valid attestation, a used destination nonce, and a successful finalized Base receipt. However, the decoded message and mint event both name a different address X, which the treasury does not control. The event amount is 14,940 USDC after a 60 USDC fee. The treasury's address Y shows no credit. The worker wants to record 14,940 as available treasury cash and burn another 15,000 'to make the dashboard correct.' Assess the accounting and recovery proposal, explain exactly what the existing evidence proves, and state the amount this transfer contributes to Y's available cash.",
+    "criteria": [
+      {
+        "id": "HLD-06-c1",
+        "description": "Reports zero available treasury cash at Y from this transfer; a used nonce/success receipt does not prove payment to the intended recipient.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-06-c2",
+        "description": "Reconciles 15000 gross-60 fee=14940 minted to X, and distinguishes protocol message completion from fulfillment of the intended payment.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-06-c3",
+        "description": "Rejects another source burn as automatic recovery or ledger repair, since it creates a new separate transfer and duplicate economic outlay.",
+        "severity": "critical"
+      },
+      {
+        "id": "HLD-06-c4",
+        "description": "Preserves source/destination hashes, domains, nonce and decoded recipient/amount; investigates how X entered the instruction and what authority or legitimate recovery path exists without claiming an automatic reversal.",
+        "severity": "major"
+      },
+      {
+        "id": "HLD-06-c5",
+        "description": "Does not imply the treasury controlsX, that same-message replay redirects tokens, or that CCTP's nonce protection refunds the error.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "The message settled 14940 USDCtoX after 60 fee, but Y receivedzero. A protocol-level successful mint and nonce consumption do not establish the intended treasury payment. Do not record treasury cash or issue a second burn to repair accounting. Preserve and reconcile message, recipient and transaction evidence; investigate signing/instruction formation and authorized recovery options. The supplied facts establish no treasury control of X and no automatic reversal or redirection by replay.",
+    "sources": [
+      "https://developers.circle.com/cctp/references/technical-guide"
+    ]
+  }
+]

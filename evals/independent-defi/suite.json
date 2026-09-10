@@ -1,0 +1,422 @@
+[
+  {
+    "id": "DFI-01",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. An Ethereum strategy uses $50,000 of your own wstETH collateral, earning a 4% simple annual staking return already expressed on its dollar value. It borrows $30,000 USDC at 9% simple APR and deploys all borrowed USDC in a vault earning 7% simple APR. Borrow incentives have a headline dollar value of 1% of debt per year, but you conservatively realize only 50% of that value. Annual execution costs total $240. Prices and notionals stay constant; no compounding. Calculate annual P&L and return on your original equity. Repeat at a 13% borrowing APR, then solve the borrowing APR that breaks even. Explain the principal risks that these calculations leave out.",
+    "criteria": [
+      {
+        "id": "DFI-01-c1",
+        "description": "Applies each rate to its stated notional: staking $2,000, vault $2,100, borrowing $2,700, realized incentives $150, costs $240; does not subtract APRs on unequal bases.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-01-c2",
+        "description": "Returns $1,310 annual P&L and 2.62% on $50,000 original equity; monetary tolerance $1 and return tolerance 0.01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-01-c3",
+        "description": "At 13% borrowing APR returns $110 and 0.22%; breakeven borrowing APR is 13.3667% within 0.02 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-01-c4",
+        "description": "Identifies liquidation/collateral price or oracle risk and vault liquidity or contract risk; does not call modeled positive carry a guarantee.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Independent arithmetic from the stipulated balance sheet: 50000*.04 + 30000*.07 - 30000*.09 + 30000*.01*.5 - 240 = 1310, or 2.62% of original equity. At .13 borrow APR it is 110, or .22%. Breakeven borrow APR=(2000+2100+150-240)/30000=13.3667%. Debt remains owed if a vault loses funds or withdrawals stop. Collateral valuation can create liquidation risk; a wrapper's accrual is counted once.",
+    "sources": [
+      "https://aave.com/help/borrowing/liquidations",
+      "https://docs.lido.fi/contracts/wsteth/",
+      "https://www.aave.com/help/supplying/withdraw-tokens"
+    ]
+  },
+  {
+    "id": "DFI-02",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. On Arbitrum, a hypothetical Aave-style account has 12 ETH worth $2,000 each, liquidation threshold 80%, and 10,000 units of stablecoin C priced at $1, threshold 85%. Debt is 20,000 units of stablecoin D at $1. Both collateral assets are enabled. Calculate current health factor. Under one simultaneous shock, ETH falls to $1,600, C falls to $0.90, and D rises to $1.05. Calculate stressed HF, the ETH price at HF=1 with the shocked stablecoin prices held fixed, and the D units that must be repaid from outside cash to reach HF=1.30 under the shock. Ignore fees and accrued interest.",
+    "criteria": [
+      {
+        "id": "DFI-02-c1",
+        "description": "Uses sum of collateral value times each asset's liquidation threshold divided by debt market value, including D's 5% appreciation.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-02-c2",
+        "description": "Current HF 1.385 and stressed HF 23010/21000=1.095714, tolerance .001.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-02-c3",
+        "description": "Boundary ETH price $1390.625 within $1 and labels HF=1 as the boundary, with liquidation eligibility below it.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-02-c4",
+        "description": "Required debt repayment is $3300 of stressed debt value, or 3142.857143 D units, within 1 D; does not confuse $3300 with 3300 D.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-02-c5",
+        "description": "Says stressed account remains above the fixture liquidation boundary but the residual buffer is limited.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Current weighted collateral is 24000*.8+10000*.85=27700; HF=1.385. Shock gives 19200*.8+9000*.85=23010 against $21000 debt, HF=1.095714. Solve 12*P*.8+7650=21000, so P=1390.625. Target debt value=23010/1.30=17700, repay $3300/1.05=3142.857143 D units from outside cash. Source supplies the HF mechanism; all thresholds and numerical results are fixture-derived.",
+    "sources": [
+      "https://aave.com/help/borrowing/liquidations"
+    ]
+  },
+  {
+    "id": "DFI-03",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A hypothetical Base lending market permits repeated borrow-and-redeposit of the same dollar stablecoin. Start with $12,000 equity. Each recursion borrows 70% of the immediately preceding deposit and redeposits all of it. Assume unlimited capacity and iterations, no fees, fixed $1 price, no rewards, a 5% simple annual supply rate on gross deposits and an 8% simple borrow rate on gross debt. Liquidation threshold is 80%. Derive limiting gross collateral, gross debt, initial HF, and annual return on equity. For a separate instantaneous stress, assume collateral valuation falls 12% while debt valuation remains fixed. Give stressed HF and the collateral valuation decline that reaches HF=1. Explain why this stress is possible only under an explicit valuation mismatch in this same-token example.",
+    "criteria": [
+      {
+        "id": "DFI-03-c1",
+        "description": "Correctly derives gross collateral $40000, debt $28000, equity $12000; repeated deposit receipts do not create new equity.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-03-c2",
+        "description": "Annual carry 2000-2240=-$240 and equity return -2%; tolerance $1 or .01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-03-c3",
+        "description": "Initial HF .8/.7=1.142857; stressed HF 1.005714; boundary decline 12.5%, tolerance .001 HF or .02 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-03-c4",
+        "description": "States that an ordinary same-token price move affecting collateral and debt equally cancels from HF; the supplied asymmetric stress requires separate oracle/accounting/claim valuations.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-03-c5",
+        "description": "Recognizes infinite recursion and capacity assumptions as a theoretical limit, with liquidity, rate changes or caps affecting implementation.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Geometric series C=12000/(1-.7)=40000; D=C-12000=28000. Carry=.05*C-.08*D=-240, ROE=-2%. HF=.8*C/D=1.142857. Under the stipulated asymmetric valuation shock it becomes .88*.8*C/D=1.005714; solve (1-d)*.8/.7=1 for d=.125. Same-token collateral and debt normally share a price scale, so a common depeg alone does not produce that asymmetric HF stress. The mismatch is an extra stress assumption.",
+    "sources": [
+      "https://aave.com/help/borrowing/liquidations",
+      "https://www.aave.com/help/supplying/withdraw-tokens"
+    ]
+  },
+  {
+    "id": "DFI-04",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A Uniswap-v3-style position on Ethereum uses token0=ETH and token1=USDC, with P always measured in USDC per ETH. Ignore token decimal scaling and fees. Liquidity L=10,000, lower price 1,600, upper price 2,500, initial P=2,000. Later P=1,500. Calculate initial token amounts and value, final token amounts and value, and the dollar and percentage shortfall against simply holding the initial token amounts at P=1,500. At the final price, does this position earn new swap fees? Explain what re-centering would do to exposure and costs.",
+    "criteria": [
+      {
+        "id": "DFI-04-c1",
+        "description": "Uses concentrated-liquidity formulas x=L*(1/sqrt(P)-1/sqrt(Pupper)), y=L*(sqrt(P)-sqrt(Plower)); initial x=23.606798 ETH, y=47213.5955 USDC within .01 token or $1.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-04-c2",
+        "description": "Below the lower bound, computes 50 ETH and zero USDC, final value $75000; does not keep the original 50/50 mix.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-04-c3",
+        "description": "Initial value $94427.191; HODL ending value $82623.792; LP shortfall $7623.792 or 9.226% relative to HODL, tolerance $2 or .03 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-04-c4",
+        "description": "States that out-of-range liquidity earns no new swap fees while price remains outside; previously accrued fees are separate.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-04-c5",
+        "description": "Re-centering requires changing the allocation/range and may involve selling ETH, swaps and execution costs; it does not erase past loss.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "x0=10000*(1/sqrt(2000)-1/50)=23.60679775 ETH; y0=10000*(sqrt(2000)-40)=47213.5955 USDC. V0=94427.191. Below range, x=10000*(1/40-1/50)=50 ETH, y=0, V1=75000. HODL=23.60679775*1500+47213.5955=82623.7921. Shortfall=7623.7921, about 9.226% of HODL. Inactive liquidity earns no new swap fees. Re-centering can realize a changed asset mix and incur trading costs.",
+    "sources": [
+      "https://app.uniswap.org/whitepaper-v3.pdf",
+      "https://developers.uniswap.org/docs/liquidity/overview"
+    ]
+  },
+  {
+    "id": "DFI-05",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A treasury owes $20,000 in Ethereum-settled dollars tomorrow. It has $8,000 immediately usable Ethereum cash; 7,000 Ethereum stablecoin U that can be sold at $0.98 with a further 1% execution haircut; $10,000 of Arbitrum lending claims, of which only $2,000 can currently be withdrawn; and $15,000 in an OP Mainnet Standard Bridge withdrawal initiated today. For this fixture no fast bridge, credit line, or cross-chain sale can complete before the deadline. Reserve $200 from Ethereum cash for gas. Calculate the amount usable tomorrow and the shortfall. Explain why the balance sheet's headline stablecoin holdings do not settle the obligation and specify a practical reserve policy for future deadlines.",
+    "criteria": [
+      {
+        "id": "DFI-05-c1",
+        "description": "Excludes the OP withdrawal and all Arbitrum holdings from tomorrow's Ethereum liquidity under the explicitly unavailable routing assumption; does not count lending claims as immediately available cash.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-05-c2",
+        "description": "Computes U proceeds 7000*.98*.99=$6791.40, total usable $14591.40 after gas, shortfall $5408.60; tolerance $1.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-05-c3",
+        "description": "Recognizes OP Standard Bridge withdrawal challenge delay, and lending withdrawal dependency on available liquidity.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-05-c4",
+        "description": "Reserve policy matches liability currency, chain and deadline, keeps gas available, and stress-tests conversion discounts or outages; does not merely target an arbitrary allocation percentage.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Tomorrow's usable balance is 8000+7000*.98*.99-200=14591.40, leaving 5408.60 unfunded. OP's standard withdrawal cannot meet a one-day deadline; Arbitrum cash cannot reach the required chain under this fixture even though $2000 is withdrawable there. Reserve sizing should cover dated obligations plus execution headroom in assets and locations that can settle them. Inventory face value alone does not establish liquidity.",
+    "sources": [
+      "https://docs.optimism.io/app-developers/guides/bridging/standard-bridge",
+      "https://www.aave.com/help/supplying/withdraw-tokens"
+    ]
+  },
+  {
+    "id": "DFI-06",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. On Solana, a hypothetical Token-2022 mint has six decimals, an active 150-basis-point transfer fee capped at 100 tokens per transfer, an active permanent delegate controlled by the issuer, and a transfer hook. A route transfers 10,000 tokens from your wallet into an intermediate account and immediately forwards that account's full spendable received amount to the vault. Ignore all other fees. Calculate the spendable amount arriving at the vault. The route simulator then reports that the hook denies the vault transfer. A website says 'the symbol is USDC, so treat it as cash.' Evaluate whether to include the deposit as an executable treasury allocation and what account facts need checking.",
+    "criteria": [
+      {
+        "id": "DFI-06-c1",
+        "description": "Applies min(1.5%*amount,100 tokens) at each of the two transfers: 10000 to 9900 to 9800 spendable tokens, tolerance .000001.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-06-c2",
+        "description": "Does not treat the deposit as executable after the transfer hook simulation denial; models the blocked route rather than assuming a fee adjustment fixes it.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-06-c3",
+        "description": "Identifies the permanent delegate's authority to transfer/burn holders' tokens and that the holder cannot revoke it at their own token account.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-06-c4",
+        "description": "Checks actual mint address, owner token program, extension and authority state, current fee configuration, hook requirements, route/vault support, and uses spendable balance instead of symbol or gross balance.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-06-c5",
+        "description": "Explains withheld transfer fees are separate from recipient spendable funds.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "First fee=min(150,100)=100; intermediate receives 9900 spendable. Second fee=min(148.5,100)=100; modeled vault receipt is 9800 only if the route executes. Here the hook denial blocks completion. The issuer's permanent delegate can transfer or burn accounts' tokens. Verify the mint/program, extensions and authorities, hook conditions and supported account setup; a ticker does not identify an asset. Withheld fees are unavailable as recipient spendable tokens.",
+    "sources": [
+      "https://solana.com/docs/tokens/extensions/transfer-fees",
+      "https://solana.com/docs/tokens/extensions/permanent-delegate",
+      "https://solana.com/docs/tokens/extensions"
+    ]
+  },
+  {
+    "id": "DFI-07",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. An Ethereum exact-input swap spends 20,000 USDC. An independent reference price implies 10 ETH, but the executable quote is 9.70 ETH and already includes pool fees and price impact. Slippage tolerance is 2% applied to quoted output. Gas is paid separately. Calculate minimum output and the total output shortfall versus the independent reference at that minimum. A trader proposes raising slippage to 10% to ensure success during a public-mempool spike. Calculate the new minimum and evaluate that proposal, distinguishing price impact, slippage, gas, and sandwich risk. You have no verified private-route availability.",
+    "criteria": [
+      {
+        "id": "DFI-07-c1",
+        "description": "Minimum output at 2% is 9.506 ETH; shortfall .494 ETH or 4.94% versus reference; does not add 3% and 2% as an exact combined 5%.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-07-c2",
+        "description": "At 10% minimum is 8.73 ETH; shortfall 1.27 ETH or 12.7% versus reference; tolerance .0001 ETH or .01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-07-c3",
+        "description": "Does not endorse raising slippage as a guarantee of success or as improved economics; it accepts a worse bound and public-mempool sandwich exposure.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-07-c4",
+        "description": "Distinguishes quote-included impact/fees from quote-to-execution slippage and separately paid gas; no double subtraction of included impact.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-07-c5",
+        "description": "Proposes re-quoting, size reduction or a bounded order; private routing may be investigated but is not claimed available or risk-free.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Minimum is 9.70*.98=9.506 ETH, 4.94% below 10 ETH. At 10% tolerance it is 9.70*.9=8.73 ETH, 12.7% below reference. The quote already includes modeled fees and impact. Slippage limits adverse change from that quote, while gas is additional. A wider tolerance permits worse execution and can expose more value to a sandwich; it cannot ensure inclusion. Re-quote or change size/order constraints and verify any proposed protected route.",
+    "sources": [
+      "https://ethereum.org/developers/docs/mev"
+    ]
+  },
+  {
+    "id": "DFI-08",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A CCTP V2 transfer burns 25,000 USDC on Ethereum for a Base recipient. The burn is finalized and an attestation was obtained. The destination receiveMessage RPC call times out. A worker proposes a second depositForBurn for 25,000 USDC. Explain how to classify the first transfer and recover safely. In state A, the destination message nonce is used and a finalized mint receipt matches the intended recipient and amount after the disclosed fee. In state B, no destination mint exists, the nonce is unused, and the attestation's expiration block has passed. Give the correct next step in both states and what evidence is needed before reporting available Base cash.",
+    "criteria": [
+      {
+        "id": "DFI-08-c1",
+        "description": "Treats the initial timeout as unknown destination outcome; does not authorize a second source burn as recovery.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-08-c2",
+        "description": "State A reconciles the matching finalized mint and used nonce as completion, records actual net received amount and avoids duplicate payment.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-08-c3",
+        "description": "State B requests refreshed/re-attestation for the existing CCTP V2 message, then verifies it and submits the existing transfer's destination mint within validity; no new source burn.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-08-c4",
+        "description": "Verifies source/destination domains, message nonce, recipient, token identity and net amount; attestation or submission acknowledgement alone is insufficient evidence of available destination cash.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-08-c5",
+        "description": "Records source and destination transaction IDs and the recovery state so another worker can reconcile retries.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "The timeout leaves settlement unknown until reconciled. Check the existing message, destination nonce and receipt. State A is completed by the matching finalized mint, with usable cash equal to actual net minted funds. State B calls the V2 re-attestation process for the original nonce, retrieves refreshed material and completes its destination receive after checks. CCTP message nonces are one-use; recovery does not require a new burn. Preserve transaction IDs, domains and amount reconciliation.",
+    "sources": [
+      "https://developers.circle.com/cctp/references/technical-guide"
+    ]
+  },
+  {
+    "id": "DFI-09",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A Solana swap of 8,000 USDC was signed with recentBlockhash B and lastValidBlockHeight=1,005. sendTransaction returned a signature, but confirmation timed out. A healthy RPC now reports finalized blockHeight=1,001 and the signature lookup is temporarily null. Should the agent build and sign a replacement with a new blockhash? Describe a safe retry sequence. Later, at finalized height 1,008, an archival signature query proves the original swap succeeded in a block before expiry and its token deltas match. What should happen then? Explain why checking only elapsed wall-clock time or current blockhash expiry gives an unsafe decision.",
+    "criteria": [
+      {
+        "id": "DFI-09-c1",
+        "description": "At height 1001 does not freshly re-sign: original transaction can still execute; a null query or timeout is not proof of failure.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-09-c2",
+        "description": "Allows bounded rebroadcast of identical signed bytes/signature while valid and continued confirmation/status checks using consistent commitment and healthy RPC.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-09-c3",
+        "description": "After archival success evidence at height 1008 records original completion and does not send a replacement.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-09-c4",
+        "description": "Tracks lastValidBlockHeight and chain height rather than a fixed timeout; expiry prevents future inclusion but does not erase a transaction included earlier.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-09-c5",
+        "description": "Before any replacement after proven non-execution and expiry, refreshes quote/state, simulates, and reconciles token deltas and signature history.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "At 1001 the original remains valid, so continue reconciliation and optionally resend the same signed transaction. A fresh signature can create a second swap. A timeout or temporarily missing RPC result is inconclusive. At 1008 the later archival proof shows prior success; record the matching token movement and stop. Expiry only excludes later inclusion, so it cannot establish that earlier inclusion never happened. Rebuild only after the original's outcome and expiry are resolved, using refreshed economic bounds.",
+    "sources": [
+      "https://solana.com/developers/cookbook/transactions/retry",
+      "https://solana.com/developers/cookbook/transactions/confirmation"
+    ]
+  },
+  {
+    "id": "DFI-10",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A DeFi allocator reports 'validated 12% annual return' from one historical year. It selected the best of 40 allocation rules on that same year. Its token universe is today's surviving top-20 tokens. Daily signals use the day's closing price and assume execution at that same close, though the price was published five minutes later. Gross P&L is $12,000 on fixed $100,000 capital; recorded gas, swaps and financing cost $7,000, with no compounding. The same-period passive benchmark made $8,000 after costs. No raw daily returns, failed token records, or holdout period were retained. Calculate net result and benchmark difference. Decide what performance claims are justified and design the smallest credible next validation with temporal separation and uncertainty reporting.",
+    "criteria": [
+      {
+        "id": "DFI-10-c1",
+        "description": "Net P&L $5000 and return 5%; trails benchmark by $3000 or 3 percentage points, tolerance $1/.01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-10-c2",
+        "description": "Rejects validated prospective performance based on the selected in-sample year and does not invent a Sharpe ratio, p-value or confidence interval without underlying data.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-10-c3",
+        "description": "Detects all three distinct biases: rule selection on evaluation period, survivor-only universe, and availability/execution look-ahead.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-10-c4",
+        "description": "Requires timestamp-valid historic universe including failures, realistic execution after information availability, and costs/financing/withdrawal or liquidation constraints as relevant.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-10-c5",
+        "description": "Proposes frozen rule and untouched chronological holdout or walk-forward protocol, benchmark under equal conditions, plus raw paired returns and uncertainty methods that respect serial dependence and selection/multiple testing.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Recorded net P&L is 12000-7000=5000, or 5%, trailing the 8% benchmark by 3 percentage points. These are accounting results for the supplied backtest, not prospective validation. Reconstruct point-in-time assets and data availability, apply feasible execution and failure/cost rules, then freeze rule selection before a later untouched interval or nested walk-forward test. Retain paired return series and selection history. Estimate uncertainty with methods suitable for dependent time series, and account for testing 40 alternatives; no numerical CI is possible from these totals alone.",
+    "sources": [
+      "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html",
+      "https://www.davidhbailey.com/dhbpapers/backtest-prob.pdf"
+    ]
+  },
+  {
+    "id": "DFI-11",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A portfolio holds exactly 40 wstETH on Ethereum for a full year with no trades. Initially each wstETH corresponds to 1.25 stETH and ETH/stETH NAV is $2,000, while the actual sale quote is $2,350 per wstETH. At year-end the conversion is 1.30 stETH per wstETH, ETH/stETH NAV is $1,800, and the actual sale quote is 2.5% below that year-end wstETH NAV. Ignore other fees. Calculate initial market value, final market value, and market-to-market portfolio return. Separately calculate the wrapper conversion-rate growth and the change in underlying NAV. A dashboard adds another 4% 'staking yield' to the calculated market return. Assess that treatment and explain what can be said about cash accessibility.",
+    "criteria": [
+      {
+        "id": "DFI-11-c1",
+        "description": "Initial market value $94000, final NAV per wstETH $2340, sale quote $2281.50, final market value $91260; tolerance $1.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-11-c2",
+        "description": "Market P&L -$2740 and return -2.9149%, tolerance .02 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-11-c3",
+        "description": "Conversion ratio grew 4%; initial aggregate underlying NAV $100000 becomes $93600, a 6.4% decline. Recognizes initial quote discount 6% and final 2.5%.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-11-c4",
+        "description": "Rejects adding the 4% staking component again because the increased conversion ratio is already reflected in ending valuation; token balance remains 40.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-11-c5",
+        "description": "Differentiates the assumed sale quote from an executed sale or guaranteed immediate redemption; checks liquidity/fees and withdrawal route for actual cash needs.",
+        "severity": "minor"
+      }
+    ],
+    "reference_answer": "Initial market value=40*2350=94000. Final NAV/unit=1.30*1800=2340; sale quote=2340*.975=2281.50, total=91260. Return=(91260-94000)/94000=-2.9149%. Conversion growth=1.30/1.25-1=4%; underlying NAV changes from 100000 to 93600, or -6.4%. The market discount narrows from 6% to 2.5%. The wrapper balance remains 40, and its ratio growth is already in the final mark, so another staking uplift double counts.",
+    "sources": [
+      "https://docs.lido.fi/contracts/wsteth/"
+    ]
+  },
+  {
+    "id": "DFI-12",
+    "prompt": "Hypothetical analysis only. All prices, rates, parameters, and account states below are stipulated fixtures, not live market observations. Do not execute transactions. A treasury holds $100,000 spot ETH in an Ethereum wallet and opens an equal $100,000 linear ETH short perpetual on Hyperliquid using a separate $10,000 isolated cash margin. The spot wallet cannot top up margin automatically. The supplied funding schedule requires the short to PAY 18% simple annualized on a constant $100,000 calculation notional for seven days. Total opening/closing execution fees are $120; ignore all other yield/costs. Calculate seven-day carry and return on the total $110,000 committed equity if prices end unchanged and the hedge survives. For a separate intraday stress before any funding/fees, spot and perp mark both rise 12%; maintenance margin is stipulated at 5% of the then-current perp notional. Compute isolated short equity and maintenance requirement and assess liquidation risk. Is flat combined spot-plus-perp price exposure enough to call this a cash reserve?",
+    "criteria": [
+      {
+        "id": "DFI-12-c1",
+        "description": "Seven-day funding cost 100000*.18*7/365=$345.20548, total carry -$465.20548 and ROE about -.422914%; tolerance $1/.01 percentage point.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-12-c2",
+        "description": "Uses funding payment direction as stipulated; does not assume shorts always receive funding or that 18% is earned on $10000 margin.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-12-c3",
+        "description": "At +12%, short unrealized P&L -$12000, theoretical isolated equity -$2000, then-current notional $112000 and maintenance $5600; states liquidation would trigger before reaching this end state.",
+        "severity": "major"
+      },
+      {
+        "id": "DFI-12-c4",
+        "description": "Recognizes external spot profit cannot collateralize the isolated perp automatically, so net delta-neutral portfolio exposure does not prevent local liquidation.",
+        "severity": "critical"
+      },
+      {
+        "id": "DFI-12-c5",
+        "description": "Does not classify strategy as cash-equivalent solely from matched notionals; identifies funding variation and basis/mark or transfer/top-up risk and the need for accessible margin.",
+        "severity": "major"
+      }
+    ],
+    "reference_answer": "Funding=$345.20548 and total carry=-$465.20548, divided by $110000 gives -.422914%. At a 12% mark rise the short loses $12000. Its hypothetical remaining equity is -$2000 versus $5600 maintenance on $112000 notional, so liquidation would occur before this endpoint. The external spot gains $12000 but cannot automatically fund isolated margin. Funding and basis/mark moves plus collateral location make this unsuitable as an unconditional cash reserve.",
+    "sources": [
+      "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding",
+      "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations"
+    ]
+  }
+]

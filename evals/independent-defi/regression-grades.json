@@ -1,0 +1,382 @@
+{
+  "reviewed_at_utc": "2026-09-10T16:40:59.038597+00:00",
+  "review_type": "independent AI review of exposed-case regression",
+  "manifest": {
+    "host": "codex-cli 0.153.3",
+    "model": "host default; no override supplied",
+    "python": "Python 3.11.16",
+    "source_revision": "7d2e5dd8ad5cd5045c57f2b7bdf1280b6fab3ff9",
+    "source_dirty": true,
+    "dependency_lock_sha256": "69bc2cb9418b45a92d735442fb6a80c68d11a6c73dfda2db5964b0566db1a7f0",
+    "runner_sha256": "794f15562bcd2dc8366704c65e8f4697db047f97044437d1a44e07aedaa769ab",
+    "suite_sha256": "0a57f534b42d167244b7654f39426930028d09920c3ddacf604bd96c071f09d9",
+    "context_sha256": "140cf457a73e06a2c5726e62dca054a0778f5e0ac37c5859966b12827eeda966",
+    "runtime_sha256": "5319d9d2619783c6f36939da93f82faf4105cd752b73a5594a107c63ecb3f254",
+    "mode": "injected Scout skills and real fixture MCP; native plugin activation untested",
+    "rubric_sent_to_host": false,
+    "cases": [
+      {
+        "id": "DFI-02",
+        "exit_code": 0,
+        "seconds": 30.6
+      },
+      {
+        "id": "DFI-05",
+        "exit_code": 0,
+        "seconds": 29.6
+      },
+      {
+        "id": "DFI-06",
+        "exit_code": 0,
+        "seconds": 32.5
+      },
+      {
+        "id": "DFI-12",
+        "exit_code": 0,
+        "seconds": 32.6
+      }
+    ],
+    "runtime_unchanged": true
+  },
+  "original_frozen_suite_sha256": "1aeee631588f8d4db67a596fabf87642e4ae671c879d9d783476026663012804",
+  "regression_subset_verified_identical_to_original": true,
+  "cases": [
+    {
+      "id": "DFI-02",
+      "score_percent": 91.66666666666666,
+      "baseline_score_percent": 83.33333333333334,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "DFI-02-c1",
+          "description": "Uses sum of collateral value times each asset's liquidation threshold divided by debt market value, including D's 5% appreciation.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "Uses the sum of collateral values times their liquidation thresholds, divided by debt value. The stressed debt denominator includes 20,000 \u00d7 1.05."
+        },
+        {
+          "id": "DFI-02-c2",
+          "description": "Current HF 1.385 and stressed HF 23010/21000=1.095714, tolerance .001.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Current HF is 1.385; stressed HF is 1.0957."
+        },
+        {
+          "id": "DFI-02-c3",
+          "description": "Boundary ETH price $1390.625 within $1 and labels HF=1 as the boundary, with liquidation eligibility below it.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The boundary ETH price is $1,390.625. The answer now says HF below 1 makes a position eligible, and equality does not establish that liquidation occurred."
+        },
+        {
+          "id": "DFI-02-c4",
+          "description": "Required debt repayment is $3300 of stressed debt value, or 3142.857143 D units, within 1 D; does not confuse $3300 with 3300 D.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The repayment is 3,142.857142 D units, costing approximately $3,300 at the stipulated price."
+        },
+        {
+          "id": "DFI-02-c5",
+          "description": "Says stressed account remains above the fixture liquidation boundary but the residual buffer is limited.",
+          "severity": "minor",
+          "credit": 0,
+          "grade": "fail",
+          "weight": 1,
+          "response_evidence": "The general eligibility rule is present, but the response does not interpret this stressed account\u2019s limited remaining buffer."
+        }
+      ],
+      "notes": [
+        "The previous major boundary omission is repaired. Minor c5 remains unaddressed: no direct assessment that the stressed account's remaining buffer is limited."
+      ],
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "ecosystem": "ethereum",
+            "limit": 1,
+            "query": "Aave health factor multi asset collateral liquidation threshold debt HF below 1"
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "other_items": [],
+      "warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "answer_path": "regression-run/DFI-02-answer.md",
+      "answer_sha256": "b276743a949ef32c0e4ecdcaf75e9ebe7c6c5d94a92747f49a1d961b216dd46b",
+      "trace_path": "regression-run/DFI-02-events.jsonl",
+      "trace_sha256": "b81b4bc81c6bdaf032e54c0ffa6fbf32978b27df0ce58b352437280c056666fb",
+      "false_live_or_execution_claim_observed": false
+    },
+    {
+      "id": "DFI-05",
+      "score_percent": 100.0,
+      "baseline_score_percent": 90.9090909090909,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "DFI-05-c1",
+          "description": "Excludes the OP withdrawal and all Arbitrum holdings from tomorrow's Ethereum liquidity under the explicitly unavailable routing assumption; does not count lending claims as immediately available cash.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "Arbitrum lending claims and the OP withdrawal each contribute $0. The $2,000 withdrawable on Arbitrum has no route that meets the deadline."
+        },
+        {
+          "id": "DFI-05-c2",
+          "description": "Computes U proceeds 7000*.98*.99=$6791.40, total usable $14591.40 after gas, shortfall $5408.60; tolerance $1.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Usable funds are $14,591.40 and the shortfall is $5,408.60. Selling U yields 7,000 \u00d7 0.98 \u00d7 0.99 = $6,791.40."
+        },
+        {
+          "id": "DFI-05-c3",
+          "description": "Recognizes OP Standard Bridge withdrawal challenge delay, and lending withdrawal dependency on available liquidity.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The withdrawal requires proof, completion of the fault-challenge period and L1 finalization. The remaining $8,000 lending claim is unavailable for withdrawal."
+        },
+        {
+          "id": "DFI-05-c4",
+          "description": "Reserve policy matches liability currency, chain and deadline, keeps gas available, and stress-tests conversion discounts or outages; does not merely target an arbitrary allocation percentage.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Keeps upcoming obligations on the settlement chain, with separate gas and operating reserves sized around stressed exit times."
+        }
+      ],
+      "notes": [],
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "ecosystem": "ethereum",
+            "limit": 2,
+            "query": "OP Mainnet Standard Bridge withdrawal proving fault challenge period finalization settlement liquidity deadline"
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "other_items": [],
+      "warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "answer_path": "regression-run/DFI-05-answer.md",
+      "answer_sha256": "c16b65a8d6549e0029cff01fa9bfc90c519d0f416722d15146f65e59009bfc16",
+      "trace_path": "regression-run/DFI-05-events.jsonl",
+      "trace_sha256": "3228f9b1bc8e627a68c161e050dca96db372f1a1f720c9d9e6af65a06177a5f9",
+      "false_live_or_execution_claim_observed": false
+    },
+    {
+      "id": "DFI-06",
+      "score_percent": 100.0,
+      "baseline_score_percent": 83.33333333333334,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "DFI-06-c1",
+          "description": "Applies min(1.5%*amount,100 tokens) at each of the two transfers: 10000 to 9900 to 9800 spendable tokens, tolerance .000001.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "The two capped transfer fees produce 10,000 \u2192 9,900 \u2192 9,800 spendable tokens."
+        },
+        {
+          "id": "DFI-06-c2",
+          "description": "Does not treat the deposit as executable after the transfer hook simulation denial; models the blocked route rather than assuming a fee adjustment fixes it.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "Excludes the deposit because the simulated hook denies the vault transfer. The denied transfer delivers zero, and simulation changes no state."
+        },
+        {
+          "id": "DFI-06-c3",
+          "description": "Identifies the permanent delegate's authority to transfer/burn holders' tokens and that the holder cannot revoke it at their own token account.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The issuer\u2019s permanent delegate can transfer or burn tokens across the mint\u2019s accounts. An individual holder cannot revoke that authority."
+        },
+        {
+          "id": "DFI-06-c4",
+          "description": "Checks actual mint address, owner token program, extension and authority state, current fee configuration, hook requirements, route/vault support, and uses spendable balance instead of symbol or gross balance.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Checks exact mint identity, Token-2022 ownership, active and scheduled fees, spendable balances, account controls and hook/vault compatibility."
+        },
+        {
+          "id": "DFI-06-c5",
+          "description": "Explains withheld transfer fees are separate from recipient spendable funds.",
+          "severity": "minor",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 1,
+          "response_evidence": "Withheld fees cannot be forwarded as spendable tokens."
+        }
+      ],
+      "notes": [],
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "ecosystem": "solana",
+            "limit": 3,
+            "query": "Token-2022 transfer fee capped per transfer withheld spendable amount permanent delegate transfer hook account checks"
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "other_items": [],
+      "warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "answer_path": "regression-run/DFI-06-answer.md",
+      "answer_sha256": "55b5c39efc59d9882343f77139f39b277957d6f593a5423d5c6111d8a3befaca",
+      "trace_path": "regression-run/DFI-06-events.jsonl",
+      "trace_sha256": "b4c0b8bbc5ba1c537809db6775927d0a5dd196af580826abc0b21874d0023a18",
+      "false_live_or_execution_claim_observed": false
+    },
+    {
+      "id": "DFI-12",
+      "score_percent": 100.0,
+      "baseline_score_percent": 93.75,
+      "case_pass": true,
+      "criteria": [
+        {
+          "id": "DFI-12-c1",
+          "description": "Seven-day funding cost 100000*.18*7/365=$345.20548, total carry -$465.20548 and ROE about -.422914%; tolerance $1/.01 percentage point.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Funding costs $345.21, fees cost $120, net carry is \u2212$465.21 and the return on $110,000 is \u22120.423%."
+        },
+        {
+          "id": "DFI-12-c2",
+          "description": "Uses funding payment direction as stipulated; does not assume shorts always receive funding or that 18% is earned on $10000 margin.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The short pays funding on the $100,000 notional at 18% \u00d7 7/365."
+        },
+        {
+          "id": "DFI-12-c3",
+          "description": "At +12%, short unrealized P&L -$12000, theoretical isolated equity -$2000, then-current notional $112000 and maintenance $5600; states liquidation would trigger before reaching this end state.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Theoretical isolated equity is \u2212$2,000, current notional is $112,000 and maintenance is $5,600. The 4.762% boundary is crossed before the full 12% move."
+        },
+        {
+          "id": "DFI-12-c4",
+          "description": "Recognizes external spot profit cannot collateralize the isolated perp automatically, so net delta-neutral portfolio exposure does not prevent local liquidation.",
+          "severity": "critical",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 5,
+          "response_evidence": "The spot gain remains in a separate Ethereum wallet and cannot automatically support isolated margin; liquidation can break the hedge."
+        },
+        {
+          "id": "DFI-12-c5",
+          "description": "Does not classify strategy as cash-equivalent solely from matched notionals; identifies funding variation and basis/mark or transfer/top-up risk and the need for accessible margin.",
+          "severity": "major",
+          "credit": 1,
+          "grade": "pass",
+          "weight": 2,
+          "response_evidence": "Future funding can change magnitude or sign. The answer also explains the limits of matched price exposure and the uncertainty of exit liquidity and transfer timing."
+        }
+      ],
+      "notes": [],
+      "tool_calls": [
+        {
+          "id": "item_3",
+          "tool": "search_defi_knowledge",
+          "arguments": {
+            "query": "perpetual funding isolated margin liquidation delta neutral cash and carry",
+            "limit": 2
+          },
+          "status": "completed",
+          "error": null
+        }
+      ],
+      "other_items": [],
+      "warnings": [
+        "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in <home>/.codex/config.toml.",
+        "Exceeded skills context budget. All skill descriptions were removed and 571 additional skills were not included in the model-visible skills list."
+      ],
+      "answer_path": "regression-run/DFI-12-answer.md",
+      "answer_sha256": "31ff3680677553cd0b01b11bd257761a60f0bf65794f79b842025aeb75eaad97",
+      "trace_path": "regression-run/DFI-12-events.jsonl",
+      "trace_sha256": "94d382160114e253fe0d12cffebf9a0a7e18acc0f585720e02ee8c3bcc0df3c6",
+      "false_live_or_execution_claim_observed": false
+    }
+  ],
+  "criterion_counts": {
+    "pass": 18,
+    "fail": 1
+  },
+  "changed_criteria": [
+    {
+      "criterion": "DFI-02-c3",
+      "severity": "major",
+      "baseline_credit": 0.5,
+      "regression_credit": 1
+    },
+    {
+      "criterion": "DFI-05-c3",
+      "severity": "major",
+      "baseline_credit": 0.5,
+      "regression_credit": 1
+    },
+    {
+      "criterion": "DFI-06-c3",
+      "severity": "critical",
+      "baseline_credit": 0.5,
+      "regression_credit": 1
+    },
+    {
+      "criterion": "DFI-12-c5",
+      "severity": "major",
+      "baseline_credit": 0.5,
+      "regression_credit": 1
+    }
+  ],
+  "equal_case_mean_score_percent": 97.91666666666666,
+  "same_case_baseline_mean_percent": 87.8314393939394,
+  "observed_mean_change_percentage_points": 10.085227272727252,
+  "subset_gate_pass": true,
+  "original_baseline_verdict_unchanged": true,
+  "ci_95": null,
+  "limits": "Four exposed cases, single runs, amended dirty source snapshot. Regression evidence only. Native activation and live operation untested; no population confidence interval or significance inferred."
+}

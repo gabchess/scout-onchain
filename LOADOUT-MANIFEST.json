@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "product": "scout-portfolio",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "default_source": "synthetic fixture",
   "optional_sources": [
     "Zerion positions and transactions API (API key or x402 pay-per-call)"
@@ -15,7 +15,13 @@
       "analyze_asset",
       "dca_windows",
       "set_alert",
-      "check_alerts"
+      "check_alerts",
+      "get_portfolio_risk",
+      "assess_defi_yield",
+      "search_defi_knowledge",
+      "plan_zerion_action",
+      "prepare_zerion_transaction",
+      "get_zerion_preparation"
     ],
     "mcp": [
       "get_portfolio_snapshot",
@@ -25,7 +31,13 @@
       "analyze_asset",
       "dca_windows",
       "set_alert",
-      "check_alerts"
+      "check_alerts",
+      "get_portfolio_risk",
+      "assess_defi_yield",
+      "search_defi_knowledge",
+      "plan_zerion_action",
+      "prepare_zerion_transaction",
+      "get_zerion_preparation"
     ],
     "claude_code_command": "/portfolio-intelligence"
   },
@@ -43,10 +55,15 @@
     "submit": false,
     "verify_settlement": false,
     "technical_analysis": true,
-    "alerts": true
+    "alerts": true,
+    "portfolio_concentration": true,
+    "assumed_yield_scenarios": true,
+    "source_linked_knowledge": true,
+    "zerion_action_plans": true,
+    "unsigned_zerion_preparation": true
   },
   "component_versions": {
-    "product": "0.4.0",
+    "product": "0.5.0",
     "zerion_adapter": "0.2.0",
     "demo_ui": "0.1.0"
   },
@@ -54,7 +71,8 @@
     "live_zerion_key": "No Zerion API key, payment private key, or wallet address ships in this repo. The operator chooses API-key or x402 authorization and supplies the matching variables.",
     "demo_data_source": "demo/zerion-portfolio-agent reads the synthetic portfolio and price-history fixtures; it makes no live Zerion call."
   },
-  "data_boundary": "No repository database or hosted retention service; integrating hosts and API providers have separate policies.",
+  "data_boundary": "Optional preparation stores unsigned envelopes and request state in an operator-selected local SQLite database. No hosted retention service. Integrating hosts and providers have separate policies.",
   "release_notes": "See CHANGELOG.md, WHAT-BROKE.md, and RELEASE-MANIFEST.json.",
-  "evidence_boundary": "Proves what surfaces and sources are wired into this build, and what was deliberately left out; does not prove those surfaces behave correctly at runtime, or that an excluded item is absent from a fork of this tree."
+  "evidence_boundary": "Proves what surfaces and sources are wired into this build, and what was deliberately left out; does not prove those surfaces behave correctly at runtime, or that an excluded item is absent from a fork of this tree.",
+  "proposal_status": "Release identity: 0.5.0. Publication record is maintained in GitHub Releases."
 }

@@ -55,6 +55,12 @@ def test_create_server_registers_only_read_tools(monkeypatch):
         "dca_windows",
         "set_alert",
         "check_alerts",
+        "get_portfolio_risk",
+        "assess_defi_yield",
+        "search_defi_knowledge",
+        "plan_zerion_action",
+        "prepare_zerion_transaction",
+        "get_zerion_preparation",
     ]
     banned = ("execute", "sign", "submit", "send", "transfer")
     for tool_name in registered:
