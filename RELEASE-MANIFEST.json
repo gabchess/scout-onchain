@@ -26,11 +26,12 @@
     "x402_payment_signing": true,
     "x402_process_budget": true,
     "dca_proposal": true,
-    "swap_quote_fetch": "optional Zerion CLI preparation only; disabled by default",
+    "swap_quote_fetch": true,
     "trade_submission": false,
     "trade_execution": false,
     "settlement_verification": false,
-    "unsigned_zerion_preparation": true
+    "unsigned_zerion_preparation": true,
+    "swap_quote_fetch_enabled_by_default": false
   },
   "honesty_artifacts": [
     "WHAT-BROKE.md",
@@ -51,9 +52,9 @@
   "release_artifacts": [
     {
       "path": "dist/scout-portfolio-0.4.0.zip",
-      "sha256": "70c7bbd56eda47cca5d6d45464ed6922fdce0af7d9380c62b3fbd3cda1088ef6",
+      "sha256": "bf325ac6a679472da01445d7d7d7b642b3db3885ada01923504342dae4b165aa",
       "version": "0.4.0",
-      "built_at": "2026-09-10T14:48:17Z"
+      "built_at": "2026-09-10T14:57:05Z"
     }
   ]
 }
