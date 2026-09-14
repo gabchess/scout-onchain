@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scout v0.5 · Shock Lab · SIMULATED</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #131826;
+    --panel-2: #1a2133;
+    --line: #263049;
+    --text: #e8edf7;
+    --muted: #93a0b8;
+    --accent: #5eead4;
+    --warn: #fbbf24;
+    --danger: #fb7185;
+    --sim: #f59e0b;
+    --ok: #34d399;
+    font-size: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background:
+      radial-gradient(1200px 500px at 80% -10%, rgba(94,234,212,.08), transparent 60%),
+      radial-gradient(900px 400px at 10% 110%, rgba(245,158,11,.07), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    padding-bottom: 80px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+  /* --- simulated ribbon --- */
+  .sim-ribbon {
+    position: sticky; top: 0; z-index: 50;
+    background: repeating-linear-gradient(45deg, #7c5300, #7c5300 14px, #925f00 14px, #925f00 28px);
+    color: #fff7e6; text-align: center; font-weight: 700;
+    font-size: .8rem; letter-spacing: .14em; text-transform: uppercase;
+    padding: 6px 10px; border-bottom: 1px solid #a97803;
+  }
+
+  header { padding: 44px 0 8px; }
+  .kicker { color: var(--sim); font-weight: 700; letter-spacing: .18em; text-transform: uppercase; font-size: .75rem; }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin-top: 6px; letter-spacing: -.01em; }
+  h1 .sep { color: var(--muted); font-weight: 400; }
+  .subtitle { color: var(--muted); margin-top: 8px; max-width: 62ch; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px; border: 1px solid;
+  }
+  .badge.sim { color: var(--sim); border-color: rgba(245,158,11,.5); background: rgba(245,158,11,.1); }
+  .badge.fixture { color: var(--accent); border-color: rgba(94,234,212,.45); background: rgba(94,234,212,.08); }
+  .badge.fresh { color: var(--ok); border-color: rgba(52,211,153,.45); background: rgba(52,211,153,.08); }
+
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 22px;
+  }
+  .step-label { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+  section h2 { font-size: 1.15rem; margin: 4px 0 4px; }
+  .hint { color: var(--muted); font-size: .88rem; }
+
+  /* wallet */
+  .wallet-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  input[type="text"] {
+    flex: 1 1 320px; min-width: 0;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem;
+  }
+  input[type="text"]:focus { outline: 2px solid rgba(94,234,212,.5); outline-offset: 1px; }
+  button {
+    background: var(--accent); color: #05261f;
+    border: none; border-radius: 10px; padding: 12px 18px;
+    font-weight: 700; font-size: .9rem; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button.ghost { background: transparent; color: var(--accent); border: 1px solid rgba(94,234,212,.5); }
+  .wallet-result { margin-top: 14px; display: none; }
+  .wallet-result.show { display: block; }
+  .kv { display: flex; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: .85rem; margin-top: 8px; }
+  .kv code { color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; font-size: .82rem; }
+
+  /* heatmap */
+  .heatmap { display: flex; gap: 8px; margin-top: 16px; height: 128px; }
+  .tile {
+    border-radius: 12px; position: relative; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 10px 12px; min-width: 64px;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .tile .sym { font-weight: 800; font-size: .95rem; }
+  .tile .pct { font-size: .78rem; color: rgba(255,255,255,.85); }
+  .callout {
+    margin-top: 16px; border-left: 4px solid var(--danger);
+    background: rgba(251,113,133,.08); border-radius: 0 10px 10px 0;
+    padding: 12px 16px; font-size: .92rem;
+  }
+  .callout strong { color: var(--danger); }
+  .stat-row { display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap; }
+  .stat .num { font-size: 1.35rem; font-weight: 800; }
+  .stat .lbl { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; }
+
+  /* shock */
+  .shock-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .shock-val { font-size: 2rem; font-weight: 800; color: var(--danger); font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; margin-top: 12px; accent-color: var(--danger); height: 28px; }
+  .presets { display: flex; gap: 10px; margin-top: 10px; }
+  .presets button { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); padding: 8px 16px; }
+  .presets button.active { border-color: var(--danger); color: var(--danger); }
+  .chart-box { margin-top: 18px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .chart-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .85rem; color: var(--muted); }
+  svg { display: block; width: 100%; height: auto; }
+  .pnl-line { fill: none; stroke: var(--danger); stroke-width: 2.5; }
+  .base-line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
+  .pnl-fill { fill: url(#pnlGrad); }
+  .shock-out { display: flex; gap: 24px; margin-top: 14px; flex-wrap: wrap; }
+
+  /* prep */
+  .prep-result { display: none; margin-top: 18px; }
+  .prep-result.show { display: block; }
+  pre {
+    background: #0a0d15; border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; line-height: 1.6;
+    color: #c7d2e8;
+  }
+  pre .k { color: var(--accent); }
+  pre .hex { color: var(--warn); word-break: break-all; }
+  .lockcard {
+    margin-top: 14px; text-align: center;
+    border: 2px solid var(--danger); border-radius: 14px;
+    background: rgba(251,113,133,.07);
+    padding: 26px 18px;
+  }
+  .lockcard .lock { font-size: 3rem; line-height: 1; }
+  .lockcard .big {
+    font-size: clamp(1.3rem, 4vw, 2rem); font-weight: 900; letter-spacing: .06em;
+    color: var(--danger); margin-top: 10px; text-transform: uppercase;
+  }
+  .lockcard .small { color: var(--muted); font-size: .85rem; margin-top: 8px; max-width: 52ch; margin-left: auto; margin-right: auto; }
+
+  /* end card */
+  .endcard { text-align: center; padding: 40px 24px; }
+  .endcard h2 { font-size: 1.4rem; }
+  .endcard p { color: var(--muted); margin-top: 8px; }
+  .endcard a.cta {
+    display: inline-block; margin-top: 18px;
+    background: var(--accent); color: #05261f; font-weight: 800;
+    padding: 13px 22px; border-radius: 12px; text-decoration: none;
+  }
+  .endcard .fine { font-size: .78rem; margin-top: 18px; }
+  footer { text-align: center; color: var(--muted); font-size: .78rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<div class="sim-ribbon">Simulated demo · fixture data only · nothing here can sign or broadcast</div>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">Marketer demo · not a live product surface</div>
+    <h1>Scout v0.5 <span class="sep">·</span> Shock Lab <span class="sep">·</span> <span style="color:var(--sim)">SIMULATED</span></h1>
+    <p class="subtitle">
+      Paste a wallet, see concentration over gross observed holdings, run a declared price-shock
+      scenario, and preview an <em>unsigned</em> action. Every number on this page comes from a
+      bundled fixture — no live Zerion, no keys, no execution.
+    </p>
+    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+      <span class="badge sim">Simulated</span>
+      <span class="badge fixture">Fixture data</span>
+    </div>
+  </header>
+
+  <!-- STEP 2: wallet -->
+  <section id="step-wallet">
+    <div class="step-label">Step 1 · Observe</div>
+    <h2>Wallet</h2>
+    <p class="hint">Prefilled with the Shock Lab fixture address. Loading always reads the bundled fixture snapshot — the address is never sent anywhere.</p>
+    <div class="wallet-row">
+      <input id="wallet-input" type="text" spellcheck="false" aria-label="Wallet address"
+             value="0xFACADE00C0FFEE00DECADE00ADD1C7ED0FF1CE00" />
+      <button id="load-btn">Load fixture snapshot</button>
+    </div>
+    <div class="wallet-result" id="wallet-result">
+      <div class="kv">
+        <span>Source: <code>fixture · demo/shock-lab (synthetic)</code></span>
+        <span>Chain: <code>ethereum</code></span>
+        <span>Observed at: <code id="observed-at"></code></span>
+      </div>
+      <div class="kv"><span class="badge fresh" id="freshness-badge-top"></span></div>
+    </div>
+  </section>
+
+  <!-- STEP 3: concentration -->
+  <section id="step-concentration" style="display:none">
+    <div class="step-label">Step 2 · Concentration</div>
+    <h2>Gross observed allocation <span class="badge sim" style="vertical-align:2px">Simulated</span></h2>
+    <div class="heatmap" id="heatmap" role="img" aria-label="Portfolio concentration heatmap"></div>
+    <div class="callout" id="conc-callout"></div>
+    <div class="stat-row">
+      <div class="stat"><div class="num" id="stat-total"></div><div class="lbl">Gross observed value</div></div>
+      <div class="stat"><div class="num" id="stat-top"></div><div class="lbl">Top position weight</div></div>
+      <div class="stat"><div class="num" id="stat-hhi"></div><div class="lbl">HHI (concentration)</div></div>
+    </div>
+  </section>
+
+  <!-- STEP 4: shock -->
+  <section id="step-shock" style="display:none">
+    <div class="step-label">Step 3 · Declared shock scenario</div>
+    <h2>Uniform price shock <span class="badge sim" style="vertical-align:2px">Simulated</span></h2>
+    <p class="hint">A declared what-if applied uniformly to gross observed holdings. It is arithmetic on the fixture snapshot, not a forecast.</p>
+    <div class="shock-head">
+      <div class="shock-val" id="shock-val">−30%</div>
+      <span class="badge fresh" id="freshness-badge"></span>
+    </div>
+    <input id="shock-slider" type="range" min="-80" max="0" step="1" value="-30" aria-label="Shock percentage" />
+    <div class="presets">
+      <button class="preset active" data-shock="-30">−30%</button>
+      <button class="preset" data-shock="-50">−50%</button>
+    </div>
+    <div class="chart-box">
+      <div class="chart-meta">
+        <span>Fixture value history + shock applied at the observation point</span>
+        <span>Fixture prices · not live market data</span>
+      </div>
+      <svg id="chart" viewBox="0 0 800 260" preserveAspectRatio="none" aria-label="Simulated portfolio value line under shock">
+        <defs>
+          <linearGradient id="pnlGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(251,113,133,.28)"/>
+            <stop offset="100%" stop-color="rgba(251,113,133,0)"/>
+          </linearGradient>
+        </defs>
+        <g id="chart-content"></g>
+      </svg>
+    </div>
+    <div class="shock-out">
+      <div class="stat"><div class="num" id="shock-change"></div><div class="lbl">Scenario change</div></div>
+      <div class="stat"><div class="num" id="shock-value"></div><div class="lbl">Scenario value</div></div>
+      <div class="stat"><div class="num" id="shock-top-loss"></div><div class="lbl" id="shock-top-loss-lbl">Top position alone</div></div>
+    </div>
+  </section>
+
+  <!-- STEP 5: unsigned prep -->
+  <section id="step-prep" style="display:none">
+    <div class="step-label">Step 4 · Optional unsigned preparation</div>
+    <h2>Prep an unsigned action <span class="badge sim" style="vertical-align:2px">Simulated</span></h2>
+    <p class="hint">Scout can prepare an exact, unsigned transaction proposal for review. Preparation is where the pipeline ends: there is no signer, no review session, no broadcast path.</p>
+    <div style="margin-top:14px">
+      <button id="prep-btn">Prep unsigned action (trim top position 10%)</button>
+    </div>
+    <div class="prep-result" id="prep-result">
+      <pre id="prep-pre"></pre>
+      <div class="lockcard">
+        <div class="lock">🔒</div>
+        <div class="big">Cannot sign · Cannot broadcast</div>
+        <div class="small">This is an unsigned preview built from fixture data. Scout v0.5 exposes no execute, sign, or submit tools — a human wallet you control would have to review and act on any real proposal.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 6: end card -->
+  <section class="endcard" id="step-end" style="display:none">
+    <h2>That's Shock Lab.</h2>
+    <p>Concentration, declared shocks with visible freshness, and unsigned-only preparation —<br/>the honest core of Scout v0.5.0.</p>
+    <a class="cta" href="https://github.com/gabchess/scout-onchain/releases/tag/v0.5.0" target="_blank" rel="noopener">Get Scout v0.5.0 →</a>
+    <p class="fine hint">Everything above is SIMULATED from a bundled fixture. Scout never claims push alerts, WalletConnect, or automated buys.</p>
+  </section>
+
+  <footer>Scout v0.5 · Shock Lab · demo/shock-lab · fixture data only</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- Fixture (synthetic, demo-local; mirrors Scout fixture shape) ---------- */
+const FIXTURE = {
+  wallet_address: "0xFACADE00C0FFEE00DECADE00ADD1C7ED0FF1CE00",
+  chain: "ethereum",
+  observed_at: "2026-09-03T12:00:00Z",
+  source: { kind: "fixture", locator: "demo/shock-lab/index.html (synthetic fixture, not live data)" },
+  holdings: [
+    { asset: "ETH",  quantity: 16.4,   value_usd: 36900 },
+    { asset: "USDC", quantity: 5400,   value_usd: 5400 },
+    { asset: "UNI",  quantity: 310,    value_usd: 2170 },
+    { asset: "AAVE", quantity: 8.2,    value_usd: 1530 }
+  ],
+  // Synthetic 30-day gross value history ending at the observation point.
+  value_history: [
+    47800, 47420, 47950, 48310, 47880, 47510, 47120, 46840, 47210, 47660,
+    48020, 48490, 48150, 47790, 47430, 47060, 46720, 46390, 46610, 46930,
+    47280, 47540, 47190, 46850, 46520, 46180, 45940, 45710, 45890, 46000
+  ]
+};
+
+const TILE_COLORS = ["#e11d48", "#0e7490", "#7c3aed", "#b45309"];
+const fmtUsd = n => (n < 0 ? "−$" : "$") + Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const fmtPct = n => (n * 100).toFixed(1) + "%";
+
+/* ---------- Derived risk figures (same math as scout advisory.portfolio_risk) ---------- */
+const total = FIXTURE.holdings.reduce((s, h) => s + h.value_usd, 0);
+const positions = FIXTURE.holdings
+  .map(h => ({ ...h, weight: h.value_usd / total }))
+  .sort((a, b) => b.value_usd - a.value_usd);
+const hhi = positions.reduce((s, p) => s + p.weight * p.weight, 0);
+const top = positions[0];
+
+/* ---------- Freshness ---------- */
+function freshnessText() {
+  const observed = new Date(FIXTURE.observed_at);
+  const days = Math.max(0, Math.round((Date.now() - observed.getTime()) / 86400000));
+  return `Freshness: fixture observed ${FIXTURE.observed_at} (${days}d old at page load)`;
+}
+
+/* ---------- Step reveal ---------- */
+const $ = id => document.getElementById(id);
+function show(id) {
+  const el = $(id);
+  if (el.style.display === "none") {
+    el.style.display = "";
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+/* ---------- Step 1: load wallet ---------- */
+$("load-btn").addEventListener("click", () => {
+  // Always loads the bundled fixture regardless of pasted text — declared, not hidden.
+  $("wallet-input").value = FIXTURE.wallet_address;
+  $("observed-at").textContent = FIXTURE.observed_at;
+  $("freshness-badge-top").textContent = freshnessText();
+  $("wallet-result").classList.add("show");
+  renderConcentration();
+  show("step-concentration");
+  show("step-shock");
+  renderShock();
+});
+
+/* ---------- Step 2: concentration heatmap ---------- */
+function renderConcentration() {
+  const map = $("heatmap");
+  map.innerHTML = "";
+  positions.forEach((p, i) => {
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    tile.style.flexGrow = String(Math.round(p.weight * 1000));
+    tile.style.background = `linear-gradient(180deg, ${TILE_COLORS[i % TILE_COLORS.length]}cc, ${TILE_COLORS[i % TILE_COLORS.length]}88)`;
+    tile.innerHTML = `<div class="sym">${p.asset}</div><div class="pct">${fmtPct(p.weight)}</div>`;
+    map.appendChild(tile);
+  });
+  $("conc-callout").innerHTML =
+    `<strong>Concentration callout:</strong> ${fmtPct(top.weight)} of gross observed value sits in a single token (${top.asset}). ` +
+    `A uniform shock therefore lands almost entirely on one position.`;
+  $("stat-total").textContent = fmtUsd(total);
+  $("stat-top").textContent = `${fmtPct(top.weight)} ${top.asset}`;
+  $("stat-hhi").textContent = hhi.toFixed(3);
+}
+
+/* ---------- Step 3: shock scenario ---------- */
+const slider = $("shock-slider");
+
+function renderShock() {
+  const shock = Number(slider.value); // e.g. -30
+  $("shock-val").textContent = `${shock === 0 ? "0" : "−" + Math.abs(shock)}%`;
+  $("freshness-badge").textContent = freshnessText();
+
+  document.querySelectorAll(".preset").forEach(b =>
+    b.classList.toggle("active", Number(b.dataset.shock) === shock));
+
+  const change = total * shock / 100;
+  const scenarioValue = total + change;
+  $("shock-change").textContent = fmtUsd(change);
+  $("shock-value").textContent = fmtUsd(scenarioValue);
+  $("shock-top-loss").textContent = fmtUsd(top.value_usd * shock / 100);
+  $("shock-top-loss-lbl").textContent = `${top.asset} position alone`;
+
+  drawChart(shock, scenarioValue);
+  show("step-prep");
+}
+
+function drawChart(shock, scenarioValue) {
+  const W = 800, H = 260, PAD = 14;
+  const hist = FIXTURE.value_history;
+  // history points, then a short shock leg dropping to the scenario value
+  const shockSteps = 6;
+  const pts = hist.slice();
+  const last = hist[hist.length - 1];
+  for (let i = 1; i <= shockSteps; i++) {
+    pts.push(last + (scenarioValue - last) * (i / shockSteps));
+  }
+  const min = Math.min(...pts) * 0.97, max = Math.max(...pts) * 1.01;
+  const x = i => PAD + (i / (pts.length - 1)) * (W - 2 * PAD);
+  const y = v => H - PAD - ((v - min) / (max - min)) * (H - 2 * PAD);
+
+  let d = "";
+  pts.forEach((v, i) => { d += (i ? " L " : "M ") + x(i).toFixed(1) + " " + y(v).toFixed(1); });
+  const fillD = d + ` L ${x(pts.length - 1).toFixed(1)} ${H - PAD} L ${x(0).toFixed(1)} ${H - PAD} Z`;
+  const baseY = y(last).toFixed(1);
+  const shockX = x(hist.length - 1).toFixed(1);
+  const endY = y(scenarioValue).toFixed(1);
+
+  $("chart-content").innerHTML =
+    `<path class="pnl-fill" d="${fillD}"></path>` +
+    `<line class="base-line" x1="${PAD}" y1="${baseY}" x2="${W - PAD}" y2="${baseY}"></line>` +
+    `<path class="pnl-line" d="${d}"></path>` +
+    `<circle cx="${shockX}" cy="${baseY}" r="4" fill="#fbbf24"></circle>` +
+    `<text x="${shockX}" y="${Number(baseY) - 10}" fill="#fbbf24" font-size="12" text-anchor="middle">shock applied</text>` +
+    `<circle cx="${W - PAD}" cy="${endY}" r="4" fill="#fb7185"></circle>` +
+    `<text x="${W - PAD - 6}" y="${Number(endY) + 18}" fill="#fb7185" font-size="12" text-anchor="end">${shock}% → ${fmtUsd(scenarioValue)}</text>`;
+}
+
+slider.addEventListener("input", renderShock);
+document.querySelectorAll(".preset").forEach(b =>
+  b.addEventListener("click", () => { slider.value = b.dataset.shock; renderShock(); }));
+
+/* ---------- Step 4: unsigned prep ---------- */
+$("prep-btn").addEventListener("click", () => {
+  const trimQty = (top.quantity * 0.1).toFixed(2);
+  const trimUsd = fmtUsd(top.value_usd * 0.1);
+  // Deterministic fake calldata — clearly synthetic, never valid for any chain.
+  const calldata = "0x5c07d0de" + Array.from({ length: 4 }, (_, r) =>
+    Array.from({ length: 24 }, (_, i) => ((r * 31 + i * 7 + 13) % 16).toString(16)).join("")
+  ).join("");
+  const preview = [
+    `<span class="k">// UNSIGNED PREPARATION PREVIEW — SIMULATED, fixture data only</span>`,
+    `preparation_id : <span class="hex">prep-shocklab-demo-0001</span>`,
+    `status         : proposal (approval required, expires in 120s in real Scout)`,
+    `action         : swap (trim top position ~10%)`,
+    `chain          : ethereum (chain_id 1)`,
+    `source_wallet  : <span class="hex">${FIXTURE.wallet_address}</span>`,
+    `sell           : ${trimQty} ${top.asset} (~${trimUsd})`,
+    `buy            : USDC`,
+    `slippage_bps   : 50`,
+    `unsigned_calldata (synthetic, not valid on any chain):`,
+    `  <span class="hex">${calldata}</span>`,
+    ``,
+    `<span class="k">// No signer attached. No review session. No broadcast path.</span>`
+  ].join("\n");
+  $("prep-pre").innerHTML = preview;
+  $("prep-result").classList.add("show");
+  show("step-end");
+  $("prep-result").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+</script>
+</body>
+</html>
