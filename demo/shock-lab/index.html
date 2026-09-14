@@ -311,7 +311,7 @@ const positions = FIXTURE.holdings
   .map(h => ({ ...h, weight: h.value_usd / total }))
   .sort((a, b) => b.value_usd - a.value_usd);
 const hhi = positions.reduce((s, p) => s + p.weight * p.weight, 0);
-const top = positions[0];
+const topPos = positions[0];
 
 /* ---------- Freshness ---------- */
 function freshnessText() {
@@ -356,10 +356,10 @@ function renderConcentration() {
     map.appendChild(tile);
   });
   $("conc-callout").innerHTML =
-    `<strong>Concentration callout:</strong> ${fmtPct(top.weight)} of gross observed value sits in a single token (${top.asset}). ` +
+    `<strong>Concentration callout:</strong> ${fmtPct(topPos.weight)} of gross observed value sits in a single token (${topPos.asset}). ` +
     `A uniform shock therefore lands almost entirely on one position.`;
   $("stat-total").textContent = fmtUsd(total);
-  $("stat-top").textContent = `${fmtPct(top.weight)} ${top.asset}`;
+  $("stat-top").textContent = `${fmtPct(topPos.weight)} ${topPos.asset}`;
   $("stat-hhi").textContent = hhi.toFixed(3);
 }
 
@@ -378,8 +378,8 @@ function renderShock() {
   const scenarioValue = total + change;
   $("shock-change").textContent = fmtUsd(change);
   $("shock-value").textContent = fmtUsd(scenarioValue);
-  $("shock-top-loss").textContent = fmtUsd(top.value_usd * shock / 100);
-  $("shock-top-loss-lbl").textContent = `${top.asset} position alone`;
+  $("shock-top-loss").textContent = fmtUsd(topPos.value_usd * shock / 100);
+  $("shock-top-loss-lbl").textContent = `${topPos.asset} position alone`;
 
   drawChart(shock, scenarioValue);
   show("step-prep");
@@ -422,8 +422,8 @@ document.querySelectorAll(".preset").forEach(b =>
 
 /* ---------- Step 4: unsigned prep ---------- */
 $("prep-btn").addEventListener("click", () => {
-  const trimQty = (top.quantity * 0.1).toFixed(2);
-  const trimUsd = fmtUsd(top.value_usd * 0.1);
+  const trimQty = (topPos.quantity * 0.1).toFixed(2);
+  const trimUsd = fmtUsd(topPos.value_usd * 0.1);
   // Deterministic fake calldata — clearly synthetic, never valid for any chain.
   const calldata = "0x5c07d0de" + Array.from({ length: 4 }, (_, r) =>
     Array.from({ length: 24 }, (_, i) => ((r * 31 + i * 7 + 13) % 16).toString(16)).join("")
@@ -435,7 +435,7 @@ $("prep-btn").addEventListener("click", () => {
     `action         : swap (trim top position ~10%)`,
     `chain          : ethereum (chain_id 1)`,
     `source_wallet  : <span class="hex">${FIXTURE.wallet_address}</span>`,
-    `sell           : ${trimQty} ${top.asset} (~${trimUsd})`,
+    `sell           : ${trimQty} ${topPos.asset} (~${trimUsd})`,
     `buy            : USDC`,
     `slippage_bps   : 50`,
     `unsigned_calldata (synthetic, not valid on any chain):`,
