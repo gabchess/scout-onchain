@@ -32,6 +32,7 @@ from scout_portfolio_manager.x402_source import (
     X402SpendBudget,
     parse_max_usd_per_call,
     parse_max_usd_per_session,
+    preflight_before_signing,
     x402_transport,
 )
 from scout_portfolio_manager.x402_source import (
@@ -173,6 +174,43 @@ def test_payment_signature_header_check_is_case_insensitive_and_non_empty():
     assert has_payment_signature({"payment-signature": "signed"})
     assert not has_payment_signature({"PAYMENT-SIGNATURE": "  "})
     assert not has_payment_signature({"Accept": "application/json"})
+
+
+def test_preflight_validates_before_reserving_budget():
+    events = []
+
+    class RecordingGuard:
+        def validate(self, context):
+            events.append("validate")
+
+    class RecordingBudget:
+        def reserve_payment(self):
+            events.append("reserve")
+
+    preflight_before_signing(
+        payment_context(),
+        guard=RecordingGuard(),
+        spend_budget=RecordingBudget(),
+    )
+
+    assert events == ["validate", "reserve"]
+
+
+def test_rejected_preflight_does_not_reserve_budget():
+    events = []
+
+    class RecordingBudget:
+        def reserve_payment(self):
+            events.append("reserve")
+
+    with pytest.raises(ZerionAPIPaymentError, match="chain_not_allowed"):
+        preflight_before_signing(
+            payment_context(network="solana:mainnet"),
+            guard=X402PaymentGuard.from_usd("$0.05"),
+            spend_budget=RecordingBudget(),
+        )
+
+    assert events == []
 
 
 # --- spend cap validation -----------------------------------------------------
