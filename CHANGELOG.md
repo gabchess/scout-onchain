@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add fail-closed x402 preflight checks for Base mainnet, the pinned Base USDC
+  contract, explicit recipients and timeouts, atomic amount caps, and the
+  `PAYMENT-SIGNATURE` retry header.
+- Restrict the x402 EVM registration to Scout's documented Base analytics rail;
+  keep non-Base and Solana behavior outside the current signer path.
+
 ## 0.5.0 - 2026-09-10
 
 - Add gross portfolio concentration and explicit uniform shock calculations.
