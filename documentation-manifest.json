@@ -6,7 +6,7 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "d0af812273aa76700e3646bc8041d65ee4f22b6ca03b0dbbd2393dd7ade554c3"
+      "sha256": "fccef9a986cbb884d264d63f32539c435fa6b6e785c224ad68b9fb7f7bf08e30"
     },
     {
       "path": "CHANGELOG.md",
@@ -18,7 +18,7 @@
     },
     {
       "path": "DATA-AND-PRIVACY.md",
-      "sha256": "0bb3d563390dac28948248374856a4c7df4150e8a9ebb6294cfe8021ea372eaa"
+      "sha256": "5863e0ff44e9046ef06d34b46b12cbc1f19ec8b2286812789e11e2ae3979450f"
     },
     {
       "path": "HOST-MATRIX.md",
@@ -42,7 +42,7 @@
     },
     {
       "path": "START-HERE.md",
-      "sha256": "cb4be1d194995d8f154b04fdfd13674fd83792da59fc3ce3bd64f7413934fa05"
+      "sha256": "0694440a06c372ab98335da991705b2003dbdd46a90218bee1baeb0e6494a885"
     },
     {
       "path": "SUPPORT.md",
@@ -58,7 +58,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "f5ecf7cb9ba36658640beb21927d47056f040cdbb0fc9c73402c0dfee2844b9b"
+      "sha256": "0127fc1fc4d59bd5d283472c902d8adac02236296b3cbe3c4be441c5ed4c8180"
     },
     {
       "path": "docs/GROK.md",

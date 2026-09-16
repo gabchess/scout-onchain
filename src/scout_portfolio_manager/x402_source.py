@@ -15,7 +15,8 @@ payment wallet signs USDC data fees. Scout installs a hook immediately before
 each payment payload is created, including recovery payloads, and reserves the
 configured per-payment maximum against one process-lifetime budget.
 
-Enable with ``ZERION_X402_PRIVATE_KEY`` + ``ZERION_WALLET_ADDRESS``. Setting
+Enable with ``ZERION_X402_PRIVATE_KEY`` + ``ZERION_WALLET_ADDRESS`` +
+``ZERION_X402_PAY_TO``, which pins the only address Scout will pay. Setting
 both ``ZERION_API_KEY`` and ``ZERION_X402_PRIVATE_KEY`` is a configuration
 error: one authorization mode per source, decided loudly at startup.
 """

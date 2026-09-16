@@ -13,7 +13,7 @@
 
 The fixture path comes from `ZPM_FIXTURE_PATH`. Claude Code defaults it to `${CLAUDE_PLUGIN_ROOT}/fixtures/portfolio.json`.
 
-API-key Zerion needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. x402 needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the optional dependency group. Authorization modes are exclusive. Incomplete configuration stops startup.
+API-key Zerion needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. x402 needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the optional dependency group. `ZERION_X402_PAY_TO` pins the only address Scout will pay. Authorization modes are exclusive. Incomplete configuration stops startup.
 
 Zerion snapshots contain per-asset positions and mapped transactions with `source.kind = "zerion_api"`. An API failure returns `status: "error"` and `fallback: "none"`.
 
