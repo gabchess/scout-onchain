@@ -25,7 +25,7 @@ Partial or conflicting configuration stops startup. A call-time API failure retu
 
 `ZerionAPIReader` maps per-asset positions and wallet transactions. Positions use one request. Transactions follow `links.next` for up to `max_pages`, which defaults to 20. A malformed, repeated, or off-host cursor raises `ZerionAPIPaginationError`. Missing asset symbols and unmapped operations are logged and skipped instead of invented. Scout sends no chain filter, so reads include every chain Zerion returns for the wallet, including Arc (`arc`). Holdings with the same asset label are merged before PnL and asset analysis.
 
-Asset indicators read `fixtures/price_history.json` in every mode. A live portfolio source does not make that price series live. DCA previews accept optional quote fields from the caller. The optional Zerion CLI adapter can obtain unsigned swap and bridge proposals; its transaction semantics remain unverified.
+Asset indicators read `fixtures/price_history.json` in every mode. A live portfolio source does not make that price series live. DCA previews accept optional quote fields from the caller. The optional Zerion CLI adapter can obtain unsigned swap, transfer and bridge proposals, including on Arc mainnet; their transaction semantics remain unverified, except that Arc USDC value and 0x3600 transfer calldata are checked against the intent.
 
 ## Authority and state
 

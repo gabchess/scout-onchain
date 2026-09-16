@@ -14,7 +14,7 @@ import sqlite3
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, Inexact, localcontext
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
@@ -27,9 +27,29 @@ CHAINS = {
     "optimism": (10, "ETH"),
     "polygon": (137, "POL"),
     "avalanche": (43114, "AVAX"),
+    # Arc mainnet only. Chain id 5042 comes from Arc's docs, not from Zerion.
+    "arc": (5042, "USDC"),
 }
 TTL_SECONDS = 120
 NATIVE_ADDRESS = "0x" + "e" * 40
+# On Arc, native USDC (18 decimals) and this ERC-20 view (6 decimals) share one balance.
+ARC_USDC_TOKEN = "0x3600000000000000000000000000000000000000"
+ARC_USDC = frozenset({"native", ARC_USDC_TOKEN})
+ARC_USDC_NOTE = "native USDC and the 0x3600 token share one balance"
+ARC_SAME_BALANCE = (
+    "On Arc, native USDC and the 0x3600 USDC token are the same balance; there is nothing to swap."
+)
+ARC_TRANSFERS_ONLY = (
+    "On Arc, use native USDC for swaps and bridges; "
+    "the 0x3600 token is accepted for transfers only."
+)
+TRANSFER_SELECTOR = "a9059cbb"
+# Closed enum of Zerion CLI chain refusal codes. Nothing else from stderr is trusted.
+CHAIN_REFUSAL_REASONS = {
+    "unsupported_chain": "unknown_chain",
+    "chain_capability_missing": "capability_missing",
+    "chain_unsignable": "not_signable",
+}
 ID_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}")
 AMOUNT_RE = re.compile(r"(?:0|[1-9][0-9]{0,17})(?:\.[0-9]{1,18})?")
 ADDRESS_RE = re.compile(r"0x[0-9a-fA-F]{40}")
@@ -37,6 +57,24 @@ ADDRESS_RE = re.compile(r"0x[0-9a-fA-F]{40}")
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class ChainNotSupported(Exception):
+    """The Zerion CLI refused the chain or action; carries only a closed-enum code."""
+
+    def __init__(self, code: str):
+        if code not in CHAIN_REFUSAL_REASONS:
+            raise ValueError("Unknown chain refusal code")
+        super().__init__(code)
+        self.code = code
+
+
+def scaled_units(amount: str, decimals: int) -> int:
+    """Exact integer base units; raises decimal.Inexact instead of rounding."""
+    with localcontext() as ctx:
+        ctx.prec = 80
+        ctx.traps[Inexact] = True
+        return int(Decimal(amount).scaleb(decimals).to_integral_exact())
 
 
 def _address(value: str) -> str:
@@ -62,11 +100,6 @@ class PreparationIntent(BaseModel):
     @field_validator("chain", "destination_chain")
     @classmethod
     def chain_known(cls, value: str | None) -> str | None:
-        if value == "arc":
-            raise ValueError(
-                "Arc is read-only in Scout: wallet reads work through the Zerion API, "
-                "but Zerion CLI preparation on Arc is not supported yet"
-            )
         if value is not None and value not in CHAINS:
             raise ValueError("Unsupported preparation chain; EVM allowlist only")
         return value
@@ -102,6 +135,8 @@ class PreparationIntent(BaseModel):
         if self.action == "swap":
             if self.destination is not None or self.destination_chain is not None:
                 raise ValueError("Swap returns to the source wallet on the same chain")
+            if self.chain == "arc" and {self.asset, self.target_asset} <= ARC_USDC:
+                raise ValueError(ARC_SAME_BALANCE)
             if self.asset == self.target_asset:
                 raise ValueError("Swap assets must differ")
         if self.action == "bridge":
@@ -109,7 +144,28 @@ class PreparationIntent(BaseModel):
                 raise ValueError("Bridge needs explicit destination and destination_chain")
             if self.destination_chain == self.chain:
                 raise ValueError("Bridge must change chains")
+        if self.action != "transfer" and (
+            (self.chain == "arc" and self.asset == ARC_USDC_TOKEN)
+            or (self.target_chain == "arc" and self.target_asset == ARC_USDC_TOKEN)
+        ):
+            raise ValueError(ARC_TRANSFERS_ONLY)
+        if (
+            self.chain == "arc"
+            and self.asset in ARC_USDC
+            and Decimal(self.amount) != Decimal(self.amount).quantize(Decimal("0.000001"))
+        ):
+            raise ValueError("Arc USDC amounts allow at most 6 decimal places")
         return self
+
+    @property
+    def target_chain(self) -> str:
+        return self.destination_chain or self.chain
+
+    @property
+    def involves_arc_usdc(self) -> bool:
+        return (self.chain == "arc" and self.asset in ARC_USDC) or (
+            self.target_chain == "arc" and self.target_asset in ARC_USDC
+        )
 
     def cli_args(self) -> list[str]:
         def token(asset: str, chain: str) -> str:
@@ -199,6 +255,8 @@ def validate_envelope(value: dict[str, Any], intent: PreparationIntent, now: dat
             raise ValueError("Malformed transaction calldata")
         if not re.fullmatch(r"0x[0-9a-fA-F]+", tx.get("value", "")):
             raise ValueError("Malformed transaction value")
+    if intent.chain == "arc" and intent.asset in ARC_USDC:
+        _check_arc_usdc_transactions(intent, [entry["evm"] for entry in txs])
     # Check the provider-declared destination. Router calldata is still unverified.
     summary = value.get("summary", {})
     if intent.action == "transfer":
@@ -213,6 +271,32 @@ def validate_envelope(value: dict[str, Any], intent: PreparationIntent, now: dat
         ):
             raise ValueError("Bridge destination mismatch")
     return prepared + timedelta(seconds=TTL_SECONDS)
+
+
+def _check_arc_usdc_transactions(intent: PreparationIntent, txs: list[dict[str, Any]]) -> None:
+    """Bind Arc USDC value exactly: native at 18 decimals, 0x3600 transfer at 6."""
+    if intent.asset == "native":
+        if sum(int(tx["value"], 16) for tx in txs) != scaled_units(intent.amount, 18):
+            raise ValueError("Arc native USDC value does not match intent")
+        if intent.action == "transfer" and (
+            len(txs) != 1 or txs[0]["to"].lower() != intent.destination or txs[0]["data"] != "0x"
+        ):
+            raise ValueError("Arc native USDC transfer must be one plain value transfer")
+        return
+    # 0x3600 is refused at intent for swap and bridge, so only a transfer reaches here.
+    data = txs[0]["data"].lower() if len(txs) == 1 else ""
+    recipient, units = data[34:74], data[74:]
+    if (
+        intent.action != "transfer"
+        or txs[0]["to"].lower() != ARC_USDC_TOKEN
+        or int(txs[0]["value"], 16) != 0
+        or len(data) != 2 + 8 + 64 * 2
+        or data[2:10] != TRANSFER_SELECTOR
+        or data[10:34] != "0" * 24
+        or "0x" + recipient != intent.destination
+        or int(units, 16) != scaled_units(intent.amount, 6)
+    ):
+        raise ValueError("Arc 0x3600 USDC transfer calldata does not match intent")
 
 
 class PreparationProvider(Protocol):
@@ -297,6 +381,7 @@ class PreparationService:
             raise ValueError("Invalid request ID")
         if self.provider is None:
             return self._result("disabled", next_step="Operator must configure Zerion preparation.")
+        note = {"arc_usdc_note": ARC_USDC_NOTE} if intent.involves_arc_usdc else {}
         payload = json.dumps(intent.model_dump(), sort_keys=True, separators=(",", ":"))
         digest = hashlib.sha256(payload.encode()).hexdigest()
         with self._connect() as db:
@@ -326,14 +411,28 @@ class PreparationService:
                 transaction_semantics_verified=False,
                 next_step="Inspect the unsigned envelope locally. A separately "
                 "authorized Zerion signing workflow is still required.",
+                **note,
             )
             state, expires = "prepared_unsigned", expiry.isoformat()
+        except ChainNotSupported as refusal:
+            # A bridge refusal can come from either chain, so the text names neither.
+            result = self._result(
+                "chain_not_supported",
+                request_id=request_id,
+                reason=CHAIN_REFUSAL_REASONS[refusal.code],
+                retryable=False,
+                next_step="Zerion's CLI refused this chain or action. No retry was attempted. "
+                "Use a new request ID if Zerion's support changes.",
+                **note,
+            )
+            state, expires, raw = "chain_not_supported", None, None
         except Exception:
             # Provider exception/output can contain credentials. Return only the fixed status.
             result = self._result(
                 "preparation_failed",
                 request_id=request_id,
                 next_step="Inspect provider configuration; no automatic retry.",
+                **note,
             )
             state, expires, raw = "preparation_failed", None, None
         with self._connect() as db:

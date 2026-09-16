@@ -10,7 +10,7 @@ Evidence labels describe what this repository can show. `CI` means a workflow bl
 | Zerion API-key source | Yes | Available after MCP attachment | Yes | TEST; no current live call |
 | Zerion x402 source | Yes | Available after MCP attachment | Yes | TEST; SDK and budget hook run offline, live paid call unverified |
 | Arc wallet reads | Yes | Available after MCP attachment | Yes | TEST; Zerion-shaped Arc fixture offline, live call unverified |
-| Unsigned preparation on Arc | Refused | Refused after MCP attachment | Refused | TEST; `arc` rejected before any provider call |
+| Unsigned preparation on Arc | Accepted, live availability unverified | Available after MCP attachment | Accepted, live availability unverified | TEST; fixture envelopes and fake CLI refusals offline, no live Arc preparation |
 | Local alert file | `.scout/alerts.json` | Written by attached MCP runtime | `.scout/alerts.json` | CI; alert tests |
 | Trade execution | Absent | Absent | Absent | CI; runtime file and tool registry gate |
 | Fresh archive install | Files present | Skills present | Package installs and lists all tools | LOCAL; tested in a clean Python 3.11 environment |

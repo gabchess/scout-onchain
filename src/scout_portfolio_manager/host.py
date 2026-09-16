@@ -110,20 +110,23 @@ def _acquisition_basis_usd(transactions: Sequence[Transaction], asset: str) -> f
 
 
 def _holdings_by_asset(holdings: Sequence[Holding]) -> List[Holding]:
-    """Merge holdings that share an exact asset label, in first-seen order.
+    """Merge holdings whose asset labels match case-insensitively, in first-seen order.
 
     Zerion returns one position per chain, so a multi-chain wallet can report
     USDC on Arc and USDC on Base as two rows. The transaction ledger carries no
     chain either, so per-asset basis and PnL are calculated once per label.
+    Callers filter with ``.upper()``, so the merge key is uppercase too; the
+    first-seen label is kept.
     """
     merged: Dict[str, Holding] = {}
     for holding in holdings:
-        seen = merged.get(holding.asset)
-        merged[holding.asset] = (
+        key = holding.asset.upper()
+        seen = merged.get(key)
+        merged[key] = (
             holding
             if seen is None
             else Holding(
-                asset=holding.asset,
+                asset=seen.asset,
                 quantity=seen.quantity + holding.quantity,
                 value_usd=seen.value_usd + holding.value_usd,
             )

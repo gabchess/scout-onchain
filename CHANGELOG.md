@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.1 - 2026-09-16
+
+### Arc preparation
+
+- Accept Arc mainnet (`arc`) in unsigned Zerion CLI preparation: native USDC for transfer, swap and bridge; the 0x3600 token for transfers only. Tested offline; live Arc availability is unverified.
+- Refuse a swap between native USDC and the 0x3600 token, which share one balance, and add `arc_usdc_note` to Arc USDC responses.
+- Allow at most 6 decimal places for Arc USDC amounts. Bind native USDC value exactly at 18 decimals, and decode the 0x3600 transfer call. Other Arc tokens are not decimal-checked.
+- Enforce Arc chain id 5042 in prepared envelopes. Arc testnet is refused.
+
+### Behavior change
+
+- Preparation refusals caused by Zerion chain flags now return `chain_not_supported` on every chain (previously `preparation_failed`). Only the refusal code is read; the CLI's message is never returned or stored.
+
+### Fixes
+
+- Merge holdings whose asset labels differ only in case, matching the case-insensitive asset filters.
+- Update the stale version in `docs/knowledge/README.md`.
+
 ## 0.6.0 - 2026-09-16
 
 ### Arc reads

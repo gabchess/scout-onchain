@@ -1,6 +1,6 @@
 # Start here
 
-Scout 0.6.0 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
+Scout 0.6.1 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
 
 After setup, ask:
 
@@ -134,7 +134,7 @@ Open `http://127.0.0.1:8787`. The demo reads the fixture and ignores Zerion envi
 
 The fourteen tools cover portfolio observation, PnL, DCA proposals, asset analysis, local alerts, portfolio risk, assumed yield, DeFi reference lookup and Zerion action planning. Optional preparation produces an unsigned proposal and exposes its local status. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
 
-Live price history and pushed alerts are outside version 0.6.0. Trade approval, execution, and settlement are not part of this package.
+Live price history and pushed alerts are outside version 0.6.1. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.
 

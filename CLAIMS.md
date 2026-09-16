@@ -1,6 +1,6 @@
 # Claim status
 
-Source: `gabchess/scout-onchain` 0.6.0. Each status names the strongest evidence in this repository.
+Source: `gabchess/scout-onchain` 0.6.1. Each status names the strongest evidence in this repository.
 
 | Claim | Status | Evidence and limit |
 |:--|:--|:--|
@@ -14,11 +14,17 @@ Source: `gabchess/scout-onchain` 0.6.0. Each status names the strongest evidence
 | Uses x402 for paid Zerion reads | IMPLEMENTED, LIVE UNVERIFIED | The real SDK session builds offline. The payment wallet can sign and spend USDC. No paid live request is recorded. |
 | Caps x402 spend | TESTED OFFLINE | The defaults are `$0.05` per payment and `$1.05` per process. Scout reserves before every SDK payment payload, including recovery. |
 | Preflights x402 payment requirements | TESTED OFFLINE | Scout rejects non-Base, non-pinned-USDC, malformed or over-cap requirements before signing and rejects paid retries without `PAYMENT-SIGNATURE`. |
-| Prepares unsigned transactions on Arc | ABSENT | Preparation refuses `arc` as a source or destination chain. |
+| Prepares unsigned transactions on Arc | TESTED OFFLINE, LIVE AVAILABILITY UNVERIFIED | Scout accepts Arc preparation for native USDC for transfer, swap and bridge; the 0x3600 token for transfers only. Zerion's live chain flags decide which actions work; Scout has not observed them. A refusal returns `chain_not_supported`. Fixture envelopes only; no live Arc preparation is recorded. |
 | Signs with the observed wallet | ABSENT | The observed wallet is an address input. The only signer is the separate x402 payment wallet when configured. |
 | Executes trades | ABSENT | Public tools stop at proposal preview or optional unsigned EVM preparation. No signing, broadcast or settlement tool ships. |
 | Runs through MCP | TESTED LOCALLY | The registry is pinned to the public tool set. Host-specific activation still needs inspection after installation. |
 | Ships under MIT | VERIFIED IN TREE | See [`LICENSE.md`](LICENSE.md) and [`LICENSE-STATUS.md`](LICENSE-STATUS.md). |
+
+## 0.6.1 Arc preparation
+
+Scout enforces chain id 5042, taken from Arc's docs. The Zerion CLI derives the id from Zerion's `external_id` for `arc`, which Scout has not observed; a different value makes every Arc preparation fail closed.
+
+Only Arc mainnet (`arc`) is accepted. Native USDC and the 0x3600 token share one balance, so Scout refuses a swap between them. Arc USDC amounts allow at most 6 decimal places. Scout binds the native USDC value exactly at 18 decimals and decodes the 0x3600 transfer call. Other Arc tokens, such as EURC, are not decimal-checked.
 
 ## 0.6.0 Arc reads
 
