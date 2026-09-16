@@ -65,6 +65,23 @@ jobs:
       - name: Check release archive
         run: python scripts/build_release_zip.py --check
 
+  wheel-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v10.0.1
+      - name: Build wheel, wheelhouse, and smoke client
+        run: |
+          uv build --wheel --out-dir dist
+          python -m pip download --dest wheelhouse dist/*.whl
+          python -m pip install 'mcp>=1.2,<2'
+      - name: Install and start the wheel with the network cut
+        run: bash scripts/wheel_smoke_offline.sh
+
   offline-evals:
     runs-on: ubuntu-latest
     steps:
