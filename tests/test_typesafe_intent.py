@@ -583,3 +583,46 @@ def test_no_key_or_request_text_in_failure_counts(tmp_path):
     text = "$200 budget, put $50 weekly into ETH on base from wallet:a to rail:b"
     ts.resolve_dca_request(text, _env(tmp_path), transport=StubTransport(error=OSError(text)))
     assert all(KEY_VALUE not in k and "budget" not in k for k in ts.failure_counts)
+
+
+# --- review fixes (Harrier L1, L3; Kestrel negation clause) ------------------------
+
+
+def test_fifo_at_dotenv_path_is_refused_without_hanging(tmp_path):
+    fifo = tmp_path / "scout.fifo"
+    os.mkfifo(fifo, 0o600)
+    started = time.monotonic()
+    assert ts.load_key({ts.ENABLE_ENV: "1", ts.DOTENV_ENV: str(fifo)}) is None
+    assert time.monotonic() - started < 1.0
+
+
+def test_bare_64_hex_and_long_base58_runs_are_redacted():
+    hex64 = "ab" * 32
+    base58_long = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU" * 2
+    joined = "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZ_RuJosgAsU7xKXtg2CW87d97TXJSDpb"
+    for secret in (hex64, base58_long, joined):
+        assert ts.redact(f"x {secret} y") == f"x {ts.REDACTED} y"
+
+
+def test_chain_candidate_cannot_carry_a_64_hex_string(tmp_path):
+    hex64 = "c0" * 32
+    text = f"$50 ETH weekly on base or on {hex64} from wallet:a to rail:b"
+    transport = StubTransport(response={"answers": {}})
+    ts.resolve_dca_request(text, _env(tmp_path), transport=transport)
+    raw = b"".join(body for _, body in transport.calls).decode()
+    assert hex64 not in raw and "c0c0c0" not in raw
+    found = ts.find_candidates(ts.redact(text))["chain"]
+    assert [c.value for c in found] == ["base"]
+
+
+def test_unknown_chain_names_are_capped_at_20_characters():
+    found = ts.find_candidates("on abcdefghijklmnopqrstuvwxyz and on short")["chain"]
+    assert [c.value for c in found] == ["short"]
+
+
+def test_negation_lookback_stops_at_clause_punctuation(tmp_path):
+    text = "buy $50 of ETH, not SOL, weekly on base from wallet:a to rail:b"
+    found = ts.find_candidates(ts.redact(text))
+    assert [(c.value, c.negated) for c in found["asset"]] == [("ETH", False), ("SOL", True)]
+    assert [(c.value, c.negated) for c in found["schedule"]] == [("weekly", False)]
+    assert [(c.value, c.negated) for c in found["chain"]] == [("base", False)]

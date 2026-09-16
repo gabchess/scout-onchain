@@ -90,7 +90,8 @@ def load_key(environ: Mapping[str, str]) -> Optional[_ApiKey]:
         _notice(f"{ENABLE_ENV} is off on this platform (no O_NOFOLLOW or getuid).")
         return None
     try:
-        fd = os.open(path, os.O_RDONLY | nofollow)
+        # O_NONBLOCK: a FIFO at this path must not hang open(); S_ISREG rejects it below.
+        fd = os.open(path, os.O_RDONLY | nofollow | getattr(os, "O_NONBLOCK", 0))
     except OSError:
         failure_counts["dotenv_open"] += 1
         return None
@@ -157,8 +158,13 @@ _REDACTIONS = [
     re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"),
     re.compile(r"\b[\w-]+(?:\.[\w-]+)*\.(?:eth|sol)\b", re.I),
     re.compile(r"0x[0-9a-fA-F]{40,}"),
+    re.compile(r"\b[0-9a-fA-F]{64}\b"),
     re.compile(r"\b[a-z]{1,83}1[02-9ac-hj-np-z]{20,}\b", re.I),
-    re.compile(r"\b[1-9A-HJ-NP-Za-km-z]{32,44}\b"),
+    # Base58 runs of 32+ characters with no upper bound, including runs joined by "_".
+    re.compile(
+        r"(?<![0-9A-Za-z_])(?=[1-9A-HJ-NP-Za-km-z_]*[1-9A-HJ-NP-Za-km-z]{32})"
+        r"[1-9A-HJ-NP-Za-km-z_]+(?![0-9A-Za-z_])"
+    ),
 ]
 
 
@@ -240,7 +246,9 @@ def _alternation(words: Sequence[str]) -> str:
 
 
 def _negated(text: str, start: int) -> bool:
-    before = re.findall(r"[^\s,.;:!?]+", text[:start])[-3:]
+    """True if a negation word is among the 3 tokens before start, within the same clause."""
+    clause = re.split(r"[,;]", text[:start])[-1]
+    before = re.findall(r"[^\s.:!?]+", clause)[-3:]
     return bool(_NEGATION.search(" ".join(before)))
 
 
@@ -254,7 +262,7 @@ def _find(text: str, pattern: str, mapping: Mapping[str, str], group: int = 0) -
 
 
 def find_candidates(redacted: str) -> Dict[str, List[Candidate]]:
-    chain_pattern = rf"\bon\s+({_alternation(list(CHAIN_SYNONYMS))}|[a-z][a-z0-9-]*)\b"
+    chain_pattern = rf"\bon\s+({_alternation(list(CHAIN_SYNONYMS))}|[a-z][a-z0-9-]{{0,19}})\b"
     chains = []
     for match in re.finditer(chain_pattern, redacted, re.I):
         word = re.sub(r"\s+", " ", match.group(1).lower())
