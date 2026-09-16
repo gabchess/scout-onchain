@@ -748,3 +748,33 @@ def test_x402_with_opt_in_selects_x402(monkeypatch, capsys):
     reader = reader_from_env(x402_env())
     assert reader is not None and reader._reader.config.api_key is None
     assert capsys.readouterr().err == ""
+
+
+def test_every_x402_env_combination_returns_a_host_or_typed_error(monkeypatch, capsys):
+    """R-1: no mix of x402, wallet, API-key and opt-in variables crashes startup."""
+    import itertools
+
+    from scout_portfolio_manager import mcp_server, x402_source
+    from scout_portfolio_manager.host import ReadOnlyHost
+
+    monkeypatch.setattr(
+        x402_source,
+        "build_payment_session",
+        lambda key, cap, spend_budget=None, pay_to=None: FakeSession(),
+    )
+    values = {
+        X402_KEY_ENV: X402_KEY,
+        WALLET_ENV: WALLET,
+        API_KEY_ENV: "a-key",
+        X402_PAY_TO_ENV: PINNED,
+        X402_ENABLE_ENV: "1",
+    }
+    for mask in itertools.product([False, True], repeat=len(values)):
+        env = {name: value for (name, value), on in zip(values.items(), mask) if on}
+        try:
+            host = mcp_server.build_host(env)
+        except ZerionConfigError as exc:
+            assert X402_KEY not in str(exc) and "a-key" not in str(exc)
+            continue
+        assert isinstance(host, ReadOnlyHost), env
+    assert X402_KEY not in capsys.readouterr().err
