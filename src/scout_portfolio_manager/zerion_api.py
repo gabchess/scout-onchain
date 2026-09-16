@@ -24,6 +24,7 @@ import base64
 import json
 import logging
 import math
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -572,6 +573,9 @@ class ZerionWalletReader:
 API_KEY_ENV = "ZERION_API_KEY"
 WALLET_ENV = "ZERION_WALLET_ADDRESS"
 CHAIN_ENV = "ZERION_CHAIN"
+#: x402 spends from a payment wallet, so it needs an explicit opt-in. A shell-exported
+#: x402 key inherited by a plugin-launched server must never select paid mode alone.
+X402_ENABLE_ENV = "SCOUT_ENABLE_X402"
 
 
 def reader_from_env(
@@ -579,10 +583,12 @@ def reader_from_env(
 ) -> Optional[ZerionWalletReader]:
     """Build the Zerion source from the environment, or return None when it is not enabled.
 
-    Authorization mode is exclusive: ``ZERION_X402_PRIVATE_KEY`` selects the
-    pay-per-call x402 source (see ``x402_source``), otherwise
-    ``ZERION_API_KEY`` selects the key-auth source. Returns None only when no
-    variable is set. Raises ZerionConfigError on a partial configuration, so a
+    Authorization mode is exclusive: ``ZERION_X402_PRIVATE_KEY`` together with
+    ``SCOUT_ENABLE_X402=1`` selects the pay-per-call x402 source (see
+    ``x402_source``), otherwise ``ZERION_API_KEY`` selects the key-auth source.
+    An x402 key without the opt-in is ignored with a one-line stderr notice; if
+    no API key is set either, the fixture serves. Returns None when neither
+    source is enabled. Raises ZerionConfigError on a partial configuration, so a
     half-configured host fails loudly instead of silently serving the
     fixture. The error message never contains the credential value.
     """
@@ -591,7 +597,16 @@ def reader_from_env(
     key = (environ.get(API_KEY_ENV) or "").strip()
     wallet = (environ.get(WALLET_ENV) or "").strip()
     x402_key = (environ.get(X402_KEY_ENV) or "").strip()
-    if x402_key:
+    x402_enabled = (environ.get(X402_ENABLE_ENV) or "").strip() == "1"
+    if x402_key and not x402_enabled:
+        print(
+            f"scout: {X402_KEY_ENV} is set but ignored; add {X402_ENABLE_ENV}=1 to this "
+            "MCP server entry to use x402.",
+            file=sys.stderr,
+        )
+        if not key:
+            return None
+    if x402_key and x402_enabled:
         if transport is not None:
             raise ZerionConfigError(
                 "A custom transport cannot be injected in x402 mode; the x402 "

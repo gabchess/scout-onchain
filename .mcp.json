@@ -7,12 +7,13 @@
         "--frozen",
         "--project",
         "${CLAUDE_PLUGIN_ROOT}",
-        "--extra",
-        "mcp",
-        "zpm-mcp"
+        "scout-portfolio-manager"
       ],
       "env": {
-        "ZPM_FIXTURE_PATH": "${CLAUDE_PLUGIN_ROOT}/fixtures/portfolio.json"
+        "ZERION_API_KEY": "${ZERION_API_KEY:-}",
+        "ZERION_WALLET_ADDRESS": "${ZERION_WALLET_ADDRESS:-}",
+        "SCOUT_ENABLE_X402": "",
+        "SCOUT_TYPESAFE": ""
       }
     }
   }

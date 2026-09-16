@@ -78,9 +78,11 @@ def bounded_process(argv: list[str], env: Mapping[str, str], timeout: float = 30
         return output.decode("utf-8")
     finally:
         # A child process could retain pipes or outlive the parent; close the whole group.
+        # macOS returns EPERM, not ESRCH, when the group holds only an exited (zombie)
+        # leader. That race is benign; letting it raise would mask the real error.
         try:
             os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
+        except (ProcessLookupError, PermissionError):
             pass
         process.wait()
         selector.close()

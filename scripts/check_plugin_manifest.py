@@ -7,6 +7,7 @@ import tomllib
 from pathlib import Path
 
 EXPECTED_ENTRY_POINT = "scout_portfolio_manager.mcp_server:main"
+EXPECTED_SCRIPTS = ("zpm-mcp", "scout-portfolio-manager")
 README_MARKERS = (
     "START-HERE.md",
     "zpm-mcp",
@@ -29,9 +30,13 @@ def check(root: Path) -> list[str]:
     except OSError as exc:
         return [f"cannot read {readme_path}: {exc}"]
 
-    script = manifest.get("project", {}).get("scripts", {}).get("zpm-mcp")
-    if script != EXPECTED_ENTRY_POINT:
-        errors.append(f"project.scripts.zpm-mcp must be {EXPECTED_ENTRY_POINT!r}")
+    scripts = manifest.get("project", {}).get("scripts", {})
+    for name in EXPECTED_SCRIPTS:
+        if scripts.get(name) != EXPECTED_ENTRY_POINT:
+            errors.append(f"project.scripts.{name} must be {EXPECTED_ENTRY_POINT!r}")
+    dependencies = manifest.get("project", {}).get("dependencies", [])
+    if not any(str(dep).replace(" ", "").startswith("mcp>=") for dep in dependencies):
+        errors.append("project.dependencies must include the mcp SDK")
     if "[project.optional-dependencies]" not in pyproject_path.read_text():
         errors.append("pyproject.toml must declare optional dependencies")
     for marker in README_MARKERS:

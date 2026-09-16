@@ -102,3 +102,15 @@ def test_unknown_cli_version_rejected_before_launch(tmp_path):
     cli = cli_fixture(tmp_path, version="2.0.0")
     with pytest.raises(ValueError, match="version"):
         ZerionCliProvider(cli, {"ZPM_ZERION_PREPARE_API_KEY": "test"})
+
+
+def test_killpg_eperm_on_exited_group_does_not_mask_the_real_error(monkeypatch):
+    """Regression: macOS killpg returns EPERM for a zombie-only group (flaky before)."""
+    import os as os_module
+
+    def eperm(pid, sig):
+        raise PermissionError(1, "Operation not permitted")
+
+    monkeypatch.setattr(os_module, "killpg", eperm)
+    with pytest.raises(ValueError, match="output limit"):
+        bounded_process([sys.executable, "-c", 'print("x"*1100000)'], {}, timeout=5)

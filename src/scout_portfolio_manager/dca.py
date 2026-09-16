@@ -1,7 +1,7 @@
 import re
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DcaIntent(BaseModel):
@@ -20,6 +20,8 @@ class DcaParseResult(BaseModel):
     status: str
     missing: List[str]
     question: Optional[str] = None
+    #: Per filled field: "regex", "synonym" or "model_selected" (ADR 0004 D-9.5).
+    field_sources: Dict[str, str] = Field(default_factory=dict)
 
 
 def _single_match(pattern: str, text: str, *, flags: int = re.I) -> Optional[str]:
@@ -58,4 +60,9 @@ def parse_dca_request(text: str) -> DcaParseResult:
         status="needs_clarification" if missing else "ready",
         missing=missing,
         question=question,
+        field_sources={
+            name: "regex"
+            for name in ("asset", "amount_usd", "chain", "schedule", "source", "destination")
+            if getattr(intent, name) is not None
+        },
     )

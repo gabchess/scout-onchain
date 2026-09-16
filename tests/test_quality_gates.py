@@ -55,3 +55,44 @@ def test_secret_scan_covers_tests_directory(tmp_path):
 
 def test_plugin_manifest_and_readme_contract_is_complete():
     assert check_plugin_manifest(ROOT) == []
+
+
+def test_plugin_manifest_requires_both_console_scripts(tmp_path):
+    pyproject = (ROOT / "pyproject.toml").read_text()
+    (tmp_path / "README.md").write_text((ROOT / "README.md").read_text())
+    (tmp_path / "pyproject.toml").write_text(
+        pyproject.replace('scout-portfolio-manager = "scout_portfolio_manager.mcp_server:main"', "")
+    )
+    assert check_plugin_manifest(tmp_path) == [
+        "project.scripts.scout-portfolio-manager must be 'scout_portfolio_manager.mcp_server:main'"
+    ]
+
+
+def test_plugin_manifest_requires_mcp_core_dependency(tmp_path):
+    pyproject = (ROOT / "pyproject.toml").read_text()
+    (tmp_path / "README.md").write_text((ROOT / "README.md").read_text())
+    (tmp_path / "pyproject.toml").write_text(pyproject.replace(', "mcp>=1.2,<2"]', "]"))
+    assert check_plugin_manifest(tmp_path) == ["project.dependencies must include the mcp SDK"]
+
+
+def test_secret_scan_rejects_a_dotenv_file_outside_git(tmp_path):
+    (tmp_path / ".env").write_text("NOTHING=here\n")
+    (tmp_path / ".env.example").write_text("NOTHING=\n")
+    assert scan(tmp_path) == [f"{tmp_path / '.env'}: committed .env file"]
+
+
+def test_secret_scan_rejects_only_tracked_dotenv_in_git(tmp_path):
+    import subprocess
+
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    (tmp_path / ".env").write_text("NOTHING=here\n")
+    assert scan(tmp_path) == []
+    subprocess.run(["git", "-C", str(tmp_path), "add", "-f", ".env"], check=True)
+    assert scan(tmp_path) == [f"{tmp_path / '.env'}: committed .env file"]
+
+
+def test_release_archive_excludes_the_test_only_sitecustomize_stub():
+    from scripts.build_release_zip import _is_excluded
+
+    assert _is_excluded(("tests", "typesafe_stub", "sitecustomize.py"))
+    assert not _is_excluded(("tests", "test_typesafe_mcp.py"))

@@ -20,7 +20,7 @@ host.set_alert("ETH", "rsi_below", 30.0)
 ```
 
 The next `watch` run's `check_alerts` step picks up the new rule from
-`.scout/alerts.json` and reports whether it fired, alongside its `stale` flag.
+`~/.scout/alerts.json` (or `ZPM_ALERTS_PATH`) and reports whether it fired, alongside its `stale` flag.
 
 ## Running under `/loop`
 

@@ -4,7 +4,7 @@
 
 The default configuration reads the synthetic JSON fixture at `fixtures/portfolio.json`. The local host and MCP server do not call Zerion until an operator configures the optional source. No execution provider is wired into the product.
 
-`fixtures/price_history.json`, read by `analyze_asset` and `dca_windows`, is synthetic, the same status as `fixtures/portfolio.json`. `.scout/alerts.json`, written by `set_alert` and read by `check_alerts`, is local-only, never transmitted, and contains no secrets, only the asset, kind, and threshold values a user chose.
+`fixtures/price_history.json`, read by `analyze_asset` and `dca_windows`, is synthetic, the same status as `fixtures/portfolio.json`. `~/.scout/alerts.json` (or the file named by `ZPM_ALERTS_PATH`), written by `set_alert` and read by `check_alerts`, is local-only, never transmitted, and contains no secrets, only the asset, kind, and threshold values a user chose.
 
 ## Optional Zerion adapter
 
@@ -19,6 +19,21 @@ Scout reserves the full payment cap before every SDK payment payload, including 
 The host application is responsible for credential storage, network logs, retention, access control, and deletion. Use a customer-controlled secret manager. Do not place credentials or personal wallet data in source files, fixtures, prompts, logs, or support reports.
 
 API-backed data may be incomplete, stale, unavailable, or subject to the permissions and limits of the configured Zerion account. Review the applicable Zerion terms and privacy documentation before using real wallet data.
+
+## Optional TypeSafe DCA intent resolution
+
+Off by default. It runs only when the MCP server environment has both `SCOUT_TYPESAFE=1` and `SCOUT_DOTENV` set to an absolute path of a file you own that holds `TYPESAFE_API_KEY`. Scout sends a request only when a DCA text has two or more candidates for one field, or a single candidate in a negated phrase.
+
+What leaves the machine, to `api.typesafe.ai` only:
+
+- Short windows of the DCA text, at most 24 characters each side of each candidate, cut after redaction. Redaction replaces EVM addresses, base58 and bech32 addresses, ENS and SNS names, emails, and `wallet:` and `rail:` tokens with `[addr]`.
+- The option labels Scout found (for example `ETH`, `$50`, `weekly`, `none`) and fixed question text.
+- The model id `jev-1.12`.
+- Your TypeSafe key in the `Authorization` header.
+
+Never sent: the full request text, wallet addresses, holdings, balances, positions, transactions, or any other key.
+
+As of 2026-09-16, TypeSafe publishes no data-retention or training-use policy page. Treat anything sent as retained by TypeSafe. Scout stores nothing about the call except failure counts by kind.
 
 ## Retention
 

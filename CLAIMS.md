@@ -1,6 +1,6 @@
 # Claim status
 
-Source: `gabchess/scout-onchain` 0.6.1. Each status names the strongest evidence in this repository.
+Source: `gabchess/scout-onchain` 0.7.0. Each status names the strongest evidence in this repository.
 
 | Claim | Status | Evidence and limit |
 |:--|:--|:--|
@@ -10,11 +10,15 @@ Source: `gabchess/scout-onchain` 0.6.1. Each status names the strongest evidence
 | Offers several agent routes | VERIFIED IN PACKAGE | The host and MCP registry expose portfolio, PnL, DCA proposal, analysis, DCA-window, and local-alert tools. |
 | Builds DCA proposals | VERIFIED WITH FIXTURE | Complete previews require approval and expose no execution action. Optional quote fields come from the caller. |
 | Analyzes markets and DCA windows | FIXTURE ONLY | These tools use bundled synthetic price history with fixed low confidence. |
-| Checks alerts | LOCAL ON DEMAND | `set_alert` writes `.scout/alerts.json`; `check_alerts` evaluates rules when called. No channel delivery is present. |
+| Checks alerts | LOCAL ON DEMAND | `set_alert` writes `~/.scout/alerts.json` (or `ZPM_ALERTS_PATH`); `check_alerts` evaluates rules when called. No channel delivery is present. |
 | Uses x402 for paid Zerion reads | IMPLEMENTED, LIVE UNVERIFIED | The real SDK session builds offline. The payment wallet can sign and spend USDC. No paid live request is recorded. |
 | Caps x402 spend | TESTED OFFLINE | The defaults are `$0.05` per payment and `$1.05` per process. Scout reserves before every SDK payment payload, including recovery. |
 | Preflights x402 payment requirements | TESTED OFFLINE | Scout rejects non-Base, non-pinned-USDC, malformed or over-cap requirements before signing and rejects paid retries without `PAYMENT-SIGNATURE`. |
 | Prepares unsigned transactions on Arc | TESTED OFFLINE, LIVE AVAILABILITY UNVERIFIED | Scout accepts Arc preparation for native USDC for transfer, swap and bridge; the 0x3600 token for transfers only. Zerion's live chain flags decide which actions work; Scout has not observed them. A refusal returns `chain_not_supported`. Fixture envelopes only; no live Arc preparation is recorded. |
+| Installs without cloning | TESTED LOCALLY, PARTLY UNVERIFIED | Claude Code plugin started from `--plugin-dir` with no vars, API-key vars, and an ignored x402 key (2026-09-16). CI builds the wheel and starts it offline with `uvx`. Codex starting the MCP server and Cursor are unverified. |
+| Zero-key tour | TESTED OFFLINE | `/scout-portfolio:try` calls three tools on the packaged fixture; a test runs the same calls. Host rendering is unverified. |
+| Resolves ambiguous DCA intent with TypeSafe | TESTED OFFLINE, LIVE UNVERIFIED | Off by default. Synthesized responses cover fills, fallbacks, redirects, deadlines and redaction. No TypeSafe key exists here; model id `jev-1.12` availability is unverified. |
+| Keeps x402 opt-in under the Claude Code plugin | TESTED OFFLINE; LOCAL ON CLAUDE CODE 2.1.273 ONLY | x402 needs `SCOUT_ENABLE_X402=1`; all 32 variable mixes start or fail typed. With `SCOUT_ENABLE_X402=1`, an x402 key and a wallet exported in the launching shell, the plugin (loaded with `--plugin-dir`) printed the ignore notice and served the fixture. Marketplace installs, other Claude Code versions and other hosts are not tested. |
 | Signs with the observed wallet | ABSENT | The observed wallet is an address input. The only signer is the separate x402 payment wallet when configured. |
 | Executes trades | ABSENT | Public tools stop at proposal preview or optional unsigned EVM preparation. No signing, broadcast or settlement tool ships. |
 | Runs through MCP | TESTED LOCALLY | The registry is pinned to the public tool set. Host-specific activation still needs inspection after installation. |

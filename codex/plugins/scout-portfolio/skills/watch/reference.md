@@ -12,7 +12,7 @@
 | DCA windows | propose | Asset analysis |
 | Alerts | calculate | Saved rules plus shared analysis and PnL |
 
-No report step writes a transaction or schedules work. `set_alert` is outside the report chain and writes only `.scout/alerts.json`.
+No report step writes a transaction or schedules work. `set_alert` is outside the report chain and writes only `~/.scout/alerts.json` (or `ZPM_ALERTS_PATH`).
 
 In x402 mode, each payment payload reserves the full configured per-payment cap. A recovery payload consumes another reservation. The rendered header shows the remaining process budget.
 
@@ -41,4 +41,4 @@ Rendering performs no I/O or network call.
 
 ## Alert storage
 
-Alert rules persist in `.scout/alerts.json` and are read during each check. A new process uses the same file when it runs from the same working directory.
+Alert rules persist in `~/.scout/alerts.json`, or the file named by `ZPM_ALERTS_PATH`, and are read during each check. Every process uses the same file regardless of its working directory. A pre-0.7 `./.scout/alerts.json` is copied once into the new file and kept.

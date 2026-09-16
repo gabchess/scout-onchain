@@ -45,6 +45,7 @@ from scout_portfolio_manager.x402_source import (
 from scout_portfolio_manager.zerion_api import (
     API_KEY_ENV,
     WALLET_ENV,
+    X402_ENABLE_ENV,
     ZerionAPIAuthError,
     ZerionAPIBudgetError,
     ZerionAPIPaymentError,
@@ -135,7 +136,12 @@ ATTACKER = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 
 
 def x402_env(**extra):
-    env = {X402_KEY_ENV: X402_KEY, WALLET_ENV: WALLET, X402_PAY_TO_ENV: PINNED}
+    env = {
+        X402_KEY_ENV: X402_KEY,
+        WALLET_ENV: WALLET,
+        X402_PAY_TO_ENV: PINNED,
+        X402_ENABLE_ENV: "1",
+    }
     env.update(extra)
     return env
 
@@ -616,6 +622,7 @@ def test_mcp_build_host_prefers_x402_source(monkeypatch):
     monkeypatch.setenv(X402_KEY_ENV, X402_KEY)
     monkeypatch.setenv(WALLET_ENV, WALLET)
     monkeypatch.setenv(X402_PAY_TO_ENV, PINNED)
+    monkeypatch.setenv(X402_ENABLE_ENV, "1")
     monkeypatch.delenv(API_KEY_ENV, raising=False)
     monkeypatch.delenv("ZPM_FIXTURE_PATH", raising=False)
     host = mcp_server.build_host()
@@ -683,3 +690,91 @@ def test_real_sdk_rejects_invalid_private_key_without_leaking():
         build_payment_session("not-a-key", "$0.05")
     assert "not-a-key" not in str(caught.value)
     assert X402_KEY_ENV in str(caught.value)
+
+
+# --- SCOUT_ENABLE_X402 opt-in guard ---------------------------------------------
+
+
+def _no_payment_session(*args, **kwargs):
+    raise AssertionError("x402 must not be selected without SCOUT_ENABLE_X402=1")
+
+
+def test_x402_wallet_without_opt_in_or_api_key_selects_fixture(monkeypatch, capsys):
+    from scout_portfolio_manager import mcp_server, x402_source
+    from scout_portfolio_manager.portfolio import FixturePortfolioReader
+
+    monkeypatch.setattr(x402_source, "build_payment_session", _no_payment_session)
+    for name in (API_KEY_ENV, X402_ENABLE_ENV, "ZPM_FIXTURE_PATH"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv(X402_KEY_ENV, X402_KEY)
+    monkeypatch.setenv(WALLET_ENV, WALLET)
+
+    host = mcp_server.build_host()
+
+    assert isinstance(host.reader, FixturePortfolioReader)
+    notice = capsys.readouterr().err
+    assert notice.count("\n") == 1
+    assert X402_ENABLE_ENV in notice
+    assert X402_KEY not in notice and WALLET not in notice
+
+
+def test_x402_without_opt_in_uses_api_key_mode_when_configured(monkeypatch, capsys):
+    from scout_portfolio_manager import x402_source
+
+    monkeypatch.setattr(x402_source, "build_payment_session", _no_payment_session)
+    env = x402_env(**{API_KEY_ENV: "a-key"})
+    del env[X402_ENABLE_ENV]
+    reader = reader_from_env(env)
+    assert reader is not None and reader._reader.config.api_key == "a-key"
+    assert X402_ENABLE_ENV in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("value", ["", "0", "true", "yes", " 2 "])
+def test_x402_opt_in_requires_exactly_one(monkeypatch, value, capsys):
+    from scout_portfolio_manager import x402_source
+
+    monkeypatch.setattr(x402_source, "build_payment_session", _no_payment_session)
+    assert reader_from_env(x402_env(**{X402_ENABLE_ENV: value})) is None
+
+
+def test_x402_with_opt_in_selects_x402(monkeypatch, capsys):
+    from scout_portfolio_manager import x402_source
+
+    monkeypatch.setattr(
+        x402_source,
+        "build_payment_session",
+        lambda key, cap, spend_budget=None, pay_to=None: FakeSession(),
+    )
+    reader = reader_from_env(x402_env())
+    assert reader is not None and reader._reader.config.api_key is None
+    assert capsys.readouterr().err == ""
+
+
+def test_every_x402_env_combination_returns_a_host_or_typed_error(monkeypatch, capsys):
+    """R-1: no mix of x402, wallet, API-key and opt-in variables crashes startup."""
+    import itertools
+
+    from scout_portfolio_manager import mcp_server, x402_source
+    from scout_portfolio_manager.host import ReadOnlyHost
+
+    monkeypatch.setattr(
+        x402_source,
+        "build_payment_session",
+        lambda key, cap, spend_budget=None, pay_to=None: FakeSession(),
+    )
+    values = {
+        X402_KEY_ENV: X402_KEY,
+        WALLET_ENV: WALLET,
+        API_KEY_ENV: "a-key",
+        X402_PAY_TO_ENV: PINNED,
+        X402_ENABLE_ENV: "1",
+    }
+    for mask in itertools.product([False, True], repeat=len(values)):
+        env = {name: value for (name, value), on in zip(values.items(), mask) if on}
+        try:
+            host = mcp_server.build_host(env)
+        except ZerionConfigError as exc:
+            assert X402_KEY not in str(exc) and "a-key" not in str(exc)
+            continue
+        assert isinstance(host, ReadOnlyHost), env
+    assert X402_KEY not in capsys.readouterr().err

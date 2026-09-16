@@ -1,6 +1,6 @@
 # Knowledge and advisory tools
 
-Scout 0.6.1. The advisory layer adds four tools. Two additional optional unsigned preparation tools are described in [the preparation contract](../ZERION-PREPARATION.md). The package adds no signer for the observed wallet or trade executor.
+Scout 0.7.0. The advisory layer adds four tools. Two additional optional unsigned preparation tools are described in [the preparation contract](../ZERION-PREPARATION.md). The package adds no signer for the observed wallet or trade executor.
 
 | Tool | Input | Result | Network |
 |---|---|---|---|

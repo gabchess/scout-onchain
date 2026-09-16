@@ -8,7 +8,7 @@
 | `preview_dca` | Build an approval-required proposal | None |
 | `analyze_asset` | Calculate heuristic indicators | x402 mode can pay analytics fees |
 | `dca_windows` | Classify the current DCA window | x402 mode can pay analytics fees |
-| `set_alert` | Store an alert rule | Writes `.scout/alerts.json` |
+| `set_alert` | Store an alert rule | Writes `~/.scout/alerts.json` or `ZPM_ALERTS_PATH` |
 | `check_alerts` | Evaluate saved rules | x402 mode can pay analytics fees when rules exist |
 
 The fixture path comes from `ZPM_FIXTURE_PATH`. Claude Code defaults it to `${CLAUDE_PLUGIN_ROOT}/fixtures/portfolio.json`.

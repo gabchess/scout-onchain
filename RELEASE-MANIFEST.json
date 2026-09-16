@@ -1,15 +1,16 @@
 {
   "schema_version": 1,
   "name": "scout-portfolio",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "release_kind": "stable",
-  "publication_status": "Publication record: https://github.com/gabchess/scout-onchain/releases/tag/v0.6.1",
+  "publication_status": "Publication record: https://github.com/gabchess/scout-onchain/releases/tag/v0.7.0",
   "license": "MIT",
   "default_behavior": "synthetic fixture with no network request",
-  "primary_host": "Claude Code plugin, local marketplace",
+  "primary_host": "Claude Code plugin from the gabchess/scout-onchain GitHub marketplace",
   "fallback_hosts": [
-    "Codex skills layout with a separate stdio MCP route",
-    "Plain Python or stdio MCP through uv"
+    "Codex skills plugin with a uvx stdio MCP route pinned to a git tag",
+    "Cursor or any stdio MCP client through uvx pinned to a git tag",
+    "Plain Python through uvx or pipx"
   ],
   "optional_integration": {
     "name": "Zerion API",
@@ -47,16 +48,19 @@
     "No live paid x402 request is verified by this repository.",
     "Arc reads are tested offline with a Zerion-shaped fixture; no live Arc call is recorded.",
     "Unsigned Zerion CLI preparation on Arc is tested offline; Zerion's live Arc chain flags and chain id are unverified.",
+    "x402 needs SCOUT_ENABLE_X402=1; x402 setups from 0.6.x without it read the fixture or API-key mode.",
+    "TypeSafe DCA intent resolution is tested offline with synthesized responses; no live TypeSafe call and no jev-1.12 availability are verified.",
+    "Codex starting the root .mcp.json and Cursor install are unverified.",
     "No production SLA or Zerion endorsement is claimed."
   ],
   "evidence_boundary": "This manifest describes source identity, package boundaries, and local build records. It does not prove publication, live provider behavior, security on an installer's machine, or data freshness.",
   "release_artifact_policy": "The local builder adds an entry after creating a verified ZIP. A build record is not publication evidence.",
   "release_artifacts": [
     {
-      "path": "dist/scout-portfolio-0.6.1.zip",
-      "sha256": "254f8fcb3ddd506a3b9eba74c1cc17e0775c7d2fb99f8bc9633c2d4a405960c5",
-      "version": "0.6.1",
-      "built_at": "2026-09-16T19:59:49Z"
+      "path": "dist/scout-portfolio-0.7.0.zip",
+      "sha256": "bcec0fcdc3439883fc5c13f4fc1dd1154006d5ec84ebc0b42bf736520180ca69",
+      "version": "0.7.0",
+      "built_at": "2026-09-16T21:20:24Z"
     }
   ]
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "prompt": "Try Scout without a key",
+    "should_trigger": true
+  },
+  {
+    "prompt": "Give me a quick tour of what Scout can do",
+    "should_trigger": true
+  },
+  {
+    "prompt": "Show me a Scout demo on the sample portfolio",
+    "should_trigger": true
+  },
+  {
+    "prompt": "What is my PnL?",
+    "should_trigger": false
+  },
+  {
+    "prompt": "Set a weekly $50 ETH DCA on base from my wallet",
+    "should_trigger": false
+  },
+  {
+    "prompt": "Run Scout's watch report and write scout-report.html",
+    "should_trigger": false
+  }
+]

@@ -2155,16 +2155,14 @@ wheels = [
 
 [[package]]
 name = "scout-portfolio-manager"
-version = "0.6.1"
+version = "0.7.0"
 source = { editable = "." }
 dependencies = [
+    { name = "mcp" },
     { name = "pydantic" },
 ]
 
 [package.optional-dependencies]
-mcp = [
-    { name = "mcp" },
-]
 quality = [
     { name = "mypy" },
     { name = "ruff" },
@@ -2180,7 +2178,7 @@ x402 = [
 [package.metadata]
 requires-dist = [
     { name = "eth-account", marker = "extra == 'x402'", specifier = ">=0.13" },
-    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.2,<2" },
+    { name = "mcp", specifier = ">=1.2,<2" },
     { name = "mypy", marker = "extra == 'quality'", specifier = ">=1.11,<2" },
     { name = "pydantic", specifier = ">=2.5,<3" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8,<9" },

@@ -1,142 +1,160 @@
 # Start here
 
-Scout 0.6.1 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
+Scout 0.7.0 is an onchain portfolio manager for AI agents. It runs as a local stdio MCP server inside Claude Code, Codex, Cursor, or any stdio MCP client. Its tools let the host agent choose a response path from the user's request.
 
-After setup, ask:
+After install, run the tour (`/scout-portfolio:try` in Claude Code) or ask:
 
 > Show me what I own and what it did.
 
 A working install returns a portfolio and PnL with the data source named.
 
-## Try the local knowledge proposal
-
-After attaching Scout's MCP server, try `/portfolio-intelligence Review my concentration with a 30% downside scenario` or `/defi-research Explain a PDA and its signing rules`. The default is fixture data. `search_defi_knowledge` and `assess_defi_yield` need no wallet configuration. See [proposal details](docs/knowledge/README.md).
-
 ## Install scope
 
-Installation copies local files, registers the skills or plugin, and can start the fixture-backed MCP process. Live Zerion reads begin when the operator supplies a complete API-key or x402 configuration. The synthetic fixture remains the default.
+Installation registers the skills or plugin and starts the MCP process from a pinned git ref. Nothing is cloned by hand and no absolute path is needed. [`uv`](https://docs.astral.sh/uv/) must be on your PATH; it downloads Python 3.11+ and the dependencies on first start. The synthetic fixture bundled in the package is the default data source. Live Zerion reads begin only when you supply a complete API-key or x402 configuration in host config.
 
-Scout has no observed-wallet signer or trade execution rail. x402 mode gives a separate payment wallet authority to pay analytics fees within a process budget. `set_alert` writes local `.scout/alerts.json`; the package creates no daemon or scheduled task.
+Scout has no observed-wallet signer or trade execution rail. x402 mode gives a separate payment wallet authority to pay analytics fees within a process budget, and only with `SCOUT_ENABLE_X402=1`. `set_alert` writes `~/.scout/alerts.json` (or the file named by `ZPM_ALERTS_PATH`); the package creates no daemon or scheduled task.
 
 ## Route 1: Claude Code plugin
 
-Install [`uv`](https://docs.astral.sh/uv/), then run:
-
 ```bash
-claude plugin marketplace add /absolute/path/to/scout-onchain
+claude plugin marketplace add gabchess/scout-onchain
 claude plugin install scout-portfolio@scout-portfolio-manager
 ```
 
-Restart Claude Code. The root [`.mcp.json`](.mcp.json) starts `zpm-mcp` through `uv` and uses `fixtures/portfolio.json`.
+Restart Claude Code. The marketplace tracks the default branch unless you pass a ref. The plugin's [`.mcp.json`](.mcp.json) runs `uv run --frozen --project ${CLAUDE_PLUGIN_ROOT} scout-portfolio-manager`, so it uses the lockfile.
 
 Try:
 
 ```text
-/portfolio-intelligence Show me what I own and what it did
+/scout-portfolio:try
 /portfolio-intelligence What is my PnL?
 /portfolio-intelligence Preview a weekly $300 ETH DCA request
 ```
 
-## Route 2: Codex skills and MCP
+The plugin forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`, and starts on the fixture when they are unset.
 
-The generated Codex plugin contains skills and metadata:
+## Route 2: Codex
 
 ```bash
-codex plugin marketplace add /absolute/path/to/scout-onchain/codex/.agents/plugins
+codex plugin marketplace add gabchess/scout-onchain --ref v0.7.0
 codex plugin add scout-portfolio --marketplace scout-portfolio-manager
-codex plugin list
+codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
 ```
 
-Attach the executable tools as a separate stdio server. Replace both paths:
+The plugin carries skills. The `codex mcp add` line attaches the tools. Restart Codex and confirm the `scout-portfolio` tools appear. Whether Codex also starts the root `.mcp.json` by itself is unverified, so keep the explicit MCP line.
 
-```bash
-codex mcp add scout-portfolio \
-  --env ZPM_FIXTURE_PATH=/absolute/path/to/scout-onchain/fixtures/portfolio.json \
-  -- uv run --project /absolute/path/to/scout-onchain --extra mcp zpm-mcp
+`uvx` installs from the `v0.7.0` tag and resolves dependencies fresh within the version ranges in `pyproject.toml`; it does not read `uv.lock`, and a git tag can be moved. The Claude Code plugin route is the only one pinned to the lockfile.
+
+Codex passes only a fixed set of variables (such as `HOME` and `PATH`) to MCP servers. To use your own wallet, list the names in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.scout-portfolio]
+env_vars = ["ZERION_API_KEY", "ZERION_WALLET_ADDRESS"]
 ```
 
-Restart Codex and confirm the `scout-portfolio` tools appear. [`scripts/build_host_layouts.py`](scripts/build_host_layouts.py) regenerates the skills copy. It does not copy the Python runtime into the generated plugin directory.
+## Route 3: Cursor or another stdio MCP client
 
-## Route 3: Python
-
-Python 3.11 or newer is required.
-
-```bash
-uv sync --extra test --extra mcp
-uv run pytest -q
-```
-
-Without `uv`:
-
-```bash
-python3.11 -m venv .venv
-.venv/bin/pip install -e '.[test,mcp]'
-.venv/bin/pytest -q
-```
-
-Call the host directly:
-
-```bash
-uv run python - <<'PY'
-from scout_portfolio_manager.host import ReadOnlyHost
-
-host = ReadOnlyHost("fixtures/portfolio.json")
-print(host.get_pnl())
-PY
-```
-
-Run the MCP server with `uv run --extra mcp zpm-mcp`.
-
-## Route 4: Cursor or another stdio MCP client
-
-Merge this entry into the client's MCP configuration. Replace the absolute paths.
+Merge this entry into the client's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "scout-portfolio": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--project",
-        "/absolute/path/to/scout-onchain",
-        "--extra",
-        "mcp",
-        "zpm-mcp"
-      ],
-      "env": {
-        "ZPM_FIXTURE_PATH": "/absolute/path/to/scout-onchain/fixtures/portfolio.json"
-      }
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/gabchess/scout-onchain@v0.7.0", "scout-portfolio-manager"]
     }
   }
 }
 ```
 
-Restart the client and inspect its MCP tool list. Host activation remains unverified until this check succeeds on that host.
+Add an `env` block with `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` to read your own wallet, and keep that file out of version control. Restart the client and inspect its MCP tool list. Host activation stays unverified until this check succeeds on that host.
+
+## Route 4: Python
+
+With uv:
+
+```bash
+uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+```
+
+Without uv:
+
+```bash
+pipx run --spec git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+```
+
+As a library, install the same git ref into a virtual environment and call the host:
+
+```python
+from scout_portfolio_manager.host import default_host
+
+print(default_host().get_pnl())
+```
+
+`scout-portfolio-manager` and `zpm-mcp` are the same entry point.
+
+## Contributors
+
+```bash
+git clone https://github.com/gabchess/scout-onchain
+cd scout-onchain
+uv sync --all-extras
+uv run pytest -q
+uv run scout-portfolio-manager
+```
+
+`codex/` is generated by [`scripts/build_host_layouts.py`](scripts/build_host_layouts.py). Edit `skills/` and regenerate; never edit `codex/` by hand. Run `claude plugin validate .` before tagging a release.
 
 ## Optional Zerion data
 
-API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. x402 mode needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. The modes are exclusive. Reads cover every chain Zerion returns for the wallet, including Arc; no extra setting is needed. See [`docs/X402.md`](docs/X402.md) before enabling payments.
+API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. Reads cover every chain Zerion returns for the wallet, including Arc; no extra setting is needed.
+
+x402 mode needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra, all in your own MCP server entry. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. `SCOUT_ENABLE_X402=1` is new in 0.7.0: older x402 entries without it now read the fixture or API-key mode. The Claude Code plugin sets it to empty in its own entry, which overrides a value exported in the launching shell (verified on Claude Code 2.1.273). Set it only on the server entry that should pay, never in your shell profile. The modes are exclusive. See [`docs/X402.md`](docs/X402.md) before enabling payments.
 
 The live source reads positions and mapped transactions. Call-time failure returns a typed error with `fallback: "none"`.
 
 Scout keeps DCA on the proposal side of the boundary in both modes. `preview_dca` can accept quote values from a host adapter. The optional Zerion CLI preparation adapter can obtain unsigned proposals; Scout cannot submit a trade.
 
-## Browser demo
+## Optional TypeSafe DCA intent
+
+Off by default. When on, `parse_dca_request` and `preview_dca` can ask TypeSafe's Jev model to choose among candidates Scout already found in an ambiguous DCA request, such as two dollar amounts. A value it picks returns `needs_confirmation`, never `ready`. Read [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md) for exactly what is sent.
+
+Put your key in a file you own with mode `600`, for example `~/.config/scout/typesafe.env`:
 
 ```bash
-uv run --project . demo/zerion-portfolio-agent/server.py
+TYPESAFE_API_KEY=...
 ```
 
-Open `http://127.0.0.1:8787`. The demo reads the fixture and ignores Zerion environment variables.
+Then add two variables to your own Scout MCP entry. The Claude Code plugin does not forward `SCOUT_DOTENV` and sets `SCOUT_TYPESAFE` to empty, so Claude Code users add a user-scoped server with `claude mcp add`:
+
+```bash
+claude mcp add scout-portfolio-typesafe --scope user \
+  --env SCOUT_TYPESAFE=1 --env SCOUT_DOTENV=/Users/you/.config/scout/typesafe.env \
+  -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+```
+
+Codex, in `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.scout-portfolio]
+env = { SCOUT_TYPESAFE = "1", SCOUT_DOTENV = "/Users/you/.config/scout/typesafe.env" }
+```
+
+Cursor, in the Scout entry: `"env": { "SCOUT_TYPESAFE": "1", "SCOUT_DOTENV": "/Users/you/.config/scout/typesafe.env" }`.
+
+`SCOUT_DOTENV` must be absolute. The key never goes in host config or chat. No live TypeSafe call has been verified; the model id `jev-1.12` is unverified.
 
 ## Runtime boundary
 
 The fourteen tools cover portfolio observation, PnL, DCA proposals, asset analysis, local alerts, portfolio risk, assumed yield, DeFi reference lookup and Zerion action planning. Optional preparation produces an unsigned proposal and exposes its local status. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
 
-Live price history and pushed alerts are outside version 0.6.1. Trade approval, execution, and settlement are not part of this package.
+Live price history and pushed alerts are outside version 0.7.0. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.
+
+## Try the knowledge tools
+
+`/portfolio-intelligence Review my concentration with a 30% downside scenario` or `/defi-research Explain a PDA and its signing rules`. `search_defi_knowledge` and `assess_defi_yield` need no wallet configuration. See [proposal details](docs/knowledge/README.md).
 
 ## Optional unsigned preparation
 
