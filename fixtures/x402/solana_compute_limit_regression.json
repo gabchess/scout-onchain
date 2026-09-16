@@ -1,0 +1,24 @@
+{
+  "fixture_kind": "reported_facilitator_regression",
+  "source": "https://github.com/coinbase/cdp-sdk/issues/795",
+  "network": "solana:mainnet",
+  "scheme": "exact",
+  "evidence_status": "reported_issue_not_live_reproduction",
+  "independent_reproduction": false,
+  "cases": [
+    {
+      "name": "lower_compute_limit",
+      "compute_units": 20000,
+      "reported_outcome": "accepted"
+    },
+    {
+      "name": "higher_compute_limit",
+      "compute_units": 100000,
+      "reported_outcome": "rejected"
+    }
+  ],
+  "scout_policy": {
+    "supported": false,
+    "reason": "Scout accepts only exact Base mainnet USDC requirements; this fixture must never trigger a signer or facilitator call."
+  }
+}
