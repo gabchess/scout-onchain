@@ -1,7 +1,7 @@
 {
   "format": "cd-documentation-manifest/v1",
   "product": "scout-portfolio-manager",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "claim_boundary": "Fixture is the default; Zerion observes one wallet; x402 can sign and pay data fees; host and MCP have no trade execution tool.",
   "files": [
     {
@@ -10,11 +10,11 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "41a110aed4fc62054e90c308a849b3ead5365faf5341daa4d6f8dc8caa8487ae"
+      "sha256": "8c7f1ed067b75fb113ab1f9b6c487e5baad779924e709e8dd65500eff6548af4"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "89999816dc2a7335bf05551588b304fbdcd39fe021a3b0c972399846b2d64415"
+      "sha256": "087de11b1c973cf3d2fc8c58236208bae221fa129a12872222ab722fe47a7683"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
@@ -26,7 +26,7 @@
     },
     {
       "path": "LICENSE-STATUS.md",
-      "sha256": "945ee341adcfd22350e0cf76ff0e77c4274c65a38d1daebb103e79268e7c7dd2"
+      "sha256": "82451a9fab4b6f35fc35fc9a22f73fc13d5160a3ebeeb671020adb21e37de231"
     },
     {
       "path": "LICENSE.md",
@@ -34,7 +34,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "819c6ab94a38e8e95160984a7517fa1115459ebfb5825407648feb7cb9981529"
+      "sha256": "bf8400ba5be9fc0d1c0c99e3285f8567dc37aeb0f9ddb8e6069f756d5ba5c23a"
     },
     {
       "path": "SECURITY.md",
@@ -82,7 +82,7 @@
     },
     {
       "path": "docs/knowledge/README.md",
-      "sha256": "0eed7b5de55f2e52b3d70e6989b4821c363e1745fd44651a4dc32965a5eca37c"
+      "sha256": "06a7fa0dcc44a1ce0409166ff1667045bcbdebd2e65cc89ae1db238e38810c5d"
     },
     {
       "path": "docs/superpowers/plans/2026-09-10-scout-knowledge.md",

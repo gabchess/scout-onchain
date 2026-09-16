@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.7.0)
+## 0.7.0 - 2026-09-16
 
 ### Breaking
 
@@ -17,6 +17,18 @@
 - New console script `scout-portfolio-manager`, the same entry point as `zpm-mcp`.
 - The Claude Code plugin launches `scout-portfolio-manager` and forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`, using `${VAR:-}` so unset variables start the fixture.
 - CI builds the wheel and starts it offline from a clean directory.
+- New `try` skill (`/scout-portfolio:try`): a fixed zero-key tour on the bundled fixture.
+- Docs lead with install commands pinned to the `v0.7.0` tag for Claude Code, Codex, Cursor and pipx.
+
+### TypeSafe DCA intent (off by default)
+
+- With `SCOUT_TYPESAFE=1` and an absolute `SCOUT_DOTENV` path, `parse_dca_request` and `preview_dca` can ask TypeSafe's Jev model to choose among candidates Scout found in an ambiguous DCA request. A chosen or synonym value returns `needs_confirmation`, never `ready`. Both tools add `field_sources`.
+- Only redacted candidate windows, option labels and the model id are sent. No redirects, one 3 second deadline, no retry. Tested offline with synthesized responses; no live call is verified.
+- `security_scan.py` rejects a tracked `.env` file.
+
+### Fixes
+
+- `bounded_process` no longer lets a macOS `killpg` EPERM on an exited process group hide the real error. This fixes a flaky test.
 
 ## 0.6.1 - 2026-09-16
 
