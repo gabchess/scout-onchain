@@ -8,6 +8,7 @@ spend-cap validation, typed transport errors (including the non-retryable
 402), and credentials that never appear in errors, reprs, or results.
 """
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from urllib.request import Request
@@ -32,6 +33,7 @@ from scout_portfolio_manager.x402_source import (
     X402SpendBudget,
     parse_max_usd_per_call,
     parse_max_usd_per_session,
+    preflight_before_signing,
     x402_transport,
 )
 from scout_portfolio_manager.x402_source import (
@@ -48,6 +50,12 @@ from scout_portfolio_manager.zerion_api import (
 )
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "portfolio.json"
+SOLANA_FAILURE_FIXTURE = (
+    Path(__file__).resolve().parents[1]
+    / "fixtures"
+    / "x402"
+    / "solana_compute_limit_regression.json"
+)
 WALLET = "0xabc123"
 # Deliberately not a real key shape: tests never build a real signer.
 X402_KEY = "x402-payment-secret"
@@ -173,6 +181,69 @@ def test_payment_signature_header_check_is_case_insensitive_and_non_empty():
     assert has_payment_signature({"payment-signature": "signed"})
     assert not has_payment_signature({"PAYMENT-SIGNATURE": "  "})
     assert not has_payment_signature({"Accept": "application/json"})
+
+
+def test_preflight_validates_before_reserving_budget():
+    events = []
+
+    class RecordingGuard:
+        def validate(self, context):
+            events.append("validate")
+
+    class RecordingBudget:
+        def reserve_payment(self):
+            events.append("reserve")
+
+    preflight_before_signing(
+        payment_context(),
+        guard=RecordingGuard(),
+        spend_budget=RecordingBudget(),
+    )
+
+    assert events == ["validate", "reserve"]
+
+
+def test_rejected_preflight_does_not_reserve_budget():
+    events = []
+
+    class RecordingBudget:
+        def reserve_payment(self):
+            events.append("reserve")
+
+    with pytest.raises(ZerionAPIPaymentError, match="chain_not_allowed"):
+        preflight_before_signing(
+            payment_context(network="solana:mainnet"),
+            guard=X402PaymentGuard.from_usd("$0.05"),
+            spend_budget=RecordingBudget(),
+        )
+
+    assert events == []
+
+
+def test_solana_failure_fixture_preserves_reported_compute_split():
+    fixture = json.loads(SOLANA_FAILURE_FIXTURE.read_text())
+
+    assert fixture["source"].endswith("/coinbase/cdp-sdk/issues/795")
+    assert fixture["evidence_status"] == "reported_issue_not_live_reproduction"
+    assert fixture["independent_reproduction"] is False
+    assert [(case["compute_units"], case["reported_outcome"]) for case in fixture["cases"]] == [
+        (20000, "accepted"),
+        (100000, "rejected"),
+    ]
+
+
+def test_solana_failure_fixture_is_rejected_before_any_budget_reservation():
+    fixture = json.loads(SOLANA_FAILURE_FIXTURE.read_text())
+    budget = X402SpendBudget.from_strings("$0.05", "$0.05")
+
+    with pytest.raises(ZerionAPIPaymentError, match="chain_not_allowed"):
+        preflight_before_signing(
+            payment_context(network=fixture["network"]),
+            guard=X402PaymentGuard.from_usd("$0.05"),
+            spend_budget=budget,
+        )
+
+    assert budget.status()["reserved_payments"] == 0
 
 
 # --- spend cap validation -----------------------------------------------------

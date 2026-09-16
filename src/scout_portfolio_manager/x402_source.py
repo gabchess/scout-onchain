@@ -200,19 +200,37 @@ def build_payment_session(
     register_exact_evm_client(client, EthAccountSigner(account), networks=BASE_NETWORK)
     client.set_spend_controls({"max_amount_per_payment": max_usd_per_call})
     guard = X402PaymentGuard.from_usd(max_usd_per_call)
-
-    def preflight_before_signing(context: Any) -> None:
-        try:
-            guard.validate(context)
-        except X402GuardError as exc:
-            raise ZerionAPIPaymentError(
-                f"Scout refused x402 payment before signing ({exc.code})", status=402
-            ) from None
-        if spend_budget is not None:
-            spend_budget.reserve_payment()
-
-    client.on_before_payment_creation(preflight_before_signing)
+    client.on_before_payment_creation(
+        lambda context: preflight_before_signing(
+            context,
+            guard=guard,
+            spend_budget=spend_budget,
+        )
+    )
     return x402_requests(client)
+
+
+def preflight_before_signing(
+    context: Any,
+    *,
+    guard: X402PaymentGuard,
+    spend_budget: Optional[X402SpendBudget] = None,
+) -> None:
+    """Validate the selected payment before reserving budget or signing.
+
+    The x402 SDK invokes this callback after it has parsed a 402 response and
+    immediately before it creates a payment payload. Requirement validation is
+    intentionally before budget reservation: an unsupported chain, asset,
+    recipient or amount must not burn Scout's allowance.
+    """
+    try:
+        guard.validate(context)
+    except X402GuardError as exc:
+        raise ZerionAPIPaymentError(
+            f"Scout refused x402 payment before signing ({exc.code})", status=402
+        ) from None
+    if spend_budget is not None:
+        spend_budget.reserve_payment()
 
 
 def _is_x402_payment_error(exc: Exception) -> bool:
@@ -400,6 +418,7 @@ __all__ = [
     "build_payment_session",
     "parse_max_usd_per_call",
     "parse_max_usd_per_session",
+    "preflight_before_signing",
     "reader_from_env",
     "x402_transport",
 ]
