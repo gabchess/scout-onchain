@@ -128,8 +128,14 @@ class FakeSession:
         )
 
 
+#: The recipient pin is required to enable x402, so the shared env includes it.
+#: Tests that assert the gate itself remove it deliberately.
+PINNED = "0x1111111111111111111111111111111111111111"
+ATTACKER = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+
+
 def x402_env(**extra):
-    env = {X402_KEY_ENV: X402_KEY, WALLET_ENV: WALLET}
+    env = {X402_KEY_ENV: X402_KEY, WALLET_ENV: WALLET, X402_PAY_TO_ENV: PINNED}
     env.update(extra)
     return env
 
@@ -204,9 +210,6 @@ def test_x402_guard_accepts_the_timeout_ceiling_itself():
 
 # --- recipient pinning -------------------------------------------------------
 
-PINNED = "0x1111111111111111111111111111111111111111"
-ATTACKER = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
-
 
 def test_pinned_guard_accepts_the_configured_recipient_in_any_case():
     guard = X402PaymentGuard.from_usd("$0.05", pay_to=PINNED)
@@ -222,10 +225,11 @@ def test_pinned_guard_refuses_any_other_recipient(recipient):
     assert caught.value.code == "pay_to_not_allowed"
 
 
-def test_an_unset_pin_leaves_the_recipient_unchecked():
-    # Pinning is opt-in, so an existing deployment keeps working. This test
-    # exists to make that exposure visible rather than implied: with no pin,
-    # whoever controls the 402 response chooses where the money goes.
+def test_the_unpinned_guard_still_exists_but_startup_never_builds_one():
+    # The dataclass default stays None so the guard is usable standalone, but
+    # reader_from_env refuses to construct this shape. The assertion documents
+    # what that default would mean if it ever reached production: an
+    # attacker-chosen recipient as correct behavior.
     guard = X402PaymentGuard.from_usd("$0.05")
     assert guard.pay_to is None
     guard.validate(payment_context(pay_to=ATTACKER))
@@ -236,11 +240,19 @@ def test_a_blank_pin_is_treated_as_unset(blank):
     assert X402PaymentGuard.from_usd("$0.05", pay_to=blank).pay_to is None
 
 
-@pytest.mark.parametrize(
-    "env_value,expected",
-    [(PINNED, PINNED), (None, None), ("", None), ("   ", None)],
-)
-def test_reader_from_env_passes_the_pin_through(monkeypatch, env_value, expected):
+@pytest.mark.parametrize("missing", [None, "", "   "])
+def test_x402_refuses_to_start_without_a_recipient_pin(missing):
+    env = x402_env()
+    if missing is None:
+        env.pop(X402_PAY_TO_ENV)
+    else:
+        env[X402_PAY_TO_ENV] = missing
+    with pytest.raises(ZerionConfigError) as caught:
+        x402_reader_from_env(env)
+    assert X402_PAY_TO_ENV in str(caught.value)
+
+
+def test_reader_from_env_passes_the_pin_through(monkeypatch):
     captured = {}
 
     def fake_session(key, max_usd, *, spend_budget=None, pay_to=None):
@@ -248,9 +260,8 @@ def test_reader_from_env_passes_the_pin_through(monkeypatch, env_value, expected
         return SimpleNamespace()
 
     monkeypatch.setattr(x402_source_module, "build_payment_session", fake_session)
-    extra = {} if env_value is None else {X402_PAY_TO_ENV: env_value}
-    x402_reader_from_env(x402_env(**extra))
-    assert captured["pay_to"] == expected
+    x402_reader_from_env(x402_env())
+    assert captured["pay_to"] == PINNED
 
 
 def test_payment_signature_header_check_is_case_insensitive_and_non_empty():
@@ -604,6 +615,7 @@ def test_mcp_build_host_prefers_x402_source(monkeypatch):
     )
     monkeypatch.setenv(X402_KEY_ENV, X402_KEY)
     monkeypatch.setenv(WALLET_ENV, WALLET)
+    monkeypatch.setenv(X402_PAY_TO_ENV, PINNED)
     monkeypatch.delenv(API_KEY_ENV, raising=False)
     monkeypatch.delenv("ZPM_FIXTURE_PATH", raising=False)
     host = mcp_server.build_host()

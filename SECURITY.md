@@ -20,8 +20,8 @@ Reservations are conservative. Scout does not refund them after an ambiguous fai
 Before the x402 SDK signs, Scout requires the exact Base mainnet network, the
 pinned Base USDC contract, a positive atomic amount within the configured
 per-payment cap, an explicit recipient, and a timeout that is positive and no
-more than 600 seconds. Set `ZERION_X402_PAY_TO` and Scout pays that address or
-nothing; leave it unset and any recipient the server names is accepted. After a paid
+more than 600 seconds. `ZERION_X402_PAY_TO` is required and Scout pays that address or nothing; x402
+refuses to start without it. After a paid
 retry, the transport requires a non-empty `PAYMENT-SIGNATURE` header. These
 checks do not replace facilitator verification and do not prove settlement.
 
