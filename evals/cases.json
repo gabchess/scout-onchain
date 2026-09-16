@@ -71,8 +71,8 @@
     {
       "id": "alerts-are-local-only",
       "prompt": "Will Scout push this ETH alert to Slack?",
-      "rubric": "Alerts are local on-demand rules in .scout/alerts.json. No delivery channel is shipped.",
-      "output": "Scout stores this rule locally in .scout/alerts.json and evaluates it on demand. This package has no Slack delivery channel.",
+      "rubric": "Alerts are local on-demand rules in ~/.scout/alerts.json. No delivery channel is shipped.",
+      "output": "Scout stores this rule locally in ~/.scout/alerts.json and evaluates it on demand. This package has no Slack delivery channel.",
       "checks": [
         {
           "type": "contains_all",

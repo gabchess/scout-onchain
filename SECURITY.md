@@ -4,7 +4,7 @@
 
 The host and MCP server expose observation, calculation, parsing, proposal preview, analysis, and alert tools. They contain no observed-wallet connection or trade execution path. A DCA preview is a proposal with `approval_state=required`.
 
-`set_alert` has a local side effect. It writes rule data to `.scout/alerts.json`. It does not schedule work or send notifications.
+`set_alert` has a local side effect. It writes rule data to `~/.scout/alerts.json` (or `ZPM_ALERTS_PATH`). It does not schedule work or send notifications.
 
 The Zerion source reads positions and mapped transactions for one address. Authorization has two modes:
 
@@ -46,3 +46,9 @@ This repository has no response-time or production-support promise. See [`SUPPOR
 ## Optional preparation
 
 Explicit operator configuration enables unsigned EVM preparation through Zerion CLI. The preparation and status tools create or read a local SQLite store. Preparation sends intent to the configured Zerion services and RPC providers. It has no signing or broadcast path. Provider-declared fields receive strict checks; calldata semantics remain unverified. See [configuration, retention and recovery](docs/ZERION-PREPARATION.md).
+
+## Optional TypeSafe DCA intent
+
+`SCOUT_TYPESAFE=1` plus an absolute `SCOUT_DOTENV` path turns on one outbound call type to `https://api.typesafe.ai/v1/systemone`. It is off by default and the Claude Code plugin never enables it. `TYPESAFE_API_KEY` is read only from that file, never from the process environment. Scout opens the file without following symlinks and refuses it unless it is a regular file owned by the current user, with no group or world permission bits, and at most 64 KiB. Only the `TYPESAFE_API_KEY` line is parsed.
+
+The request never follows redirects, has one 3 second deadline and no retry. What leaves the machine is described in [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md). A model answer can never make a DCA request `ready`: any value it picks returns `needs_confirmation`, and `preview_dca` still requires approval with no execution path.

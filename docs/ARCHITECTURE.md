@@ -33,7 +33,7 @@ The observed wallet supplies an address. Scout has no signer for that wallet. Pu
 
 x402 creates a separate authority boundary. Its SDK session holds a payment-wallet signer and can spend USDC for analytics. Scout reserves the per-payment cap before every payment payload, including recovery. The process-lifetime budget defaults to 21 reservations. Payment failures and budget stops are non-retryable because settlement can be ambiguous.
 
-`set_alert` writes `.scout/alerts.json`. `check_alerts` reads that file when called. There is no scheduler or push channel.
+`set_alert` writes `~/.scout/alerts.json` (or `ZPM_ALERTS_PATH`). `check_alerts` reads that file when called. There is no scheduler or push channel.
 
 `preview_id` identifies one generated preview. It is not an authorization token. `approval_state=required` is a label because no approver registry exists.
 

@@ -6,7 +6,7 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "ce7997f96e0bf71e48c8521030ccfbcf1a5f0048111c3d5d2acc67d2aabe08a8"
+      "sha256": "5bf58f4a3497df6178c178eb8af8427ba23828e2ab3283c452f3d07fcd31f098"
     },
     {
       "path": "CHANGELOG.md",
@@ -14,15 +14,15 @@
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "9ff5bbaeafc2bd4aa7b280fc0634dd978d54741add8c194c14300fb38b5e1612"
+      "sha256": "89999816dc2a7335bf05551588b304fbdcd39fe021a3b0c972399846b2d64415"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
-      "sha256": "5863e0ff44e9046ef06d34b46b12cbc1f19ec8b2286812789e11e2ae3979450f"
+      "sha256": "a485727e66077ad847ce5586c81942426181fce7694a68bde209fc6d5b3d8f36"
     },
     {
       "path": "HOST-MATRIX.md",
-      "sha256": "e4e47aab61104c2e1ff662fef4f33281bd12f304e3472a6db9047ff854fc02de"
+      "sha256": "0f7c1c883de77727116c4f483d91c301b97c77c0c645b44750b454970502c0db"
     },
     {
       "path": "LICENSE-STATUS.md",
@@ -34,15 +34,15 @@
     },
     {
       "path": "README.md",
-      "sha256": "4f0d291ef310ea788e332f8927f1654d0517b5ae1adb27b926905dda370a83a1"
+      "sha256": "819c6ab94a38e8e95160984a7517fa1115459ebfb5825407648feb7cb9981529"
     },
     {
       "path": "SECURITY.md",
-      "sha256": "03ed72d3fcb2a90f7784ed1b7cef79404aa73e698cac4491c0e66f1cd8007d21"
+      "sha256": "275d369ff1f459b6840249fc780ecb1184181fb9c9d20a58394dd6ed68d4e423"
     },
     {
       "path": "START-HERE.md",
-      "sha256": "2f498efb993681711221c8505c0b2363d20e74ffbed851de5231a412557a342d"
+      "sha256": "0a82bdf7cf4fa1b894a0316d23b02a05d847e7a90e5abf3bbf4a3094c9deecb4"
     },
     {
       "path": "SUPPORT.md",
@@ -58,7 +58,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "904c87b8d475f8bc5397928ad764b9bf92cfe6d2d31feefd65df307f9dd6fe76"
+      "sha256": "1118e4a151321a28f6ac197abd270f36e6d3246e7c788aae26e5f103036fa6b5"
     },
     {
       "path": "docs/GROK.md",
@@ -74,7 +74,7 @@
     },
     {
       "path": "docs/X402.md",
-      "sha256": "373d41f1309b3769ecbdc1d3d5ecd5c2d5c720654c0453a6429598fc56a98419"
+      "sha256": "87e22ea374e7e4d3bbafa06d13d79aebbdb59e0d216443cfa865f27c4bf9e823"
     },
     {
       "path": "docs/ZERION-PREPARATION.md",
