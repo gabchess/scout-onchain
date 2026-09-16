@@ -10,11 +10,11 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "8c7f1ed067b75fb113ab1f9b6c487e5baad779924e709e8dd65500eff6548af4"
+      "sha256": "49ac49c2b2af41bf8ee143932eb18136f50ba096da3a11ff34100dc01cc6fcf2"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "087de11b1c973cf3d2fc8c58236208bae221fa129a12872222ab722fe47a7683"
+      "sha256": "7f3eea1608844d08f86785a41f114549871c81639b65da7aec706b1c729bae23"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
@@ -22,7 +22,7 @@
     },
     {
       "path": "HOST-MATRIX.md",
-      "sha256": "0f7c1c883de77727116c4f483d91c301b97c77c0c645b44750b454970502c0db"
+      "sha256": "b4f6254358751e55f0a6dd1f15090337114b10a926b0d30e3faa79327b0dcc7f"
     },
     {
       "path": "LICENSE-STATUS.md",
@@ -34,15 +34,15 @@
     },
     {
       "path": "README.md",
-      "sha256": "bf8400ba5be9fc0d1c0c99e3285f8567dc37aeb0f9ddb8e6069f756d5ba5c23a"
+      "sha256": "5888dc856d8efb1c92f5e0f98111ab5e9be3cca1d81f774a904a7fb411bcbb66"
     },
     {
       "path": "SECURITY.md",
-      "sha256": "275d369ff1f459b6840249fc780ecb1184181fb9c9d20a58394dd6ed68d4e423"
+      "sha256": "ca48c550e2f2162a82e76c0180507df789001350601dc23b12b7d072a4f1ba10"
     },
     {
       "path": "START-HERE.md",
-      "sha256": "0a82bdf7cf4fa1b894a0316d23b02a05d847e7a90e5abf3bbf4a3094c9deecb4"
+      "sha256": "4d15473594aa7395fa314b31f6bf80844af0df732c46bb305f26c0bda9a8a0e4"
     },
     {
       "path": "SUPPORT.md",
@@ -74,7 +74,7 @@
     },
     {
       "path": "docs/X402.md",
-      "sha256": "87e22ea374e7e4d3bbafa06d13d79aebbdb59e0d216443cfa865f27c4bf9e823"
+      "sha256": "d4be50c78e873b1eeb2118fd19c4b1dfa7dae165d0ffe7622d70dc059ed9477d"
     },
     {
       "path": "docs/ZERION-PREPARATION.md",
