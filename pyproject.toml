@@ -40,7 +40,7 @@ pythonpath = ["src", "."]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-src = ["src", "tests", "scripts", "demo"]
+src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
@@ -50,7 +50,7 @@ select = ["E", "F", "I"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src", "scripts", "demo"]
+files = ["src", "scripts"]
 warn_return_any = true
 warn_unused_configs = true
 disallow_any_generics = true

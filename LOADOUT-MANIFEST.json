@@ -64,12 +64,10 @@
   },
   "component_versions": {
     "product": "0.6.1",
-    "zerion_adapter": "0.2.0",
-    "demo_ui": "0.1.0"
+    "zerion_adapter": "0.2.0"
   },
   "exclusions": {
-    "live_zerion_key": "No Zerion API key, payment private key, or wallet address ships in this repo. The operator chooses API-key or x402 authorization and supplies the matching variables.",
-    "demo_data_source": "demo/zerion-portfolio-agent reads the synthetic portfolio and price-history fixtures; it makes no live Zerion call."
+    "live_zerion_key": "No Zerion API key, payment private key, or wallet address ships in this repo. The operator chooses API-key or x402 authorization and supplies the matching variables."
   },
   "data_boundary": "Optional preparation stores unsigned envelopes and request state in an operator-selected local SQLite database. No hosted retention service. Integrating hosts and providers have separate policies.",
   "release_notes": "See CHANGELOG.md, WHAT-BROKE.md, and RELEASE-MANIFEST.json.",

@@ -10,7 +10,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "be54eb4d91d31c1b0d2d1cdf0a74bcc33306af34f952a03982e8882409be5788"
+      "sha256": "41a110aed4fc62054e90c308a849b3ead5365faf5341daa4d6f8dc8caa8487ae"
     },
     {
       "path": "CLAIMS.md",
@@ -26,7 +26,7 @@
     },
     {
       "path": "LICENSE-STATUS.md",
-      "sha256": "980a1af322ce35232a7bd49de67ae044dc94c035812c0158c2ff5a3afcfe82e5"
+      "sha256": "945ee341adcfd22350e0cf76ff0e77c4274c65a38d1daebb103e79268e7c7dd2"
     },
     {
       "path": "LICENSE.md",
@@ -34,7 +34,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "fd16f829a9304a1e7eb68aa836c0758bfed4f862238096de96d8cc7abd103988"
+      "sha256": "4f0d291ef310ea788e332f8927f1654d0517b5ae1adb27b926905dda370a83a1"
     },
     {
       "path": "SECURITY.md",
@@ -42,7 +42,7 @@
     },
     {
       "path": "START-HERE.md",
-      "sha256": "3abaed2df9dc53913500975b946bbc6071a3f7ffb5b2aae1a0f6e30ae8c980eb"
+      "sha256": "2f498efb993681711221c8505c0b2363d20e74ffbed851de5231a412557a342d"
     },
     {
       "path": "SUPPORT.md",
@@ -50,7 +50,7 @@
     },
     {
       "path": "THIRD-PARTY-NOTICES.md",
-      "sha256": "5fe26b87be721a032af70b1fcde7fb07d1cd15c6fbbb1236bab9f1e70326c4a3"
+      "sha256": "192a02d8b13de81f9e6192a0bee69d5b34530a4c6ddfdf927a558a247511dfb4"
     },
     {
       "path": "WHAT-BROKE.md",

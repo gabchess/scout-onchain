@@ -116,19 +116,11 @@ Restart the client and inspect its MCP tool list. Host activation remains unveri
 
 ## Optional Zerion data
 
-API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. x402 mode needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra. `SCOUT_ENABLE_X402=1` is new in 0.7.0; older x402 entries without it now read the fixture or API-key mode. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. The modes are exclusive. Reads cover every chain Zerion returns for the wallet, including Arc; no extra setting is needed. See [`docs/X402.md`](docs/X402.md) before enabling payments.
+API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. x402 mode needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. `SCOUT_ENABLE_X402=1` is new in 0.7.0; older x402 entries without it now read the fixture or API-key mode. The modes are exclusive. Reads cover every chain Zerion returns for the wallet, including Arc; no extra setting is needed. See [`docs/X402.md`](docs/X402.md) before enabling payments.
 
 The live source reads positions and mapped transactions. Call-time failure returns a typed error with `fallback: "none"`.
 
 Scout keeps DCA on the proposal side of the boundary in both modes. `preview_dca` can accept quote values from a host adapter. The optional Zerion CLI preparation adapter can obtain unsigned proposals; Scout cannot submit a trade.
-
-## Browser demo
-
-```bash
-uv run --project . demo/zerion-portfolio-agent/server.py
-```
-
-Open `http://127.0.0.1:8787`. The demo reads the fixture and ignores Zerion environment variables.
 
 ## Runtime boundary
 

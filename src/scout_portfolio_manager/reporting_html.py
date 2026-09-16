@@ -1,11 +1,9 @@
 """Static, self-contained HTML report for Scout's full observe-through-alert chain.
 
-No fetch calls, no external script/style references beyond what's inlined
-here: this runs with no server behind it, unlike the interactive demo. The
-demo's app.js is not reused (it fetches client-side); this module inlines
-already-computed tool output server-side instead. Visual structure and CSS
-classes are adapted from demo/zerion-portfolio-agent/static/{index.html,
-styles.css} and inlined here.
+No fetch calls and no external script or style references: the report
+inlines already-computed tool output and its stylesheet, so the file opens
+with no server behind it. The palette uses Zerion's published brand tokens;
+see component-notices/zerion-brand-tokens/.
 """
 
 from __future__ import annotations
@@ -48,14 +46,16 @@ def _sign_class(value: Optional[float]) -> str:
 
 _STYLE = """
 :root {
-  --zr-navy: #06003C;
-  --zr-original: #3232DC;
-  --zr-digital: #2461ED;
-  --zr-blue: #56ACFF;
-  --zr-mint: #3FFDEE;
-  --zr-peach: #FF7583;
-  --zr-pink: #FFBDFF;
-  --zr-grey: #F0F0F0;
+  /* Core palette reference: design.zerion.io/color */
+  --zr-navy: #06003C;      /* Pantone 2757 C */
+  --zr-original: #3232DC;  /* Pantone 2728 C */
+  --zr-digital: #2461ED;   /* Pantone 279 C */
+  --zr-blue: #56ACFF;      /* Pantone 278 C */
+  /* Secondary palette, design.zerion.io/color */
+  --zr-mint: #3FFDEE;      /* Pantone 3242 C */
+  --zr-peach: #FF7583;     /* Pantone 170 C */
+  --zr-pink: #FFBDFF;      /* Pantone 243 C */
+  --zr-grey: #F0F0F0;      /* Cool Gray 1 C */
   --positive: var(--zr-mint);
   --negative: var(--zr-peach);
   --font-sans: "Aeonik Pro", -apple-system, "Segoe UI", sans-serif;

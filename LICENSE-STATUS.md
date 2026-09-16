@@ -9,7 +9,7 @@ Scout Portfolio Manager ships under the MIT License, copyright 2026 Zerion Portf
 ## What the license does not cover
 
 - **Zerion API.** Live API use is governed entirely by Zerion's own terms (https://zerion.io/terms), not by this license. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), section "Zerion API terms (optional adapter)".
-- **Zerion brand tokens.** The demo's color and typography values come from https://design.zerion.io and carry no endorsement. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), section "Zerion brand tokens (demo only)".
+- **Zerion brand tokens.** The HTML report's color and typography values come from https://design.zerion.io and carry no endorsement. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md), section "Zerion brand tokens (HTML report)".
 - **Fixture data provenance.** `fixtures/portfolio.json` and `fixtures/price_history.json` are synthetic bundled test data, never live market or wallet data. See [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md).
 - **Third-party Python dependencies.** Each carries its own MIT license, listed in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 

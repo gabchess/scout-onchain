@@ -1,6 +1,6 @@
 # Third-party and component notices
 
-Scout Portfolio Manager is MIT-licensed (see [`LICENSE.md`](LICENSE.md)). This file lists the third-party software the project depends on, the external API terms that govern the optional Zerion adapter, and the source of the visual brand tokens used in the browser demo. Per-component provenance, licensing, and data-handling detail lives under [`component-notices/`](component-notices/).
+Scout Portfolio Manager is MIT-licensed (see [`LICENSE.md`](LICENSE.md)). This file lists the third-party software the project depends on, the external API terms that govern the optional Zerion adapter, and the source of the visual brand tokens used in the static HTML report. Per-component provenance, licensing, and data-handling detail lives under [`component-notices/`](component-notices/).
 
 ## Python dependencies
 
@@ -22,9 +22,9 @@ This table lists the five dependencies declared directly in `pyproject.toml`. `u
 
 The optional `ZerionAPIReader` adapter in `src/scout_portfolio_manager/zerion_api.py` makes read-only requests to `https://api.zerion.io`, Zerion's own hosted API. This project does not redistribute Zerion's API, data, or software; the adapter is original code written against Zerion's public endpoint contract. Use of the live API is governed entirely by Zerion's own terms, published at https://zerion.io/terms, and by the authorization, rate limits, and data scope of the Zerion account the operator configures. Review Zerion's current terms before enabling the adapter with real credentials; this project does not restate or interpret them. See [`component-notices/zerion-adapter/`](component-notices/zerion-adapter/) for the component-level notice.
 
-## Zerion brand tokens (demo only)
+## Zerion brand tokens (HTML report)
 
-The browser demo at `demo/zerion-portfolio-agent/` uses a color and typography palette sourced from Zerion's public brand and design guidance at https://design.zerion.io (`/color` and `/typography`). These are visual reference values (hex colors, a type-family name and weight), not software. No Zerion logo, wordmark, or other brand asset is shipped in this repository. Use of the palette does not imply Zerion's endorsement or a partnership. See [`component-notices/zerion-brand-tokens/`](component-notices/zerion-brand-tokens/) for the component-level notice.
+The static HTML report written by `src/scout_portfolio_manager/reporting_html.py` uses a color and typography palette sourced from Zerion's public brand and design guidance at https://design.zerion.io (`/color` and `/typography`). These are visual reference values (hex colors, a type-family name and weight), not software. No Zerion logo, wordmark, or other brand asset is shipped in this repository. Use of the palette does not imply Zerion's endorsement or a partnership. See [`component-notices/zerion-brand-tokens/`](component-notices/zerion-brand-tokens/) for the component-level notice.
 
 ## Evidence boundary
 

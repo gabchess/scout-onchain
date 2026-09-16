@@ -44,18 +44,6 @@ uv run --extra mcp zpm-mcp
 
 The default fixture needs no key or network access. Add Scout to Claude Code, Codex, Cursor, or another stdio MCP client with [`START-HERE.md`](START-HERE.md).
 
-To see the local agent loop:
-
-```bash
-uv run --project . demo/zerion-portfolio-agent/server.py
-```
-
-Open `http://127.0.0.1:8787`.
-
-<p align="center">
-  <img src="docs/zerion-portfolio-demo-screenshot.png" width="720" alt="Scout demo with a portfolio snapshot, PnL, and DCA proposal" />
-</p>
-
 ## Use Zerion
 
 API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; the standard analytics flow does not fetch a swap quote itself.

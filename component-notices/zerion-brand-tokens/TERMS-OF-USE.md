@@ -2,11 +2,11 @@
 
 ## What this component is
 
-A set of CSS custom properties in `demo/zerion-portfolio-agent/static/styles.css` (eight named colors, six gradient pairs, one type family and weight) recorded from Zerion's own public brand and design guidance at `design.zerion.io/color` and `design.zerion.io/typography`. Each value in the file carries an inline source comment pointing at the page it came from.
+A set of CSS custom properties in the inline stylesheet of `src/scout_portfolio_manager/reporting_html.py` (eight named colors, one gradient built from two of them, one type family) recorded from Zerion's own public brand and design guidance at `design.zerion.io/color` and `design.zerion.io/typography`. Each named color carries an inline source comment pointing at the page it came from.
 
 ## Scope of use
 
-These values are used only to visually align the browser demo in this repository with the Zerion API it demonstrates. No Zerion logo, wordmark, icon, or other trademarked visual asset is shipped; only numeric color values and a type-family name are recorded. Several values in the same file (background tints, border colors, corner radii) are explicitly marked in-file as house defaults, not Zerion values, and are not covered by this notice.
+These values are used only to visually align the static HTML report this repository generates with the Zerion API it reads. No Zerion logo, wordmark, icon, or other trademarked visual asset is shipped; only numeric color values and a type-family name are recorded. Other values in the same stylesheet (background tints, border colors, spacing, corner radii) are house defaults, not Zerion values, and are not covered by this notice.
 
 ## Governing guidance
 
