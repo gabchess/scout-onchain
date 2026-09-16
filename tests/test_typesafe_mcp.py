@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
@@ -29,6 +30,8 @@ async def _call(env):
 
 
 def test_stdio_tools_return_needs_confirmation_with_stubbed_transport(tmp_path):
+    if not (STUB_DIR / "sitecustomize.py").is_file():
+        pytest.skip("test-only transport stub is excluded from release archives")
     dotenv = tmp_path / "scout.env"
     dotenv.write_text("TYPESAFE_API_KEY" + "=stub-value\n")
     dotenv.chmod(0o600)

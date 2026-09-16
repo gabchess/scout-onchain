@@ -90,3 +90,10 @@ def test_secret_scan_rejects_only_tracked_dotenv_in_git(tmp_path):
     assert scan(tmp_path) == []
     subprocess.run(["git", "-C", str(tmp_path), "add", "-f", ".env"], check=True)
     assert scan(tmp_path) == [f"{tmp_path / '.env'}: committed .env file"]
+
+
+def test_release_archive_excludes_the_test_only_sitecustomize_stub():
+    from scripts.build_release_zip import _is_excluded
+
+    assert _is_excluded(("tests", "typesafe_stub", "sitecustomize.py"))
+    assert not _is_excluded(("tests", "test_typesafe_mcp.py"))

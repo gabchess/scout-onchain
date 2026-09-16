@@ -87,6 +87,8 @@ def _is_excluded(parts: tuple[str, ...]) -> bool:
         or any(part in EXCLUDED_DIR_NAMES for part in parts)
         or any(part.endswith(".egg-info") for part in parts)
         or parts[-1] == ".DS_Store"
+        # Test-only transport stub; a sitecustomize.py must never ship in a release.
+        or parts[:2] == ("tests", "typesafe_stub")
     )
 
 
