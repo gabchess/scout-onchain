@@ -62,6 +62,11 @@ class PreparationIntent(BaseModel):
     @field_validator("chain", "destination_chain")
     @classmethod
     def chain_known(cls, value: str | None) -> str | None:
+        if value == "arc":
+            raise ValueError(
+                "Arc is read-only in Scout: wallet reads work through the Zerion API, "
+                "but Zerion CLI preparation on Arc is not supported yet"
+            )
         if value is not None and value not in CHAINS:
             raise ValueError("Unsupported preparation chain; EVM allowlist only")
         return value
