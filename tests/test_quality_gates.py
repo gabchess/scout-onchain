@@ -55,3 +55,22 @@ def test_secret_scan_covers_tests_directory(tmp_path):
 
 def test_plugin_manifest_and_readme_contract_is_complete():
     assert check_plugin_manifest(ROOT) == []
+
+
+def test_plugin_manifest_requires_both_console_scripts(tmp_path):
+    pyproject = (ROOT / "pyproject.toml").read_text()
+    (tmp_path / "README.md").write_text((ROOT / "README.md").read_text())
+    (tmp_path / "pyproject.toml").write_text(
+        pyproject.replace('scout-portfolio-manager = "scout_portfolio_manager.mcp_server:main"', "")
+    )
+    assert check_plugin_manifest(tmp_path) == [
+        "project.scripts.scout-portfolio-manager must be "
+        "'scout_portfolio_manager.mcp_server:main'"
+    ]
+
+
+def test_plugin_manifest_requires_mcp_core_dependency(tmp_path):
+    pyproject = (ROOT / "pyproject.toml").read_text()
+    (tmp_path / "README.md").write_text((ROOT / "README.md").read_text())
+    (tmp_path / "pyproject.toml").write_text(pyproject.replace(', "mcp>=1.2,<2"]', "]"))
+    assert check_plugin_manifest(tmp_path) == ["project.dependencies must include the mcp SDK"]

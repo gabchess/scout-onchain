@@ -6,6 +6,7 @@ Exposes observe, calculate, propose, and preview operations. No execute tool exi
 from __future__ import annotations
 
 import logging
+import os
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from importlib.resources import files
@@ -15,7 +16,13 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 from . import __version__
 from .advisory import assess_yield, plan_zerion_action, portfolio_risk, validate_shock_pct
 from .advisory_manifest import ADVISORY_TOOL_NAMES, advisory_manifest
-from .alerts import AlertRule, AlertStore, evaluate_alert
+from .alerts import (
+    LEGACY_ALERTS_PATH,
+    AlertRule,
+    AlertStore,
+    default_alerts_path,
+    evaluate_alert,
+)
 from .analytics import (
     distance_from_range_pct,
     drawdown_from_cost_basis_pct,
@@ -67,11 +74,6 @@ TOOL_NAMES = (
     "set_alert",
     "check_alerts",
 ) + ADVISORY_TOOL_NAMES
-
-#: Default local path for AlertStore, relative to the process's current
-#: working directory when no alerts_path is given. Gitignored: this is
-#: per-operator local state, not a repo artifact.
-DEFAULT_ALERTS_PATH = Path(".scout") / "alerts.json"
 
 #: analyze_asset's freshness gate: how many days old the last observed price
 #: point may be, relative to the snapshot's observed_at date, before the
@@ -154,9 +156,14 @@ class ReadOnlyHost:
         self.reader: PortfolioReader = (
             FixturePortfolioReader(source) if isinstance(source, (str, Path)) else source
         )
-        self._alert_store = AlertStore(
-            alerts_path if alerts_path is not None else DEFAULT_ALERTS_PATH
-        )
+        if alerts_path is not None:
+            self._alert_store = AlertStore(alerts_path)
+        elif os.environ.get("ZPM_ALERTS_PATH", "").strip():
+            self._alert_store = AlertStore(default_alerts_path())
+        else:
+            self._alert_store = AlertStore(
+                default_alerts_path(), legacy_path=Path.cwd() / LEGACY_ALERTS_PATH
+            )
         # Price history is always fixture-backed, independent of the portfolio
         # source: no live price-history endpoint exists yet (see spec's
         # non-goals). Defaults to a sibling of the portfolio fixture path when

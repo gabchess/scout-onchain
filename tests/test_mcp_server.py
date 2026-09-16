@@ -24,7 +24,7 @@ def test_require_mcp_fails_with_install_hint(monkeypatch):
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr("builtins.__import__", no_mcp)
-    with pytest.raises(SystemExit, match="pip install -e"):
+    with pytest.raises(SystemExit, match="Reinstall scout-portfolio-manager"):
         mcp_server._require_mcp()
 
 

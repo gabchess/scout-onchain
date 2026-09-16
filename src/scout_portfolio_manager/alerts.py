@@ -3,15 +3,35 @@
 AlertStore persists rules to one local JSON file so a fresh `/loop` process
 (one process per tick) doesn't silently forget every rule between ticks. No
 locking: this store supports single-process, on-demand use only.
+
+The default file is `ZPM_ALERTS_PATH` when set, else `~/.scout/alerts.json`.
+Host launchers start the server from an arbitrary, possibly read-only, working
+directory, so the default never depends on the cwd.
 """
 
 import json
+import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Mapping, Optional, Union
 
 from pydantic import BaseModel, ConfigDict
+
+logger = logging.getLogger(__name__)
+
+#: Pre-0.7 default, relative to the process working directory.
+LEGACY_ALERTS_PATH = Path(".scout") / "alerts.json"
+
+
+def default_alerts_path(environ: Optional[Mapping[str, str]] = None) -> Path:
+    """Return `ZPM_ALERTS_PATH` if set and non-empty, else `~/.scout/alerts.json`."""
+    env = os.environ if environ is None else environ
+    override = env.get("ZPM_ALERTS_PATH", "").strip()
+    if override:
+        return Path(override).expanduser()
+    return Path.home() / ".scout" / "alerts.json"
 
 
 class AlertRule(BaseModel):
@@ -27,14 +47,45 @@ class AlertRule(BaseModel):
 class AlertStore:
     """Reads/writes one JSON file of AlertRule records."""
 
-    def __init__(self, path: Union[str, Path]) -> None:
+    def __init__(
+        self, path: Union[str, Path], *, legacy_path: Optional[Union[str, Path]] = None
+    ) -> None:
         self.path = Path(path)
+        self.legacy_path = Path(legacy_path) if legacy_path is not None else None
+        self._legacy_notice_sent = False
+
+    @staticmethod
+    def _load(path: Path) -> List[AlertRule]:
+        raw = json.loads(path.read_text() or "[]")
+        return [AlertRule.model_validate(item) for item in raw]
 
     def _read_all(self) -> List[AlertRule]:
-        if not self.path.exists():
+        legacy = self.legacy_path
+        has_legacy = (
+            legacy is not None and legacy.exists() and legacy.resolve() != self.path.resolve()
+        )
+        if self.path.exists():
+            if has_legacy and not self._legacy_notice_sent:
+                self._legacy_notice_sent = True
+                logger.warning(
+                    "alerts: ignoring legacy %s because %s already exists. "
+                    "Set ZPM_ALERTS_PATH to use the legacy file.",
+                    legacy,
+                    self.path,
+                )
+            return self._load(self.path)
+        if not has_legacy or legacy is None:
             return []
-        raw = json.loads(self.path.read_text() or "[]")
-        return [AlertRule.model_validate(item) for item in raw]
+        rules = self._load(legacy)
+        logger.warning(
+            "alerts: copied %d rule(s) from legacy %s to %s; the old file is kept. "
+            "Set ZPM_ALERTS_PATH to choose another location.",
+            len(rules),
+            legacy,
+            self.path,
+        )
+        self._write_all(rules)
+        return rules
 
     def _write_all(self, rules: List[AlertRule]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)

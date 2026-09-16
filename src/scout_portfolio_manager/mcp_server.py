@@ -1,6 +1,6 @@
 """MCP stdio server for Scout's portfolio host.
 
-Requires the optional dependency: pip install -e '.[mcp]'
+The `mcp` SDK is a core dependency. Console scripts: `scout-portfolio-manager` and `zpm-mcp`.
 
 No trade, signing, or submission tool is registered. Network access belongs to an
 explicitly configured Zerion source. API-key mode reads analytics. x402 mode pays for
@@ -44,7 +44,10 @@ def _require_mcp():
     try:
         from mcp.server.fastmcp import FastMCP
     except ImportError as exc:  # pragma: no cover - exercised via import error path in tests
-        raise SystemExit("MCP extra is not installed. Run: pip install -e '.[mcp]'") from exc
+        raise SystemExit(
+            "The mcp package is missing. Reinstall scout-portfolio-manager;"
+            " mcp is a core dependency."
+        ) from exc
     return FastMCP
 
 

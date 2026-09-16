@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE.md", "LICENSE-STATUS.md"]
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.5,<3"]
+dependencies = ["pydantic>=2.5,<3", "mcp>=1.2,<2"]
 keywords = ["ai-agent", "mcp", "portfolio", "x402", "zerion"]
 
 [project.urls]
@@ -20,11 +20,13 @@ Issues = "https://github.com/gabchess/scout-onchain/issues"
 [project.optional-dependencies]
 test = ["pytest>=8,<9"]
 quality = ["ruff>=0.6,<1", "mypy>=1.11,<2"]
-mcp = ["mcp>=1.2,<2"]
+# Kept empty so older `[mcp]` install commands still resolve.
+mcp = []
 x402 = ["x402[requests,evm]>=2.22,<3", "eth-account>=0.13"]
 
 [project.scripts]
 zpm-mcp = "scout_portfolio_manager.mcp_server:main"
+scout-portfolio-manager = "scout_portfolio_manager.mcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
