@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased (0.7.0)
+
+### Breaking
+
+- x402 mode now needs `SCOUT_ENABLE_X402=1` in the MCP server entry, next to the `ZERION_X402_*` variables. Without it Scout ignores the x402 key, prints a one-line notice to stderr, and uses API-key mode if configured or the fixture otherwise. A plugin-launched server can inherit a shell-exported payment key, so paid mode must be switched on explicitly.
+- Alerts are stored at `ZPM_ALERTS_PATH` if set, else `~/.scout/alerts.json`, not `.scout/alerts.json` in the working directory. An existing `./.scout/alerts.json` is copied once into the new file and kept. To keep a project-local file, set `ZPM_ALERTS_PATH=.scout/alerts.json`.
+
+### Install
+
+- `mcp` is a core dependency. The `[mcp]` extra still resolves and is empty.
+- New console script `scout-portfolio-manager`, the same entry point as `zpm-mcp`.
+- The Claude Code plugin launches `scout-portfolio-manager` and forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`, using `${VAR:-}` so unset variables start the fixture.
+- CI builds the wheel and starts it offline from a clean directory.
+
 ## 0.6.1 - 2026-09-16
 
 ### Arc preparation

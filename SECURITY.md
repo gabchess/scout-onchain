@@ -11,7 +11,9 @@ The Zerion source reads positions and mapped transactions for one address. Autho
 | Mode | Secret | Authorized action |
 |:--|:--|:--|
 | API key | `ZERION_API_KEY` | Read Zerion endpoints |
-| x402 | `ZERION_X402_PRIVATE_KEY` | Sign and pay USDC analytics fees on Base |
+| x402 | `ZERION_X402_PRIVATE_KEY` plus `SCOUT_ENABLE_X402=1` | Sign and pay USDC analytics fees on Base |
+
+x402 needs the explicit `SCOUT_ENABLE_X402=1` opt-in (breaking change in 0.7.0). Without it an x402 key is ignored with a stderr notice that contains no values. The Claude Code plugin forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` and never sets the opt-in, so a payment key inherited from the shell cannot start paying.
 
 The observed wallet never signs. The x402 payment wallet does. Scout reserves the full configured payment cap before each SDK payment payload. This includes recovery attempts. The defaults are `$0.05` per payment and `$1.05` across one process lifetime.
 
