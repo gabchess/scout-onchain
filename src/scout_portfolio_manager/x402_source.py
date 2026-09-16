@@ -56,6 +56,7 @@ logger = logging.getLogger(__name__)
 X402_KEY_ENV = "ZERION_X402_PRIVATE_KEY"
 X402_MAX_ENV = "ZERION_X402_MAX_USD_PER_CALL"
 X402_SESSION_MAX_ENV = "ZERION_X402_MAX_USD_PER_SESSION"
+X402_PAY_TO_ENV = "ZERION_X402_PAY_TO"
 
 #: Default per-payment spend cap. The x402 SDK enforces it before signing.
 DEFAULT_MAX_USD_PER_CALL = "$0.05"
@@ -170,6 +171,7 @@ def build_payment_session(
     max_usd_per_call: str = DEFAULT_MAX_USD_PER_CALL,
     *,
     spend_budget: Optional[X402SpendBudget] = None,
+    pay_to: Optional[str] = None,
 ) -> Any:
     """Build a requests Session that settles x402 payments automatically.
 
@@ -199,7 +201,7 @@ def build_payment_session(
 
     register_exact_evm_client(client, EthAccountSigner(account), networks=BASE_NETWORK)
     client.set_spend_controls({"max_amount_per_payment": max_usd_per_call})
-    guard = X402PaymentGuard.from_usd(max_usd_per_call)
+    guard = X402PaymentGuard.from_usd(max_usd_per_call, pay_to=pay_to)
     client.on_before_payment_creation(
         lambda context: preflight_before_signing(
             context,
@@ -392,8 +394,9 @@ def reader_from_env(
         )
     budget = X402SpendBudget.from_strings(max_usd, max_session_usd)
     chain = (environ.get(CHAIN_ENV) or "").strip() or "multi-chain"
+    pay_to = (environ.get(X402_PAY_TO_ENV) or "").strip() or None
     if session is None:
-        session = build_payment_session(x402_key, max_usd, spend_budget=budget)
+        session = build_payment_session(x402_key, max_usd, spend_budget=budget, pay_to=pay_to)
     # api_key=None: the reader sends no Authorization header; the transport
     # settles access per request via x402 instead.
     api_reader = ZerionAPIReader(ZerionAPIConfig(api_key=None), transport=x402_transport(session))

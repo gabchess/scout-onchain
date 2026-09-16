@@ -11,6 +11,12 @@ BASE_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 PAYMENT_SIGNATURE_HEADER = "PAYMENT-SIGNATURE"
 USDC_DECIMALS = 6
 
+# The server picks max_timeout_seconds, and it becomes the EIP-3009 valid_before
+# or the Permit2 deadline, so an unbounded value leaves a redeemable
+# authorization outstanding for as long as the server likes. Ten minutes covers
+# any honest analytics request.
+MAX_TIMEOUT_SECONDS = 600
+
 
 class X402GuardError(ValueError):
     """A payment requirement failed before signing."""
@@ -27,16 +33,21 @@ class X402PaymentGuard:
     max_usd_per_payment: Decimal
     network: str = BASE_NETWORK
     asset: str = BASE_USDC_ADDRESS
+    # When set, the only address Scout will pay. Left None, any well-formed
+    # recipient the server returns is accepted, which means whoever controls
+    # the 402 response chooses the destination.
+    pay_to: str | None = None
 
     @classmethod
-    def from_usd(cls, value: str) -> "X402PaymentGuard":
+    def from_usd(cls, value: str, *, pay_to: str | None = None) -> "X402PaymentGuard":
         try:
             amount = Decimal(value.strip().lstrip("$"))
         except (AttributeError, InvalidOperation):
             raise X402GuardError("payment_cap_invalid", "x402 payment cap is invalid") from None
         if not amount.is_finite() or amount <= 0:
             raise X402GuardError("payment_cap_invalid", "x402 payment cap must be positive")
-        return cls(amount)
+        expected = (pay_to or "").strip() or None
+        return cls(amount, pay_to=expected)
 
     def validate(self, context: Any) -> None:
         """Validate SDK-selected requirements before a signer sees them."""
@@ -85,12 +96,22 @@ class X402PaymentGuard:
         pay_to = _value(requirements, "pay_to")
         if not isinstance(pay_to, str) or not pay_to.strip():
             raise X402GuardError("pay_to_missing", "Scout requires an explicit x402 recipient")
+        if self.pay_to is not None and pay_to.strip().lower() != self.pay_to.lower():
+            raise X402GuardError(
+                "pay_to_not_allowed",
+                "Scout refused an x402 recipient that is not the configured address",
+            )
 
         timeout = _value(requirements, "max_timeout_seconds")
         if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
             raise X402GuardError(
                 "timeout_invalid",
                 "Scout requires an explicit positive x402 timeout",
+            )
+        if timeout > MAX_TIMEOUT_SECONDS:
+            raise X402GuardError(
+                "timeout_too_long",
+                "Scout refused an x402 timeout above its maximum authorization window",
             )
 
 
@@ -114,6 +135,7 @@ def _value(value: Any, name: str) -> Any:
 __all__ = [
     "BASE_NETWORK",
     "BASE_USDC_ADDRESS",
+    "MAX_TIMEOUT_SECONDS",
     "PAYMENT_SIGNATURE_HEADER",
     "X402GuardError",
     "X402PaymentGuard",

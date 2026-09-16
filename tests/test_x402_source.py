@@ -15,10 +15,12 @@ from urllib.request import Request
 
 import pytest
 
+from scout_portfolio_manager import x402_source as x402_source_module
 from scout_portfolio_manager.host import ReadOnlyHost
 from scout_portfolio_manager.x402_guard import (
     BASE_NETWORK,
     BASE_USDC_ADDRESS,
+    MAX_TIMEOUT_SECONDS,
     X402GuardError,
     X402PaymentGuard,
     has_payment_signature,
@@ -29,6 +31,7 @@ from scout_portfolio_manager.x402_source import (
     DEFAULT_MAX_USD_PER_SESSION,
     X402_KEY_ENV,
     X402_MAX_ENV,
+    X402_PAY_TO_ENV,
     X402_SESSION_MAX_ENV,
     X402SpendBudget,
     parse_max_usd_per_call,
@@ -166,6 +169,11 @@ def test_x402_guard_accepts_only_bounded_base_usdc_requirements():
         ({"amount": "50001"}, "payment_cap_exceeded"),
         ({"pay_to": ""}, "pay_to_missing"),
         ({"max_timeout_seconds": 0}, "timeout_invalid"),
+        ({"scheme": "upto"}, "scheme_not_allowed"),
+        ({"amount": "not-a-number"}, "amount_invalid"),
+        ({"amount": "-1"}, "amount_invalid"),
+        ({"max_timeout_seconds": MAX_TIMEOUT_SECONDS + 1}, "timeout_too_long"),
+        ({"max_timeout_seconds": 999_999_999}, "timeout_too_long"),
     ],
 )
 def test_x402_guard_fails_closed_on_requirement_changes(changes, code):
@@ -175,6 +183,74 @@ def test_x402_guard_fails_closed_on_requirement_changes(changes, code):
     with pytest.raises(X402GuardError) as caught:
         X402PaymentGuard.from_usd("$0.05").validate(context)
     assert caught.value.code == code
+
+
+def test_x402_guard_rejects_missing_requirements():
+    with pytest.raises(X402GuardError) as caught:
+        X402PaymentGuard.from_usd("$0.05").validate(SimpleNamespace(selected_requirements=None))
+    assert caught.value.code == "payment_requirements_missing"
+
+
+@pytest.mark.parametrize("cap", ["", "$0", "-1", "abc", "$"])
+def test_x402_guard_rejects_an_unusable_payment_cap(cap):
+    with pytest.raises(X402GuardError) as caught:
+        X402PaymentGuard.from_usd(cap)
+    assert caught.value.code == "payment_cap_invalid"
+
+
+def test_x402_guard_accepts_the_timeout_ceiling_itself():
+    X402PaymentGuard.from_usd("$0.05").validate(payment_context(timeout=MAX_TIMEOUT_SECONDS))
+
+
+# --- recipient pinning -------------------------------------------------------
+
+PINNED = "0x1111111111111111111111111111111111111111"
+ATTACKER = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+
+
+def test_pinned_guard_accepts_the_configured_recipient_in_any_case():
+    guard = X402PaymentGuard.from_usd("$0.05", pay_to=PINNED)
+    guard.validate(payment_context(pay_to=PINNED))
+    guard.validate(payment_context(pay_to="0x" + PINNED[2:].upper()))
+
+
+@pytest.mark.parametrize("recipient", [ATTACKER, "not-an-address", "0x", "   x   "])
+def test_pinned_guard_refuses_any_other_recipient(recipient):
+    guard = X402PaymentGuard.from_usd("$0.05", pay_to=PINNED)
+    with pytest.raises(X402GuardError) as caught:
+        guard.validate(payment_context(pay_to=recipient))
+    assert caught.value.code == "pay_to_not_allowed"
+
+
+def test_an_unset_pin_leaves_the_recipient_unchecked():
+    # Pinning is opt-in, so an existing deployment keeps working. This test
+    # exists to make that exposure visible rather than implied: with no pin,
+    # whoever controls the 402 response chooses where the money goes.
+    guard = X402PaymentGuard.from_usd("$0.05")
+    assert guard.pay_to is None
+    guard.validate(payment_context(pay_to=ATTACKER))
+
+
+@pytest.mark.parametrize("blank", ["", "   ", None])
+def test_a_blank_pin_is_treated_as_unset(blank):
+    assert X402PaymentGuard.from_usd("$0.05", pay_to=blank).pay_to is None
+
+
+@pytest.mark.parametrize(
+    "env_value,expected",
+    [(PINNED, PINNED), (None, None), ("", None), ("   ", None)],
+)
+def test_reader_from_env_passes_the_pin_through(monkeypatch, env_value, expected):
+    captured = {}
+
+    def fake_session(key, max_usd, *, spend_budget=None, pay_to=None):
+        captured["pay_to"] = pay_to
+        return SimpleNamespace()
+
+    monkeypatch.setattr(x402_source_module, "build_payment_session", fake_session)
+    extra = {} if env_value is None else {X402_PAY_TO_ENV: env_value}
+    x402_reader_from_env(x402_env(**extra))
+    assert captured["pay_to"] == expected
 
 
 def test_payment_signature_header_check_is_case_insensitive_and_non_empty():
@@ -316,7 +392,7 @@ def test_top_level_reader_routes_to_x402_when_key_set(monkeypatch):
     monkeypatch.setattr(
         x402_source,
         "build_payment_session",
-        lambda key, cap, spend_budget=None: FakeSession(),
+        lambda key, cap, spend_budget=None, pay_to=None: FakeSession(),
     )
     reader = reader_from_env(x402_env())
     assert reader is not None
@@ -524,7 +600,7 @@ def test_mcp_build_host_prefers_x402_source(monkeypatch):
     monkeypatch.setattr(
         x402_source,
         "build_payment_session",
-        lambda key, cap, spend_budget=None: FakeSession(),
+        lambda key, cap, spend_budget=None, pay_to=None: FakeSession(),
     )
     monkeypatch.setenv(X402_KEY_ENV, X402_KEY)
     monkeypatch.setenv(WALLET_ENV, WALLET)
