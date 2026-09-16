@@ -14,7 +14,8 @@ import pytest
 from tests.test_zerion_prepare import NOW, Provider
 
 from scout_portfolio_manager.analytics import drawdown_from_cost_basis_pct
-from scout_portfolio_manager.host import ReadOnlyHost
+from scout_portfolio_manager.contracts import Holding
+from scout_portfolio_manager.host import ReadOnlyHost, _holdings_by_asset
 from scout_portfolio_manager.zerion_api import (
     API_KEY_ENV,
     CHAIN_ENV,
@@ -164,7 +165,7 @@ def test_arc_report_alerts_and_proposals_stay_read_only(tmp_path):
 
 
 @pytest.mark.parametrize("field", ["chain", "destination_chain"])
-def test_preparation_refuses_arc_until_it_is_reviewed(field):
+def test_preparation_accepts_arc_as_source_or_destination(field):
     fields = dict(
         action="bridge",
         chain="base",
@@ -177,26 +178,41 @@ def test_preparation_refuses_arc_until_it_is_reviewed(field):
     )
     fields[field] = "arc"
 
-    with pytest.raises(ValueError, match="Arc is read-only in Scout"):
-        PreparationIntent(**fields)
+    assert getattr(PreparationIntent(**fields), field) == "arc"
 
 
-def test_host_preparation_refuses_arc_before_any_provider_call(tmp_path):
+def test_host_preparation_sends_arc_transfer_to_the_provider_once(tmp_path):
     host = arc_host(tmp_path)
     provider = Provider()
     host.preparation = PreparationService(provider, tmp_path / "db", clock=lambda: NOW)
 
-    with pytest.raises(ValueError, match="Arc is read-only in Scout"):
-        host.call_tool(
-            "prepare_zerion_transaction",
-            dict(
-                request_id="arc-refused",
-                action="transfer",
-                chain="arc",
-                source_wallet="0x" + "1" * 40,
-                destination="0x" + "2" * 40,
-                asset="native",
-                amount="1",
-            ),
-        )
-    assert provider.calls == 0
+    result = host.call_tool(
+        "prepare_zerion_transaction",
+        dict(
+            request_id="arc-transfer",
+            action="transfer",
+            chain="arc",
+            source_wallet="0x" + "1" * 40,
+            destination="0x" + "2" * 40,
+            asset="native",
+            amount="1",
+        ),
+    )
+    assert provider.calls == 1
+    # The shared Base fixture envelope cannot pass Arc checks, so it fails closed.
+    assert result["status"] == "preparation_failed"
+    assert result["executed"] is False
+
+
+def test_holdings_merge_ignores_label_case():
+    merged = _holdings_by_asset(
+        [
+            Holding(asset="USDC", quantity=1.0, value_usd=1.0),
+            Holding(asset="usdc", quantity=2.0, value_usd=2.0),
+            Holding(asset="ETH", quantity=1.0, value_usd=10.0),
+        ]
+    )
+    assert merged == [
+        Holding(asset="USDC", quantity=3.0, value_usd=3.0),
+        Holding(asset="ETH", quantity=1.0, value_usd=10.0),
+    ]

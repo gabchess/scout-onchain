@@ -1,20 +1,20 @@
 {
   "format": "cd-documentation-manifest/v1",
   "product": "scout-portfolio-manager",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "claim_boundary": "Fixture is the default; Zerion observes one wallet; x402 can sign and pay data fees; host and MCP have no trade execution tool.",
   "files": [
     {
       "path": "AGENTS.md",
-      "sha256": "f14a00eb39d43030080013170ddb313a50d45f4fc395f6fc6bf72b79cea2c790"
+      "sha256": "ce7997f96e0bf71e48c8521030ccfbcf1a5f0048111c3d5d2acc67d2aabe08a8"
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "a2d1f700bfd7e5221c3e26551f1b0541dba247213999cb871a4e7396cb52bde9"
+      "sha256": "7700c2667ef3a4da0522d0b5178b274d3275902dbe9c6849b568ea18c38c292e"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "a20e25b9c0356d171bdf32c456f20555b4913316923d4ddbc884e2b4e2a74c4a"
+      "sha256": "9ff5bbaeafc2bd4aa7b280fc0634dd978d54741add8c194c14300fb38b5e1612"
     },
     {
       "path": "DATA-AND-PRIVACY.md",
@@ -22,11 +22,11 @@
     },
     {
       "path": "HOST-MATRIX.md",
-      "sha256": "8d81f22f41a2f0014b08ffd109779bc4b20eda01c82369894c2707b9184b88b6"
+      "sha256": "76b8f3e74940c9f5bf08c986c44db098a29f11a349d0746fe15e84bd27d7f506"
     },
     {
       "path": "LICENSE-STATUS.md",
-      "sha256": "9f14c8f2923f4b1e8436b0500ee344053f6d9e3c8b1ee1adad9299171df52cd3"
+      "sha256": "980a1af322ce35232a7bd49de67ae044dc94c035812c0158c2ff5a3afcfe82e5"
     },
     {
       "path": "LICENSE.md",
@@ -34,7 +34,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "f628438cca2398dab249ccf6e6280df8dd2f0befc21e4c8d488c940c39699d0c"
+      "sha256": "fd16f829a9304a1e7eb68aa836c0758bfed4f862238096de96d8cc7abd103988"
     },
     {
       "path": "SECURITY.md",
@@ -42,7 +42,7 @@
     },
     {
       "path": "START-HERE.md",
-      "sha256": "79021b6f700b62b6b88d6f77d74c78fece220dfd604d364fb185c4e95b62211e"
+      "sha256": "cd9bc566e83bd2bcefa94abd0f368eef9f391e5b4ebc974419cf01aae5a2d22f"
     },
     {
       "path": "SUPPORT.md",
@@ -58,7 +58,7 @@
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "sha256": "0aa1939956ab8a96b9a0cb70818f1058e91fa5b267f834a10cfd411125dea051"
+      "sha256": "904c87b8d475f8bc5397928ad764b9bf92cfe6d2d31feefd65df307f9dd6fe76"
     },
     {
       "path": "docs/GROK.md",
@@ -78,11 +78,11 @@
     },
     {
       "path": "docs/ZERION-PREPARATION.md",
-      "sha256": "81a9915313a988f6aec396719347a202481115f9b2bb73a8e9862f28b1f4fba4"
+      "sha256": "a1d89c91f784e76d86fcba12789e4a5873641aceba85630985429d0a9ed02fc7"
     },
     {
       "path": "docs/knowledge/README.md",
-      "sha256": "1f7236b93db6c64588d76f73f3d09314d6a6c7a2359c73cb21d611b2fdf660d1"
+      "sha256": "0eed7b5de55f2e52b3d70e6989b4821c363e1745fd44651a4dc32965a5eca37c"
     },
     {
       "path": "docs/superpowers/plans/2026-09-10-scout-knowledge.md",

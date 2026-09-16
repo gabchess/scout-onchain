@@ -21,7 +21,15 @@ Preparation calls the installed executable with a fixed argument list and `--pre
 
 ## Supported intent
 
-Use `swap`, `transfer` or `bridge`. Chains are ethereum, base, arbitrum, optimism, polygon and avalanche. Arc is refused; Scout reads Arc wallets but does not prepare Arc transactions. Supply an exact source wallet, token contract addresses (or `native`), a positive decimal amount string, and a unique request ID. Transfers require a destination. Bridges require both the destination chain and wallet. Slippage uses basis points with a maximum of 500. Solana preparation is unsupported in this version.
+Use `swap`, `transfer` or `bridge`. Chains are ethereum, base, arbitrum, optimism, polygon, avalanche and arc (Arc mainnet only). Supply an exact source wallet, token contract addresses (or `native`), a positive decimal amount string, and a unique request ID. Transfers require a destination. Bridges require both the destination chain and wallet. Slippage uses basis points with a maximum of 500. Solana preparation is unsupported in this version.
+
+### Arc
+
+Scout accepts Arc, but Zerion's live chain flags decide whether each action works. Scout has not observed those flags. When the Zerion CLI refuses a chain or action, the result is `chain_not_supported` with a `reason` and `retryable=false`. This status applies to every chain. Scout never retries; use a new request ID if Zerion's support changes.
+
+On Arc, native USDC and the token at `0x3600000000000000000000000000000000000000` are the same balance. Scout refuses a swap between them. Use native USDC for transfers, swaps and bridges. The 0x3600 token is accepted for transfers only. Every Arc USDC response carries `arc_usdc_note`.
+
+Arc USDC amounts allow at most 6 decimal places. Scout checks that a native USDC transfer is one plain value transfer to the destination, and that native USDC value equals the amount at 18 decimals. It decodes the 0x3600 `transfer` call and checks recipient and amount at 6 decimals. Decimals are checked only for native USDC and the 0x3600 transfer; other Arc tokens, such as EURC, are not decimal-checked. Scout enforces Arc chain id 5042, taken from Arc's docs.
 
 Example tool arguments, using illustrative addresses:
 

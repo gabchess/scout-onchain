@@ -6,7 +6,7 @@ Give an agent this repository folder or ZIP. Install Scout as its onchain portfo
 
 1. Claude Code: [`START-HERE.md`](START-HERE.md) Route 1 (`scout-portfolio@scout-portfolio-manager`).
 2. Codex: install Route 2 skills and attach the Route 2 stdio MCP command for tools.
-3. Plain Python: Route 3 (`uv sync` / venv). Package version **0.6.0**.
+3. Plain Python: Route 3 (`uv sync` / venv). Package version **0.6.1**.
 4. Cursor or any MCP client: adapt [`.mcp.json`](.mcp.json) into the host MCP config, replacing the plugin-root token with an absolute checkout path when the client does not expand it. Needs `uv` on PATH. Starts `zpm-mcp` over stdio.
 
 Discovery is not a successful install. Ask the host to list MCP tools or run `/portfolio-intelligence What is my PnL?`.
@@ -24,7 +24,7 @@ Discovery is not a successful install. Ask the host to list MCP tools or run `/p
 - Call live Zerion until the operator supplies one complete authorization mode.
 - Claim channel push alerts, WalletConnect, or automated buys.
 - Call execute, sign, or submit. Those tools are not available.
-- Offer unsigned preparation on Arc. It refuses `arc` until a later reviewed release.
+- Claim that an action works on Arc. Unsigned preparation accepts Arc mainnet (native USDC for transfer, swap and bridge; the 0x3600 token for transfers only), but Zerion's live chain flags decide, and a refusal returns `chain_not_supported`.
 - Paste secrets into the repo, prompts, fixtures, or logs.
 
 ## Knowledge and advisory tools

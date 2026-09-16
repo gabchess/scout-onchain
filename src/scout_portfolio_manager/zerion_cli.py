@@ -12,14 +12,33 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from .zerion_prepare import PreparationIntent, PreparationService
+from .zerion_prepare import (
+    CHAIN_REFUSAL_REASONS,
+    ChainNotSupported,
+    PreparationIntent,
+    PreparationService,
+)
 
 SUPPORTED_CLI_VERSION = "1.9.1"
 MAX_OUTPUT = 1_048_576
 
 
+def _chain_refusal_code(stderr: bytes) -> str | None:
+    """Return a refusal code only for the exact CLI error object; never keep its text."""
+    try:
+        value = json.loads(stderr.decode("utf-8"))
+    except (ValueError, RecursionError):
+        return None
+    error = value.get("error") if isinstance(value, dict) else None
+    code = error.get("code") if isinstance(error, dict) else None
+    return code if isinstance(code, str) and code in CHAIN_REFUSAL_REASONS else None
+
+
 def bounded_process(argv: list[str], env: Mapping[str, str], timeout: float = 30) -> str:
-    """Bound both output streams and kill the process group on failure."""
+    """Bound both output streams and kill the process group on failure.
+
+    Exit 1 with empty stdout and a known chain refusal on stderr raises ChainNotSupported.
+    """
     process = subprocess.Popen(
         argv,
         stdin=subprocess.DEVNULL,
@@ -33,6 +52,7 @@ def bounded_process(argv: list[str], env: Mapping[str, str], timeout: float = 30
     selector.register(process.stdout, selectors.EVENT_READ, "stdout")
     selector.register(process.stderr, selectors.EVENT_READ, "stderr")
     output = bytearray()
+    errors = bytearray()
     total = 0
     deadline = time.monotonic() + timeout
     try:
@@ -48,10 +68,12 @@ def bounded_process(argv: list[str], env: Mapping[str, str], timeout: float = 30
                 total += len(chunk)
                 if total > MAX_OUTPUT:
                     raise ValueError("Zerion output limit exceeded")
-                if key.data == "stdout":
-                    output.extend(chunk)
+                (output if key.data == "stdout" else errors).extend(chunk)
         process.wait(timeout=max(0.01, deadline - time.monotonic()))
         if process.returncode != 0:
+            code = _chain_refusal_code(bytes(errors)) if process.returncode == 1 else None
+            if code is not None and not output:
+                raise ChainNotSupported(code)
             raise ValueError("Zerion preparation failed")
         return output.decode("utf-8")
     finally:
