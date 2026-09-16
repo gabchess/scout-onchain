@@ -6,7 +6,9 @@ server answers an unauthenticated GET with HTTP 402 and payment requirements,
 the client signs a micropayment, retries with a payment signature header, and
 receives the data. Zerion documents this as an alternative authorization
 method for the same endpoints, so this module reuses ``ZerionAPIReader``
-unchanged and only swaps the transport.
+unchanged and only swaps the transport. Scout validates the selected
+requirements before signing: Base mainnet, the exact USDC contract, an
+explicit recipient, a positive timeout, and the configured payment cap.
 
 The observed wallet remains an address-only input. A separate operator-funded
 payment wallet signs USDC data fees. Scout installs a hook immediately before
@@ -29,6 +31,7 @@ from threading import Lock
 from typing import Any, Mapping, Optional
 from urllib.request import Request
 
+from .x402_guard import X402GuardError, X402PaymentGuard, has_payment_signature
 from .zerion_api import (
     API_KEY_ENV,
     CHAIN_ENV,
@@ -190,11 +193,44 @@ def build_payment_session(
         # Never echo the exception text: it may contain the key material.
         raise ZerionConfigError(f"{X402_KEY_ENV} is not a valid EVM private key") from None
     client = x402ClientSync()
-    register_exact_evm_client(client, EthAccountSigner(account))
+    # The helper defaults to an eip155:* wildcard. Scout's configured payment
+    # wallet is only authorized for the documented Base analytics rail.
+    from .x402_guard import BASE_NETWORK
+
+    register_exact_evm_client(client, EthAccountSigner(account), networks=BASE_NETWORK)
     client.set_spend_controls({"max_amount_per_payment": max_usd_per_call})
-    if spend_budget is not None:
-        client.on_before_payment_creation(spend_budget.reserve_payment)
+    guard = X402PaymentGuard.from_usd(max_usd_per_call)
+    client.on_before_payment_creation(
+        lambda context: preflight_before_signing(
+            context,
+            guard=guard,
+            spend_budget=spend_budget,
+        )
+    )
     return x402_requests(client)
+
+
+def preflight_before_signing(
+    context: Any,
+    *,
+    guard: X402PaymentGuard,
+    spend_budget: Optional[X402SpendBudget] = None,
+) -> None:
+    """Validate the selected payment before reserving budget or signing.
+
+    The x402 SDK invokes this callback after it has parsed a 402 response and
+    immediately before it creates a payment payload. Requirement validation is
+    intentionally before budget reservation: an unsupported chain, asset,
+    recipient or amount must not burn Scout's allowance.
+    """
+    try:
+        guard.validate(context)
+    except X402GuardError as exc:
+        raise ZerionAPIPaymentError(
+            f"Scout refused x402 payment before signing ({exc.code})", status=402
+        ) from None
+    if spend_budget is not None:
+        spend_budget.reserve_payment()
 
 
 def _is_x402_payment_error(exc: Exception) -> bool:
@@ -250,6 +286,16 @@ def x402_transport(session: Any) -> Transport:
                     status=402,
                 ) from None
             raise ZerionAPITransportError("Zerion API x402 transport failed") from exc
+        response_request = getattr(response, "request", None)
+        response_request_headers = getattr(response_request, "headers", None)
+        if _is_paid_retry(response_request_headers) and not has_payment_signature(
+            response_request_headers
+        ):
+            raise ZerionAPIPaymentError(
+                "Zerion x402 retry was missing the PAYMENT-SIGNATURE header; "
+                "Scout will not accept the response",
+                status=402,
+            )
         status = getattr(response, "status_code", None)
         if status == 200:
             try:
@@ -289,6 +335,17 @@ def x402_transport(session: Any) -> Transport:
         raise ZerionAPIError(f"Zerion API returned HTTP {status}", status=status)
 
     return transport
+
+
+def _is_paid_retry(headers: Any) -> bool:
+    """Identify the x402 adapter's signed retry, not the first unpaid GET."""
+
+    if not isinstance(headers, Mapping):
+        return False
+    return any(
+        str(name).lower() in {"payment-retry", "payment-recovery"} and str(value) == "1"
+        for name, value in headers.items()
+    )
 
 
 def reader_from_env(
@@ -361,6 +418,7 @@ __all__ = [
     "build_payment_session",
     "parse_max_usd_per_call",
     "parse_max_usd_per_session",
+    "preflight_before_signing",
     "reader_from_env",
     "x402_transport",
 ]

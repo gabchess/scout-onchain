@@ -17,6 +17,12 @@ The observed wallet never signs. The x402 payment wallet does. Scout reserves th
 
 Reservations are conservative. Scout does not refund them after an ambiguous failure because a payment may have settled. A process restart creates a new budget. Use a dedicated wallet with a small balance and inspect its payment state before retrying.
 
+Before the x402 SDK signs, Scout requires the exact Base mainnet network, the
+pinned Base USDC contract, a positive atomic amount within the configured
+per-payment cap, an explicit recipient, and a positive timeout. After a paid
+retry, the transport requires a non-empty `PAYMENT-SIGNATURE` header. These
+checks do not replace facilitator verification and do not prove settlement.
+
 Asset indicators and DCA windows use synthetic price history. They are heuristic and have fixed low confidence. DCA quote fields are caller inputs or labeled fixture assumptions. The standard analytics flow does not fetch a swap quote. Optional unsigned preparation can request one through Zerion CLI.
 
 ## Secrets and data

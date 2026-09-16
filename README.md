@@ -64,6 +64,8 @@ x402 access needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the `x
 
 Scout reserves the full per-payment cap before each x402 signature. The defaults are `$0.05` per payment and `$1.05` for the process lifetime. SDK recovery payments count against the same budget. A watch report shares one wallet snapshot across its panels.
 
+Before signing, Scout accepts only exact Base mainnet USDC requirements with an explicit recipient, timeout and amount within the configured cap. It also refuses a paid retry that lacks the `PAYMENT-SIGNATURE` header.
+
 The x402 suite runs without sending funds. This repository has no verified paid live request. Read [`docs/X402.md`](docs/X402.md) before adding a payment key.
 
 ## Evidence

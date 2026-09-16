@@ -12,6 +12,7 @@ Source: `gabchess/scout-onchain` 0.5.0. Each status names the strongest evidence
 | Checks alerts | LOCAL ON DEMAND | `set_alert` writes `.scout/alerts.json`; `check_alerts` evaluates rules when called. No channel delivery is present. |
 | Uses x402 for paid Zerion reads | IMPLEMENTED, LIVE UNVERIFIED | The real SDK session builds offline. The payment wallet can sign and spend USDC. No paid live request is recorded. |
 | Caps x402 spend | TESTED OFFLINE | The defaults are `$0.05` per payment and `$1.05` per process. Scout reserves before every SDK payment payload, including recovery. |
+| Preflights x402 payment requirements | TESTED OFFLINE | Scout rejects non-Base, non-pinned-USDC, malformed or over-cap requirements before signing and rejects paid retries without `PAYMENT-SIGNATURE`. |
 | Signs with the observed wallet | ABSENT | The observed wallet is an address input. The only signer is the separate x402 payment wallet when configured. |
 | Executes trades | ABSENT | Public tools stop at proposal preview or optional unsigned EVM preparation. No signing, broadcast or settlement tool ships. |
 | Runs through MCP | TESTED LOCALLY | The registry is pinned to the public tool set. Host-specific activation still needs inspection after installation. |

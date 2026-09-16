@@ -8,12 +8,21 @@ spend-cap validation, typed transport errors (including the non-retryable
 402), and credentials that never appear in errors, reprs, or results.
 """
 
+import json
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.request import Request
 
 import pytest
 
 from scout_portfolio_manager.host import ReadOnlyHost
+from scout_portfolio_manager.x402_guard import (
+    BASE_NETWORK,
+    BASE_USDC_ADDRESS,
+    X402GuardError,
+    X402PaymentGuard,
+    has_payment_signature,
+)
 from scout_portfolio_manager.x402_source import (
     DEFAULT_MAX_PAYMENTS_PER_SESSION,
     DEFAULT_MAX_USD_PER_CALL,
@@ -24,6 +33,7 @@ from scout_portfolio_manager.x402_source import (
     X402SpendBudget,
     parse_max_usd_per_call,
     parse_max_usd_per_session,
+    preflight_before_signing,
     x402_transport,
 )
 from scout_portfolio_manager.x402_source import (
@@ -40,6 +50,12 @@ from scout_portfolio_manager.zerion_api import (
 )
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "portfolio.json"
+SOLANA_FAILURE_FIXTURE = (
+    Path(__file__).resolve().parents[1]
+    / "fixtures"
+    / "x402"
+    / "solana_compute_limit_regression.json"
+)
 WALLET = "0xabc123"
 # Deliberately not a real key shape: tests never build a real signer.
 X402_KEY = "x402-payment-secret"
@@ -61,10 +77,11 @@ TRANSACTIONS_PAYLOAD = {"data": []}
 class FakeResponse:
     """Minimal stand-in for a requests.Response."""
 
-    def __init__(self, status_code, payload=None, headers=None):
+    def __init__(self, status_code, payload=None, headers=None, request_headers=None):
         self.status_code = status_code
         self.headers = headers or {}
         self.content = b"" if payload is None else _dumps(payload)
+        self.request = SimpleNamespace(headers=request_headers or {})
 
 
 def _dumps(payload):
@@ -76,11 +93,19 @@ def _dumps(payload):
 class FakeSession:
     """Injected session: records GET URLs, replays canned responses."""
 
-    def __init__(self, status_code=200, payload=None, raise_exc=None, headers=None):
+    def __init__(
+        self,
+        status_code=200,
+        payload=None,
+        raise_exc=None,
+        headers=None,
+        request_headers=None,
+    ):
         self.status_code = status_code
         self.payload = payload
         self.raise_exc = raise_exc
         self.headers = headers
+        self.request_headers_for_response = request_headers or {}
         self.gets = []
         self.request_headers = []
 
@@ -92,13 +117,133 @@ class FakeSession:
         payload = self.payload
         if payload is None:
             payload = POSITIONS_PAYLOAD if "/positions/" in url else TRANSACTIONS_PAYLOAD
-        return FakeResponse(self.status_code, payload=payload, headers=self.headers)
+        return FakeResponse(
+            self.status_code,
+            payload=payload,
+            headers=self.headers,
+            request_headers=self.request_headers_for_response,
+        )
 
 
 def x402_env(**extra):
     env = {X402_KEY_ENV: X402_KEY, WALLET_ENV: WALLET}
     env.update(extra)
     return env
+
+
+def payment_context(
+    *,
+    network=BASE_NETWORK,
+    asset=BASE_USDC_ADDRESS,
+    amount="50000",
+    scheme="exact",
+    pay_to="0x1111111111111111111111111111111111111111",
+    timeout=60,
+):
+    requirements = SimpleNamespace(
+        network=network,
+        asset=asset,
+        amount=amount,
+        scheme=scheme,
+        pay_to=pay_to,
+        max_timeout_seconds=timeout,
+    )
+    return SimpleNamespace(selected_requirements=requirements)
+
+
+# --- payment preflight -------------------------------------------------------
+
+
+def test_x402_guard_accepts_only_bounded_base_usdc_requirements():
+    X402PaymentGuard.from_usd("$0.05").validate(payment_context())
+
+
+@pytest.mark.parametrize(
+    "changes,code",
+    [
+        ({"network": "solana:mainnet"}, "chain_not_allowed"),
+        ({"asset": "0x0000000000000000000000000000000000000001"}, "asset_not_allowed"),
+        ({"amount": "50001"}, "payment_cap_exceeded"),
+        ({"pay_to": ""}, "pay_to_missing"),
+        ({"max_timeout_seconds": 0}, "timeout_invalid"),
+    ],
+)
+def test_x402_guard_fails_closed_on_requirement_changes(changes, code):
+    context = payment_context()
+    for key, value in changes.items():
+        setattr(context.selected_requirements, key, value)
+    with pytest.raises(X402GuardError) as caught:
+        X402PaymentGuard.from_usd("$0.05").validate(context)
+    assert caught.value.code == code
+
+
+def test_payment_signature_header_check_is_case_insensitive_and_non_empty():
+    assert has_payment_signature({"payment-signature": "signed"})
+    assert not has_payment_signature({"PAYMENT-SIGNATURE": "  "})
+    assert not has_payment_signature({"Accept": "application/json"})
+
+
+def test_preflight_validates_before_reserving_budget():
+    events = []
+
+    class RecordingGuard:
+        def validate(self, context):
+            events.append("validate")
+
+    class RecordingBudget:
+        def reserve_payment(self):
+            events.append("reserve")
+
+    preflight_before_signing(
+        payment_context(),
+        guard=RecordingGuard(),
+        spend_budget=RecordingBudget(),
+    )
+
+    assert events == ["validate", "reserve"]
+
+
+def test_rejected_preflight_does_not_reserve_budget():
+    events = []
+
+    class RecordingBudget:
+        def reserve_payment(self):
+            events.append("reserve")
+
+    with pytest.raises(ZerionAPIPaymentError, match="chain_not_allowed"):
+        preflight_before_signing(
+            payment_context(network="solana:mainnet"),
+            guard=X402PaymentGuard.from_usd("$0.05"),
+            spend_budget=RecordingBudget(),
+        )
+
+    assert events == []
+
+
+def test_solana_failure_fixture_preserves_reported_compute_split():
+    fixture = json.loads(SOLANA_FAILURE_FIXTURE.read_text())
+
+    assert fixture["source"].endswith("/coinbase/cdp-sdk/issues/795")
+    assert fixture["evidence_status"] == "reported_issue_not_live_reproduction"
+    assert fixture["independent_reproduction"] is False
+    assert [(case["compute_units"], case["reported_outcome"]) for case in fixture["cases"]] == [
+        (20000, "accepted"),
+        (100000, "rejected"),
+    ]
+
+
+def test_solana_failure_fixture_is_rejected_before_any_budget_reservation():
+    fixture = json.loads(SOLANA_FAILURE_FIXTURE.read_text())
+    budget = X402SpendBudget.from_strings("$0.05", "$0.05")
+
+    with pytest.raises(ZerionAPIPaymentError, match="chain_not_allowed"):
+        preflight_before_signing(
+            payment_context(network=fixture["network"]),
+            guard=X402PaymentGuard.from_usd("$0.05"),
+            spend_budget=budget,
+        )
+
+    assert budget.status()["reserved_payments"] == 0
 
 
 # --- spend cap validation -----------------------------------------------------
@@ -276,6 +421,16 @@ def test_402_after_payment_attempt_is_typed_payment_error_not_retryable():
     assert caught.value.status == 402
 
 
+def test_paid_retry_without_payment_signature_is_rejected():
+    session = FakeSession(
+        status_code=200,
+        request_headers={"Payment-Retry": "1"},
+    )
+    transport = x402_transport(session)
+    with pytest.raises(ZerionAPIPaymentError, match="PAYMENT-SIGNATURE"):
+        transport(Request("https://api.zerion.io/v1/wallets/x/positions/"), 10.0)
+
+
 def test_host_maps_payment_error_to_payment_kind_non_retryable():
     session = FakeSession(status_code=402, payload={})
     host = ReadOnlyHost(x402_reader_from_env(x402_env(), session=session))
@@ -423,10 +578,13 @@ def test_real_sdk_session_builds_with_spend_cap():
     # A real requests.Session with the x402 payment adapters mounted.
     assert hasattr(session, "get")
     client = session.get_adapter("https://")._client
+    assert set(client._schemes) == {BASE_NETWORK}
     hook = client._before_payment_creation_hooks[-1]
-    hook(None)
+    hook(payment_context())
+    with pytest.raises(ZerionAPIPaymentError, match="chain_not_allowed"):
+        hook(payment_context(network="solana:mainnet"))
     with pytest.raises(ZerionAPIBudgetError):
-        hook(None)
+        hook(payment_context())
 
 
 def test_real_sdk_rejects_invalid_private_key_without_leaking():
