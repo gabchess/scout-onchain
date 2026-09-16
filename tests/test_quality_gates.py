@@ -64,8 +64,7 @@ def test_plugin_manifest_requires_both_console_scripts(tmp_path):
         pyproject.replace('scout-portfolio-manager = "scout_portfolio_manager.mcp_server:main"', "")
     )
     assert check_plugin_manifest(tmp_path) == [
-        "project.scripts.scout-portfolio-manager must be "
-        "'scout_portfolio_manager.mcp_server:main'"
+        "project.scripts.scout-portfolio-manager must be 'scout_portfolio_manager.mcp_server:main'"
     ]
 
 

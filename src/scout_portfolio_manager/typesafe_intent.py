@@ -48,6 +48,7 @@ PROBABILITY_SUM_TOLERANCE = 0.01
 #: Failure counts by kind. Never holds request text, keys or response bodies.
 failure_counts: Counter[str] = Counter()
 
+
 class TypeSafeUnavailable(Exception):
     """The call failed; the caller falls back to the 0.6.1 result."""
 
