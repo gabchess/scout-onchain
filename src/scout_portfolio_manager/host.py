@@ -24,7 +24,7 @@ from .analytics import (
     rsi,
     sma,
 )
-from .contracts import PortfolioSnapshot, Transaction
+from .contracts import Holding, PortfolioSnapshot, Transaction
 from .dca import DcaIntent, parse_dca_request
 from .dca_windows import SIZING_FRACTION, classify_window
 from .knowledge import search_knowledge
@@ -107,6 +107,28 @@ def _acquisition_basis_usd(transactions: Sequence[Transaction], asset: str) -> f
     """
     buys = [t for t in transactions if t.asset == asset and t.kind == "buy"]
     return sum(t.value_usd + t.fee_usd for t in buys)
+
+
+def _holdings_by_asset(holdings: Sequence[Holding]) -> List[Holding]:
+    """Merge holdings that share an exact asset label, in first-seen order.
+
+    Zerion returns one position per chain, so a multi-chain wallet can report
+    USDC on Arc and USDC on Base as two rows. The transaction ledger carries no
+    chain either, so per-asset basis and PnL are calculated once per label.
+    """
+    merged: Dict[str, Holding] = {}
+    for holding in holdings:
+        seen = merged.get(holding.asset)
+        merged[holding.asset] = (
+            holding
+            if seen is None
+            else Holding(
+                asset=holding.asset,
+                quantity=seen.quantity + holding.quantity,
+                value_usd=seen.value_usd + holding.value_usd,
+            )
+        )
+    return list(merged.values())
 
 
 class ReadOnlyHost:
@@ -535,7 +557,7 @@ class ReadOnlyHost:
         target = asset.upper() if asset else None
         results: List[PnlResult] = []
         unknown: List[str] = []
-        for holding in snapshot.holdings:
+        for holding in _holdings_by_asset(snapshot.holdings):
             if target and holding.asset.upper() != target:
                 continue
             basis = _acquisition_basis_usd(snapshot.transactions, holding.asset)
@@ -624,7 +646,9 @@ class ReadOnlyHost:
                 }
 
         basis = _acquisition_basis_usd(snapshot.transactions, asset)
-        holding = next((h for h in snapshot.holdings if h.asset.upper() == asset), None)
+        holding = next(
+            (h for h in _holdings_by_asset(snapshot.holdings) if h.asset.upper() == asset), None
+        )
         if basis and holding is not None:
             indicators["drawdown_from_cost_basis_pct"] = round(
                 drawdown_from_cost_basis_pct(holding.value_usd, basis), 4

@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 - 2026-09-16
+
+### Arc reads
+
+- Read Arc wallet positions and transactions through the existing Zerion API and x402 sources. Zerion lists Arc as chain ID `arc`. No new configuration is needed.
+- Add a Zerion-shaped Arc fixture and offline tests for reads, USDC gas fees, PnL, risk, reports, alerts and proposals.
+- Merge holdings with the same asset label before PnL and asset analysis. A wallet holding USDC on two chains previously got two USDC PnL rows and double-counted realized PnL.
+- Refuse Arc in unsigned Zerion CLI preparation with an explicit read-only message.
+
+### x402 hardening
 
 - Add fail-closed x402 preflight checks for Base mainnet, the pinned Base USDC
   contract, explicit recipients and timeouts, atomic amount caps, and the

@@ -1,0 +1,201 @@
+{
+  "_fixture": "Synthetic Zerion-shaped responses for an Arc wallet. Shapes follow Zerion's positions and transactions schema; every value is invented for offline tests. Arc uses USDC as native gas. Zerion chain id: arc.",
+  "wallet_address": "0x00000000000000000000000000000000000a4c01",
+  "positions": {
+    "links": {
+      "self": "https://api.zerion.io/v1/wallets/0x00000000000000000000000000000000000a4c01/positions/"
+    },
+    "data": [
+      {
+        "type": "positions",
+        "id": "arc-usdc-native",
+        "attributes": {
+          "parent": null,
+          "protocol": null,
+          "name": "Asset",
+          "position_type": "wallet",
+          "quantity": {"int": "1500000000", "decimals": 6, "float": 1500.0, "numeric": "1500.000000"},
+          "value": 1500.0,
+          "price": 1.0,
+          "fungible_info": {
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "flags": {"verified": true},
+            "implementations": [{"chain_id": "arc", "address": null, "decimals": 6}]
+          },
+          "flags": {"displayable": true, "is_trash": false}
+        },
+        "relationships": {"chain": {"data": {"type": "chains", "id": "arc"}}}
+      },
+      {
+        "type": "positions",
+        "id": "arc-eurc",
+        "attributes": {
+          "parent": null,
+          "protocol": null,
+          "name": "Asset",
+          "position_type": "wallet",
+          "quantity": {"int": "1000000000", "decimals": 6, "float": 1000.0, "numeric": "1000.000000"},
+          "value": 1170.0,
+          "price": 1.17,
+          "fungible_info": {
+            "name": "Euro Coin",
+            "symbol": "EURC",
+            "flags": {"verified": true},
+            "implementations": [
+              {"chain_id": "arc", "address": "0x00000000000000000000000000000000000e0c01", "decimals": 6}
+            ]
+          },
+          "flags": {"displayable": true, "is_trash": false}
+        },
+        "relationships": {"chain": {"data": {"type": "chains", "id": "arc"}}}
+      },
+      {
+        "type": "positions",
+        "id": "arc-unpriced-token",
+        "attributes": {
+          "parent": null,
+          "protocol": null,
+          "name": "Asset",
+          "position_type": "wallet",
+          "quantity": {"int": "4200000000000000000000", "decimals": 18, "float": 4200.0, "numeric": "4200.0"},
+          "value": null,
+          "price": null,
+          "fungible_info": {
+            "name": "Unpriced Arc Token",
+            "symbol": "UNPRICED",
+            "flags": {"verified": false},
+            "implementations": [
+              {"chain_id": "arc", "address": "0x00000000000000000000000000000000000f0c01", "decimals": 18}
+            ]
+          },
+          "flags": {"displayable": true, "is_trash": false}
+        },
+        "relationships": {"chain": {"data": {"type": "chains", "id": "arc"}}}
+      },
+      {
+        "type": "positions",
+        "id": "base-usdc",
+        "attributes": {
+          "parent": null,
+          "protocol": null,
+          "name": "Asset",
+          "position_type": "wallet",
+          "quantity": {"int": "500000000", "decimals": 6, "float": 500.0, "numeric": "500.000000"},
+          "value": 500.0,
+          "price": 1.0,
+          "fungible_info": {
+            "name": "USD Coin",
+            "symbol": "USDC",
+            "flags": {"verified": true},
+            "implementations": [
+              {"chain_id": "base", "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "decimals": 6}
+            ]
+          },
+          "flags": {"displayable": true, "is_trash": false}
+        },
+        "relationships": {"chain": {"data": {"type": "chains", "id": "base"}}}
+      }
+    ]
+  },
+  "transaction_pages": [
+    {
+      "links": {
+        "self": "https://api.zerion.io/v1/wallets/0x00000000000000000000000000000000000a4c01/transactions/",
+        "next": "https://api.zerion.io/v1/wallets/0x00000000000000000000000000000000000a4c01/transactions/?currency=usd&page%5Bafter%5D=arc-page-2&page%5Bsize%5D=100"
+      },
+      "data": [
+        {
+          "type": "transactions",
+          "id": "arc-trade-usdc-eurc",
+          "attributes": {
+            "operation_type": "trade",
+            "mined_at": "2026-09-16T15:10:00Z",
+            "status": "confirmed",
+            "fee": {
+              "fungible_info": {"name": "USD Coin", "symbol": "USDC"},
+              "quantity": {"int": "10000", "decimals": 6, "float": 0.01, "numeric": "0.010000"},
+              "price": 1.0,
+              "value": 0.01
+            },
+            "transfers": [
+              {
+                "fungible_info": {"name": "USD Coin", "symbol": "USDC"},
+                "direction": "out",
+                "quantity": {"int": "1000000000", "decimals": 6, "float": 1000.0, "numeric": "1000.000000"},
+                "value": 1000.0,
+                "price": 1.0
+              },
+              {
+                "fungible_info": {"name": "Euro Coin", "symbol": "EURC"},
+                "direction": "in",
+                "quantity": {"int": "1000000000", "decimals": 6, "float": 1000.0, "numeric": "1000.000000"},
+                "value": 1150.0,
+                "price": 1.15
+              }
+            ]
+          },
+          "relationships": {"chain": {"data": {"type": "chains", "id": "arc"}}}
+        },
+        {
+          "type": "transactions",
+          "id": "arc-receive-usdc",
+          "attributes": {
+            "operation_type": "receive",
+            "mined_at": "2026-09-16T14:00:00Z",
+            "status": "confirmed",
+            "transfers": [
+              {
+                "fungible_info": {"name": "USD Coin", "symbol": "USDC"},
+                "direction": "in",
+                "quantity": {"int": "2500000000", "decimals": 6, "float": 2500.0, "numeric": "2500.000000"},
+                "value": 2500.0,
+                "price": 1.0
+              }
+            ]
+          },
+          "relationships": {"chain": {"data": {"type": "chains", "id": "arc"}}}
+        }
+      ]
+    },
+    {
+      "links": {
+        "self": "https://api.zerion.io/v1/wallets/0x00000000000000000000000000000000000a4c01/transactions/?currency=usd&page%5Bafter%5D=arc-page-2&page%5Bsize%5D=100"
+      },
+      "data": [
+        {
+          "type": "transactions",
+          "id": "base-trade-eth-usdc",
+          "attributes": {
+            "operation_type": "trade",
+            "mined_at": "2026-09-01T12:00:00Z",
+            "status": "confirmed",
+            "fee": {
+              "fungible_info": {"name": "Ethereum", "symbol": "ETH"},
+              "quantity": {"int": "8000000000000", "decimals": 18, "float": 0.000008, "numeric": "0.000008"},
+              "price": 2500.0,
+              "value": 0.02
+            },
+            "transfers": [
+              {
+                "fungible_info": {"name": "Ethereum", "symbol": "ETH"},
+                "direction": "out",
+                "quantity": {"int": "200000000000000000", "decimals": 18, "float": 0.2, "numeric": "0.2"},
+                "value": 500.0,
+                "price": 2500.0
+              },
+              {
+                "fungible_info": {"name": "USD Coin", "symbol": "USDC"},
+                "direction": "in",
+                "quantity": {"int": "500000000", "decimals": 6, "float": 500.0, "numeric": "500.000000"},
+                "value": 500.0,
+                "price": 1.0
+              }
+            ]
+          },
+          "relationships": {"chain": {"data": {"type": "chains", "id": "base"}}}
+        }
+      ]
+    }
+  ]
+}

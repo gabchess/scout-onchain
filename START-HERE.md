@@ -1,6 +1,6 @@
 # Start here
 
-Scout 0.5.0 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
+Scout 0.6.0 is a portable onchain portfolio manager for Claude Code, Codex, Python, and stdio MCP clients. Its tools let the host agent choose a response path from the user's request.
 
 After setup, ask:
 
@@ -116,7 +116,7 @@ Restart the client and inspect its MCP tool list. Host activation remains unveri
 
 ## Optional Zerion data
 
-API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. x402 mode needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. The modes are exclusive. See [`docs/X402.md`](docs/X402.md) before enabling payments.
+API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. x402 mode needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. The modes are exclusive. Reads cover every chain Zerion returns for the wallet, including Arc; no extra setting is needed. See [`docs/X402.md`](docs/X402.md) before enabling payments.
 
 The live source reads positions and mapped transactions. Call-time failure returns a typed error with `fallback: "none"`.
 
@@ -134,7 +134,7 @@ Open `http://127.0.0.1:8787`. The demo reads the fixture and ignores Zerion envi
 
 The fourteen tools cover portfolio observation, PnL, DCA proposals, asset analysis, local alerts, portfolio risk, assumed yield, DeFi reference lookup and Zerion action planning. Optional preparation produces an unsigned proposal and exposes its local status. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
 
-Live price history and pushed alerts are outside version 0.5.0. Trade approval, execution, and settlement are not part of this package.
+Live price history and pushed alerts are outside version 0.6.0. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.
 

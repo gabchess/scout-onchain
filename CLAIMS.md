@@ -1,10 +1,11 @@
 # Claim status
 
-Source: `gabchess/scout-onchain` 0.5.0. Each status names the strongest evidence in this repository.
+Source: `gabchess/scout-onchain` 0.6.0. Each status names the strongest evidence in this repository.
 
 | Claim | Status | Evidence and limit |
 |:--|:--|:--|
 | Reads Zerion holdings and transaction history | TESTED OFFLINE | Injected-response tests cover positions and paginated transactions. No current live API-key call is recorded. |
+| Reads Arc wallets through Zerion | TESTED OFFLINE | A Zerion-shaped Arc fixture runs through the reader, PnL, risk, report and alert paths. No live Arc call is recorded. |
 | Calculates portfolio PnL | VERIFIED WITH FIXTURE | `get_pnl` uses observed buys for cost basis and leaves missing basis unknown. |
 | Offers several agent routes | VERIFIED IN PACKAGE | The host and MCP registry expose portfolio, PnL, DCA proposal, analysis, DCA-window, and local-alert tools. |
 | Builds DCA proposals | VERIFIED WITH FIXTURE | Complete previews require approval and expose no execution action. Optional quote fields come from the caller. |
@@ -13,10 +14,17 @@ Source: `gabchess/scout-onchain` 0.5.0. Each status names the strongest evidence
 | Uses x402 for paid Zerion reads | IMPLEMENTED, LIVE UNVERIFIED | The real SDK session builds offline. The payment wallet can sign and spend USDC. No paid live request is recorded. |
 | Caps x402 spend | TESTED OFFLINE | The defaults are `$0.05` per payment and `$1.05` per process. Scout reserves before every SDK payment payload, including recovery. |
 | Preflights x402 payment requirements | TESTED OFFLINE | Scout rejects non-Base, non-pinned-USDC, malformed or over-cap requirements before signing and rejects paid retries without `PAYMENT-SIGNATURE`. |
+| Prepares unsigned transactions on Arc | ABSENT | Preparation refuses `arc` as a source or destination chain. |
 | Signs with the observed wallet | ABSENT | The observed wallet is an address input. The only signer is the separate x402 payment wallet when configured. |
 | Executes trades | ABSENT | Public tools stop at proposal preview or optional unsigned EVM preparation. No signing, broadcast or settlement tool ships. |
 | Runs through MCP | TESTED LOCALLY | The registry is pinned to the public tool set. Host-specific activation still needs inspection after installation. |
 | Ships under MIT | VERIFIED IN TREE | See [`LICENSE.md`](LICENSE.md) and [`LICENSE-STATUS.md`](LICENSE-STATUS.md). |
+
+## 0.6.0 Arc reads
+
+Zerion's [supported blockchains page](https://developers.zerion.io/supported-blockchains) lists Arc with chain ID `arc` and token and transaction coverage. It marks DeFi and NFT coverage as absent. Scout sends no chain filter, so Arc positions and transactions arrive with the wallet's other chains. Arc pays gas in USDC, and Scout maps that fee like any other. Holdings with the same asset label, such as USDC on Arc and on Base, are merged before PnL and asset analysis.
+
+Arc's EVM chain ID was reported as 5042. Zerion's docs do not show it and Scout does not use it. Unsigned Zerion CLI preparation on Arc is out of scope for 0.6.0.
 
 ## 0.5.0 advisory features
 
