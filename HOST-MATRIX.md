@@ -10,7 +10,7 @@ Evidence labels describe what this repository can show. `CI` means a workflow bl
 | Portfolio tool set | Root `.mcp.json` runs `scout-portfolio-manager` | Attach the stdio route separately | `scout-portfolio-manager` (alias `zpm-mcp`) | CI; tool names and execution boundary are pinned; wheel smoke starts the server offline |
 | Fixture default | Yes | Available after MCP attachment | Yes | CI; offline suite |
 | Zerion API-key source | Yes | Available after MCP attachment | Yes | TEST; no current live call |
-| Zerion x402 source | Only in your own MCP entry with `SCOUT_ENABLE_X402=1`; the plugin never sets it | Available after MCP attachment, with `SCOUT_ENABLE_X402=1` | Yes, with `SCOUT_ENABLE_X402=1` | TEST; SDK and budget hook run offline, live paid call unverified |
+| Zerion x402 source | Only in your own MCP entry with `SCOUT_ENABLE_X402=1`; the plugin sets it to empty | Available after MCP attachment, with `SCOUT_ENABLE_X402=1` | Yes, with `SCOUT_ENABLE_X402=1` | TEST; SDK and budget hook run offline, live paid call unverified |
 | Arc wallet reads | Yes | Available after MCP attachment | Yes | TEST; Zerion-shaped Arc fixture offline, live call unverified |
 | Unsigned preparation on Arc | Accepted, live availability unverified | Available after MCP attachment | Accepted, live availability unverified | TEST; fixture envelopes and fake CLI refusals offline, no live Arc preparation |
 | Local alert file | `~/.scout/alerts.json` or `ZPM_ALERTS_PATH` | Same, written by the attached MCP runtime | Same | TEST; alert path tests with a temp `HOME` |
@@ -28,11 +28,15 @@ Evidence labels describe what this repository can show. `CI` means a workflow bl
 | Scout plugin start with `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` set | Claude Code 2.1.273, `--plugin-dir` | Connected; no tool was called, so no Zerion request was made |
 | Scout plugin start with a shell x402 key and wallet, no API key, no opt-in | Claude Code 2.1.273, `--plugin-dir` | Connected; stderr notice names `SCOUT_ENABLE_X402`; fixture |
 | Shell environment inherited by a plugin MCP child | Claude Code 2.1.273 | Yes, the full shell environment, including `ZERION_X402_PRIVATE_KEY`, with or without an `env` block |
+| Explicit `"SCOUT_ENABLE_X402": ""` in plugin `.mcp.json` with `SCOUT_ENABLE_X402=1` exported in the launching shell | Claude Code 2.1.273, env probe | The child sees the variable with an empty value: the explicit entry overrides the inherited one |
+| Scout plugin start with `SCOUT_ENABLE_X402=1`, an x402 key and a wallet exported, no API key | Claude Code 2.1.273, `--plugin-dir` | Connected; stderr notice names `SCOUT_ENABLE_X402`; fixture |
 | Shell environment inherited by a configured MCP child | Codex CLI 0.154.0 | No. The child gets a fixed set (`HOME`, `PATH`, `SHELL`, `USER`, `LOGNAME`, `TMPDIR`, locale and SDK paths). Other variables arrive only through `env` or `env_vars` |
 
 `claude plugin marketplace add gabchess/scout-onchain` tracks the default branch (`main`) unless you pass a ref. Tag-pinned installs use a ref.
 
 `claude plugin validate .` is a release check; run it before tagging.
+
+The `uvx --from git+...@v0.7.0` routes (Codex, Cursor, Python) resolve dependencies fresh and do not read `uv.lock`, and a git tag can be moved. Only the Claude Code plugin route uses the lockfile.
 
 ## Names
 

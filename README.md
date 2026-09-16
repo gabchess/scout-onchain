@@ -96,7 +96,7 @@ Scout reads your wallet when its server starts with `ZERION_API_KEY` and `ZERION
 
 API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; the standard analytics flow does not fetch a swap quote itself.
 
-x402 access needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra, in your own MCP server entry. The Claude Code plugin never turns x402 on. This route pays for analytics reads from a separate Base wallet. It does not authorize trading.
+x402 access needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra, set on your own MCP server entry. The Claude Code plugin sets `SCOUT_ENABLE_X402` to empty, which overrides an exported shell value; do not export it in your shell, because other entries inherit it. This route pays for analytics reads from a separate Base wallet. It does not authorize trading.
 
 Scout reserves the full per-payment cap before each x402 signature. The defaults are `$0.05` per payment and `$1.05` for the process lifetime. SDK recovery payments count against the same budget. A watch report shares one wallet snapshot across its panels.
 

@@ -13,7 +13,7 @@ The Zerion source reads positions and mapped transactions for one address. Autho
 | API key | `ZERION_API_KEY` | Read Zerion endpoints |
 | x402 | `ZERION_X402_PRIVATE_KEY` plus `SCOUT_ENABLE_X402=1` | Sign and pay USDC analytics fees on Base |
 
-x402 needs the explicit `SCOUT_ENABLE_X402=1` opt-in (breaking change in 0.7.0). Without it an x402 key is ignored with a stderr notice that contains no values. The Claude Code plugin forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` and never sets the opt-in, so a payment key inherited from the shell cannot start paying.
+x402 needs the explicit `SCOUT_ENABLE_X402=1` opt-in (breaking change in 0.7.0). Without it an x402 key is ignored with a stderr notice that contains no values. The Claude Code plugin forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` and sets `SCOUT_ENABLE_X402` and `SCOUT_TYPESAFE` to empty values. Claude Code passes the launching shell's environment to plugin servers, and those explicit empty values override exported ones (verified on Claude Code 2.1.273). Any other MCP entry inherits an exported `SCOUT_ENABLE_X402=1`, so set it only on the one server entry that should pay.
 
 The observed wallet never signs. The x402 payment wallet does. Scout reserves the full configured payment cap before each SDK payment payload. This includes recovery attempts. The defaults are `$0.05` per payment and `$1.05` across one process lifetime.
 
@@ -49,6 +49,6 @@ Explicit operator configuration enables unsigned EVM preparation through Zerion 
 
 ## Optional TypeSafe DCA intent
 
-`SCOUT_TYPESAFE=1` plus an absolute `SCOUT_DOTENV` path turns on one outbound call type to `https://api.typesafe.ai/v1/systemone`. It is off by default and the Claude Code plugin never enables it. `TYPESAFE_API_KEY` is read only from that file, never from the process environment. Scout opens the file without following symlinks and refuses it unless it is a regular file owned by the current user, with no group or world permission bits, and at most 64 KiB. Only the `TYPESAFE_API_KEY` line is parsed.
+`SCOUT_TYPESAFE=1` plus an absolute `SCOUT_DOTENV` path turns on one outbound call type to `https://api.typesafe.ai/v1/systemone`. It is off by default. The Claude Code plugin sets `SCOUT_TYPESAFE` to empty, which overrides an exported shell value. `TYPESAFE_API_KEY` is read only from that file, never from the process environment. Scout opens the file without following symlinks and refuses it unless it is a regular file owned by the current user, with no group or world permission bits, and at most 64 KiB. Only the `TYPESAFE_API_KEY` line is parsed.
 
 The request never follows redirects, has one 3 second deadline and no retry. What leaves the machine is described in [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md). A model answer can never make a DCA request `ready`: any value it picks returns `needs_confirmation`, and `preview_dca` still requires approval with no execution path.

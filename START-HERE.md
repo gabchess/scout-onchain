@@ -43,6 +43,8 @@ codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scou
 
 The plugin carries skills. The `codex mcp add` line attaches the tools. Restart Codex and confirm the `scout-portfolio` tools appear. Whether Codex also starts the root `.mcp.json` by itself is unverified, so keep the explicit MCP line.
 
+`uvx` installs from the `v0.7.0` tag and resolves dependencies fresh within the version ranges in `pyproject.toml`; it does not read `uv.lock`, and a git tag can be moved. The Claude Code plugin route is the only one pinned to the lockfile.
+
 Codex passes only a fixed set of variables (such as `HOME` and `PATH`) to MCP servers. To use your own wallet, list the names in `~/.codex/config.toml`:
 
 ```toml
@@ -107,7 +109,7 @@ uv run scout-portfolio-manager
 
 API-key mode needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. It reads positions and mapped transactions. Reads cover every chain Zerion returns for the wallet, including Arc; no extra setting is needed.
 
-x402 mode needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra, all in your own MCP server entry. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. `SCOUT_ENABLE_X402=1` is new in 0.7.0: older x402 entries without it now read the fixture or API-key mode. The Claude Code plugin never sets it, even when your shell exports an x402 key. The modes are exclusive. See [`docs/X402.md`](docs/X402.md) before enabling payments.
+x402 mode needs `SCOUT_ENABLE_X402=1`, `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra, all in your own MCP server entry. It pays for analytics access from a separate Base wallet. `ZERION_X402_PAY_TO` pins the only address Scout will pay. `SCOUT_ENABLE_X402=1` is new in 0.7.0: older x402 entries without it now read the fixture or API-key mode. The Claude Code plugin sets it to empty in its own entry, which overrides a value exported in the launching shell (verified on Claude Code 2.1.273). Set it only on the server entry that should pay, never in your shell profile. The modes are exclusive. See [`docs/X402.md`](docs/X402.md) before enabling payments.
 
 The live source reads positions and mapped transactions. Call-time failure returns a typed error with `fallback: "none"`.
 
@@ -123,7 +125,7 @@ Put your key in a file you own with mode `600`, for example `~/.config/scout/typ
 TYPESAFE_API_KEY=...
 ```
 
-Then add two variables to your own Scout MCP entry. The Claude Code plugin does not forward them, so Claude Code users add a user-scoped server with `claude mcp add`:
+Then add two variables to your own Scout MCP entry. The Claude Code plugin does not forward `SCOUT_DOTENV` and sets `SCOUT_TYPESAFE` to empty, so Claude Code users add a user-scoped server with `claude mcp add`:
 
 ```bash
 claude mcp add scout-portfolio-typesafe --scope user \

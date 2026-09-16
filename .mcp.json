@@ -11,7 +11,9 @@
       ],
       "env": {
         "ZERION_API_KEY": "${ZERION_API_KEY:-}",
-        "ZERION_WALLET_ADDRESS": "${ZERION_WALLET_ADDRESS:-}"
+        "ZERION_WALLET_ADDRESS": "${ZERION_WALLET_ADDRESS:-}",
+        "SCOUT_ENABLE_X402": "",
+        "SCOUT_TYPESAFE": ""
       }
     }
   }

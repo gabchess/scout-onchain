@@ -16,6 +16,7 @@
 - `mcp` is a core dependency. The `[mcp]` extra still resolves and is empty.
 - New console script `scout-portfolio-manager`, the same entry point as `zpm-mcp`.
 - The Claude Code plugin launches `scout-portfolio-manager` and forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`, using `${VAR:-}` so unset variables start the fixture.
+- The plugin also sets `SCOUT_ENABLE_X402` and `SCOUT_TYPESAFE` to empty values, which override values exported in the shell that launches Claude Code.
 - CI builds the wheel and starts it offline from a clean directory.
 - New `try` skill (`/scout-portfolio:try`): a fixed zero-key tour on the bundled fixture.
 - Docs lead with install commands pinned to the `v0.7.0` tag for Claude Code, Codex, Cursor and pipx.
