@@ -1,6 +1,7 @@
 """Small dependency-free secret scan for the local MVP."""
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -34,8 +35,26 @@ PATTERNS = [
 EXCLUDED = {".git", ".venv", "__pycache__", ".pytest_cache", ".claude"}
 
 
+def _is_dotenv(path: Path) -> bool:
+    return path.name == ".env" or (path.name.startswith(".env.") and path.name != ".env.example")
+
+
+def dotenv_findings(root: Path) -> list[str]:
+    """A committed .env is a finding. In a git checkout only tracked files count."""
+    try:
+        tracked = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z"],
+            capture_output=True,
+            check=True,
+        ).stdout.decode()
+        candidates = [root / name for name in tracked.split("\0") if name]
+    except (OSError, subprocess.CalledProcessError):
+        candidates = [p for p in root.rglob(".env*") if not any(x in EXCLUDED for x in p.parts)]
+    return [f"{path}: committed .env file" for path in candidates if _is_dotenv(path)]
+
+
 def scan(root: Path) -> list[str]:
-    findings: list[str] = []
+    findings: list[str] = dotenv_findings(root)
     scanner_path = Path(__file__).resolve()
     for path in root.rglob("*"):
         if (

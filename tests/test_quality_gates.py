@@ -74,3 +74,19 @@ def test_plugin_manifest_requires_mcp_core_dependency(tmp_path):
     (tmp_path / "README.md").write_text((ROOT / "README.md").read_text())
     (tmp_path / "pyproject.toml").write_text(pyproject.replace(', "mcp>=1.2,<2"]', "]"))
     assert check_plugin_manifest(tmp_path) == ["project.dependencies must include the mcp SDK"]
+
+
+def test_secret_scan_rejects_a_dotenv_file_outside_git(tmp_path):
+    (tmp_path / ".env").write_text("NOTHING=here\n")
+    (tmp_path / ".env.example").write_text("NOTHING=\n")
+    assert scan(tmp_path) == [f"{tmp_path / '.env'}: committed .env file"]
+
+
+def test_secret_scan_rejects_only_tracked_dotenv_in_git(tmp_path):
+    import subprocess
+
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    (tmp_path / ".env").write_text("NOTHING=here\n")
+    assert scan(tmp_path) == []
+    subprocess.run(["git", "-C", str(tmp_path), "add", "-f", ".env"], check=True)
+    assert scan(tmp_path) == [f"{tmp_path / '.env'}: committed .env file"]

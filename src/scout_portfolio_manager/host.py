@@ -32,13 +32,14 @@ from .analytics import (
     sma,
 )
 from .contracts import Holding, PortfolioSnapshot, Transaction
-from .dca import DcaIntent, parse_dca_request
+from .dca import DcaIntent
 from .dca_windows import SIZING_FRACTION, classify_window
 from .knowledge import search_knowledge
 from .pnl import PnlResult, calculate_pnl
 from .portfolio import FixturePortfolioReader, PortfolioReader
 from .price_history import FixturePriceHistoryReader, PriceHistoryReader
 from .safety import build_preview
+from .typesafe_intent import resolve_dca_request
 from .zerion_api import (
     ZerionAPIAuthError,
     ZerionAPIBudgetError,
@@ -870,13 +871,14 @@ class ReadOnlyHost:
         )
 
     def parse_dca_request(self, text: str) -> Dict[str, Any]:
-        parsed = parse_dca_request(text)
+        parsed = resolve_dca_request(text)
         return {
             "status": parsed.status,
             "boundary": "propose",
             "intent": parsed.intent.model_dump(mode="json"),
             "missing": parsed.missing,
             "question": parsed.question,
+            "field_sources": parsed.field_sources,
         }
 
     def preview_dca(
@@ -889,14 +891,15 @@ class ReadOnlyHost:
         quote_expiry: Optional[Union[str, datetime]] = None,
         max_fee_usd: Optional[float] = None,
     ) -> Dict[str, Any]:
-        parsed = parse_dca_request(text)
+        parsed = resolve_dca_request(text)
         if parsed.status != "ready":
             return {
-                "status": "needs_clarification",
+                "status": parsed.status,
                 "boundary": "propose",
                 "intent": parsed.intent.model_dump(mode="json"),
                 "missing": parsed.missing,
                 "question": parsed.question,
+                "field_sources": parsed.field_sources,
                 "preview": None,
             }
 
@@ -950,6 +953,7 @@ class ReadOnlyHost:
             "intent": intent.model_dump(mode="json"),
             "missing": [],
             "question": None,
+            "field_sources": parsed.field_sources,
             "assumed": assumed,
             "preview": preview.model_dump(mode="json"),
             "approval_state": preview.approval_state,
