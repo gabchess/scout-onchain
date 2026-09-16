@@ -15,7 +15,8 @@ payment wallet signs USDC data fees. Scout installs a hook immediately before
 each payment payload is created, including recovery payloads, and reserves the
 configured per-payment maximum against one process-lifetime budget.
 
-Enable with ``ZERION_X402_PRIVATE_KEY`` + ``ZERION_WALLET_ADDRESS``. Setting
+Enable with ``ZERION_X402_PRIVATE_KEY`` + ``ZERION_WALLET_ADDRESS`` +
+``ZERION_X402_PAY_TO``, which pins the only address Scout will pay. Setting
 both ``ZERION_API_KEY`` and ``ZERION_X402_PRIVATE_KEY`` is a configuration
 error: one authorization mode per source, decided loudly at startup.
 """
@@ -56,6 +57,7 @@ logger = logging.getLogger(__name__)
 X402_KEY_ENV = "ZERION_X402_PRIVATE_KEY"
 X402_MAX_ENV = "ZERION_X402_MAX_USD_PER_CALL"
 X402_SESSION_MAX_ENV = "ZERION_X402_MAX_USD_PER_SESSION"
+X402_PAY_TO_ENV = "ZERION_X402_PAY_TO"
 
 #: Default per-payment spend cap. The x402 SDK enforces it before signing.
 DEFAULT_MAX_USD_PER_CALL = "$0.05"
@@ -170,6 +172,7 @@ def build_payment_session(
     max_usd_per_call: str = DEFAULT_MAX_USD_PER_CALL,
     *,
     spend_budget: Optional[X402SpendBudget] = None,
+    pay_to: Optional[str] = None,
 ) -> Any:
     """Build a requests Session that settles x402 payments automatically.
 
@@ -197,9 +200,14 @@ def build_payment_session(
     # wallet is only authorized for the documented Base analytics rail.
     from .x402_guard import BASE_NETWORK
 
+    # EthAccountSigner is load-bearing for the spend cap, not just a default.
+    # The SDK's gas-sponsoring extension signs approve(Permit2, MaxUint256), an
+    # unlimited USDC allowance that no cap or recipient pin bounds. It is gated
+    # on isinstance(signer, ClientEvmSignerWithSignTransaction), which this
+    # signer is not. Swapping in EthAccountSignerWithRPC re-opens that path.
     register_exact_evm_client(client, EthAccountSigner(account), networks=BASE_NETWORK)
     client.set_spend_controls({"max_amount_per_payment": max_usd_per_call})
-    guard = X402PaymentGuard.from_usd(max_usd_per_call)
+    guard = X402PaymentGuard.from_usd(max_usd_per_call, pay_to=pay_to)
     client.on_before_payment_creation(
         lambda context: preflight_before_signing(
             context,
@@ -375,6 +383,18 @@ def reader_from_env(
             f"x402 Zerion source; {WALLET_ENV} is missing. The fixture is not "
             "used as a fallback."
         )
+    pay_to = (environ.get(X402_PAY_TO_ENV) or "").strip()
+    if not pay_to:
+        # Gated at startup, not in the guard. Only here can Scout tell "the
+        # operator never configured a recipient" from "the server named the
+        # wrong one"; the second is a 402 mid-run and reads like an endpoint
+        # fault. Unset used to mean "pay whoever the server names", which is an
+        # attacker-chosen address as correct behavior.
+        raise ZerionConfigError(
+            f"{X402_KEY_ENV} and {X402_PAY_TO_ENV} must both be set to enable "
+            f"the x402 Zerion source; {X402_PAY_TO_ENV} is missing. It pins the "
+            "only address Scout may pay."
+        )
     max_usd = parse_max_usd_per_call(
         (environ.get(X402_MAX_ENV) or "").strip() or DEFAULT_MAX_USD_PER_CALL
     )
@@ -393,7 +413,7 @@ def reader_from_env(
     budget = X402SpendBudget.from_strings(max_usd, max_session_usd)
     chain = (environ.get(CHAIN_ENV) or "").strip() or "multi-chain"
     if session is None:
-        session = build_payment_session(x402_key, max_usd, spend_budget=budget)
+        session = build_payment_session(x402_key, max_usd, spend_budget=budget, pay_to=pay_to)
     # api_key=None: the reader sends no Authorization header; the transport
     # settles access per request via x402 instead.
     api_reader = ZerionAPIReader(ZerionAPIConfig(api_key=None), transport=x402_transport(session))

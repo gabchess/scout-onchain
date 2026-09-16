@@ -60,11 +60,11 @@ Open `http://127.0.0.1:8787`.
 
 API-key access needs `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`. Scout reads Zerion positions and mapped transactions. A host may pass external quote fields into `preview_dca`; the standard analytics flow does not fetch a swap quote itself.
 
-x402 access needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, and the `x402` dependency extra. This route pays for analytics reads from a separate Base wallet. It does not authorize trading.
+x402 access needs `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO`, and the `x402` dependency extra. This route pays for analytics reads from a separate Base wallet. It does not authorize trading.
 
 Scout reserves the full per-payment cap before each x402 signature. The defaults are `$0.05` per payment and `$1.05` for the process lifetime. SDK recovery payments count against the same budget. A watch report shares one wallet snapshot across its panels.
 
-Before signing, Scout accepts only exact Base mainnet USDC requirements with an explicit recipient, timeout and amount within the configured cap. It also refuses a paid retry that lacks the `PAYMENT-SIGNATURE` header.
+Before signing, Scout accepts only exact Base mainnet USDC requirements with an explicit recipient, a timeout no longer than 600 seconds, and an amount within the configured cap. `ZERION_X402_PAY_TO` is required and pins the one address it may pay. It also refuses a paid retry that lacks the `PAYMENT-SIGNATURE` header.
 
 The x402 suite runs without sending funds. This repository has no verified paid live request. Read [`docs/X402.md`](docs/X402.md) before adding a payment key.
 

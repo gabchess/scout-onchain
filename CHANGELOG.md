@@ -7,6 +7,11 @@
   `PAYMENT-SIGNATURE` retry header.
 - Restrict the x402 EVM registration to Scout's documented Base analytics rail;
   keep non-Base and Solana behavior outside the current signer path.
+- Require `ZERION_X402_PAY_TO`, pinning the one recipient Scout will pay. x402
+  refuses to start without it; previously an unset pin accepted any recipient
+  the server named.
+- Cap the server-supplied x402 timeout at 600 seconds, so a hostile 402 cannot
+  leave a redeemable authorization outstanding indefinitely.
 
 ## 0.5.0 - 2026-09-10
 

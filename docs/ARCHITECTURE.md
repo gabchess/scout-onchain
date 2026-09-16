@@ -19,7 +19,7 @@ The synthetic fixture is the default. The server selects one live authorization 
 | Mode | Required values | External effect |
 |:--|:--|:--|
 | API key | `ZERION_API_KEY`, `ZERION_WALLET_ADDRESS` | Read Zerion endpoints |
-| x402 | `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS` | Read Zerion analytics and pay data fees from a dedicated Base wallet |
+| x402 | `ZERION_X402_PRIVATE_KEY`, `ZERION_WALLET_ADDRESS`, `ZERION_X402_PAY_TO` | Read Zerion analytics and pay data fees from a dedicated Base wallet |
 
 Partial or conflicting configuration stops startup. A call-time API failure returns a typed error and keeps `fallback: "none"`.
 
