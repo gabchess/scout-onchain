@@ -88,9 +88,12 @@ class AlertStore:
         return rules
 
     def _write_all(self, rules: List[AlertRule]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         payload = json.dumps([r.model_dump(mode="json") for r in rules], indent=2)
-        self.path.write_text(payload)
+        fd = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as handle:
+            handle.write(payload)
+        os.chmod(self.path, 0o600)
 
     def add(self, *, asset: str, kind: str, threshold: float) -> AlertRule:
         rules = self._read_all()

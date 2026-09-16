@@ -95,3 +95,18 @@ def test_legacy_file_ignored_when_env_override_set(tmp_path, monkeypatch):
     monkeypatch.setenv("ZPM_ALERTS_PATH", str(target))
     host = ReadOnlyHost(FIXTURE)
     assert host._alert_store.list() == []
+
+
+def test_alert_store_directory_and_file_are_private(tmp_path):
+    target = tmp_path / "fresh" / "alerts.json"
+    AlertStore(target).add(asset="eth", kind="rsi_below", threshold=30.0)
+    assert target.parent.stat().st_mode & 0o777 == 0o700
+    assert target.stat().st_mode & 0o777 == 0o600
+
+
+def test_existing_world_readable_alert_file_is_tightened(tmp_path):
+    target = tmp_path / "alerts.json"
+    target.write_text("[]")
+    target.chmod(0o644)
+    AlertStore(target).add(asset="eth", kind="rsi_below", threshold=30.0)
+    assert target.stat().st_mode & 0o777 == 0o600
