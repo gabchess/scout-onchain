@@ -21,7 +21,7 @@ Preparation calls the installed executable with a fixed argument list and `--pre
 
 ## Supported intent
 
-Use `swap`, `transfer` or `bridge`. Chains are ethereum, base, arbitrum, optimism, polygon and avalanche. Supply an exact source wallet, token contract addresses (or `native`), a positive decimal amount string, and a unique request ID. Transfers require a destination. Bridges require both the destination chain and wallet. Slippage uses basis points with a maximum of 500. Solana preparation is unsupported in this version.
+Use `swap`, `transfer` or `bridge`. Chains are ethereum, base, arbitrum, optimism, polygon and avalanche. Arc is refused; Scout reads Arc wallets but does not prepare Arc transactions. Supply an exact source wallet, token contract addresses (or `native`), a positive decimal amount string, and a unique request ID. Transfers require a destination. Bridges require both the destination chain and wallet. Slippage uses basis points with a maximum of 500. Solana preparation is unsupported in this version.
 
 Example tool arguments, using illustrative addresses:
 
