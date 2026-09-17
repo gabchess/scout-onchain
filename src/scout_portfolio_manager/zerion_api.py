@@ -456,10 +456,10 @@ class ZerionAPIReader:
             return self._transport(self._build_request(url), self.config.timeout_seconds)
         except ZerionAPIError:
             raise
-        except Exception as exc:
+        except Exception:
             # Injected transports are untrusted boundaries too; never expose
             # their exception text because it may contain credentials or URLs.
-            raise ZerionAPITransportError("Zerion API transport failed") from exc
+            raise ZerionAPITransportError("Zerion API transport failed") from None
 
     def _headers(self) -> Dict[str, str]:
         if self.config.api_key is None:

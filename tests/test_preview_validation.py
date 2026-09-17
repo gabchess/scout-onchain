@@ -1,5 +1,5 @@
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -15,7 +15,7 @@ INTENT = DcaIntent(
     source="wallet:0xabc123",
     destination="wallet:0xdef456",
 )
-EXPIRY = datetime(2026, 9, 3, 13, tzinfo=timezone.utc)
+EXPIRY = datetime.now(timezone.utc) + timedelta(days=1)
 
 
 @pytest.mark.parametrize(
@@ -72,6 +72,6 @@ def test_preview_rejects_timezone_naive_expiry():
             expected_output=0.13,
             fees_usd=3,
             slippage_pct=0.5,
-            quote_expiry=datetime(2026, 9, 3, 13),
+            quote_expiry=datetime(2999, 1, 1, 13),
             max_fee_usd=5,
         )

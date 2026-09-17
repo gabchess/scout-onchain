@@ -546,6 +546,7 @@ def test_transport_exception_maps_to_transport_error():
         reader.snapshot()
     # The injected transport is an untrusted boundary: raw text never leaks.
     assert "connection reset" not in str(caught.value)
+    assert caught.value.__cause__ is None
 
 
 def test_wrapped_budget_stop_maps_to_typed_budget_error():

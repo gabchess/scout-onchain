@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -22,6 +23,11 @@ from scout_portfolio_manager.zerion_api import (
 )
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "portfolio.json"
+READY_TEXT = "DCA $300 ETH on ethereum weekly from wallet:0xabc123 to wallet:0xdef456"
+
+
+def _future_iso(hours: int = 1) -> str:
+    return (datetime.now(timezone.utc) + timedelta(hours=hours)).isoformat()
 
 
 @pytest.fixture
@@ -102,7 +108,7 @@ def test_preview_dca_boundary_is_approve(host: ReadOnlyHost):
         expected_output=0.13,
         fees_usd=3.0,
         slippage_pct=0.5,
-        quote_expiry="2026-09-03T13:00:00+00:00",
+        quote_expiry=_future_iso(),
         max_fee_usd=5.0,
     )
     assert result["status"] == "preview_ready"
@@ -139,7 +145,7 @@ def test_preview_dca_mints_distinct_preview_ids(host: ReadOnlyHost):
         expected_output=0.13,
         fees_usd=3.0,
         slippage_pct=0.5,
-        quote_expiry="2026-09-03T13:00:00+00:00",
+        quote_expiry=_future_iso(),
         max_fee_usd=5.0,
     )
     a = host.preview_dca(text, **kwargs)
@@ -247,3 +253,49 @@ def test_default_host_packaged_analyze_asset_without_repo_cwd(tmp_path, monkeypa
     result = host.analyze_asset("ETH")
     assert result["status"] == "ok"
     assert result.get("price_history_source", {}).get("kind") == "fixture"
+
+
+@pytest.mark.parametrize(
+    "overrides,field",
+    [
+        ({"quote_expiry": "tomorrow"}, "quote_expiry"),
+        ({"fees_usd": -1}, "fees_usd"),
+        ({"fees_usd": "abc"}, "fees_usd"),
+        ({"slippage_pct": -0.5}, "slippage_pct"),
+        ({"quote_expiry": "2999-01-01T13:00:00"}, "quote_expiry"),
+        ({"quote_expiry": "2020-01-01T13:00:00+00:00"}, "quote_expiry"),
+        ({"max_fee_usd": 1.0}, "max_fee_usd"),
+    ],
+)
+def test_preview_dca_returns_typed_status_for_invalid_quote_input(
+    host: ReadOnlyHost, overrides, field
+):
+    kwargs = dict(
+        expected_output=0.13,
+        fees_usd=3.0,
+        slippage_pct=0.5,
+        quote_expiry=_future_iso(),
+        max_fee_usd=5.0,
+    )
+    kwargs.update(overrides)
+    result = host.preview_dca(READY_TEXT, **kwargs)
+    assert result["status"] == "invalid_quote_input"
+    assert result["field"] == field
+    assert result["preview"] is None
+    assert "preview_id" not in result
+    rendered = repr(result).lower()
+    assert "validation error" not in rendered and "pydantic" not in rendered
+    assert "'abc'" not in rendered and "tomorrow" not in rendered
+
+
+def test_preview_dca_rejects_zero_amount_without_raising(host: ReadOnlyHost):
+    result = host.preview_dca(
+        "DCA $0 ETH on ethereum weekly from wallet:0xabc123 to wallet:0xdef456"
+    )
+    assert result["status"] == "invalid_intent_input"
+    assert result["field"] == "amount_usd"
+    assert result["preview"] is None
+
+
+def test_preview_dca_default_expiry_still_previews(host: ReadOnlyHost):
+    assert host.preview_dca(READY_TEXT)["status"] == "preview_ready"

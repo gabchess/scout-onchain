@@ -1,6 +1,6 @@
 # Start here
 
-Scout 0.7.0 is an onchain portfolio manager for AI agents. It runs as a local stdio MCP server inside Claude Code, Codex, Cursor, or any stdio MCP client. Its tools let the host agent choose a response path from the user's request.
+Scout 0.7.1 is an onchain portfolio manager for AI agents. It runs as a local stdio MCP server inside Claude Code, Codex, Cursor, or any stdio MCP client. Its tools let the host agent choose a response path from the user's request.
 
 After install, run the tour (`/scout-portfolio:try` in Claude Code) or ask:
 
@@ -36,14 +36,14 @@ The plugin forwards only `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS`, and start
 ## Route 2: Codex
 
 ```bash
-codex plugin marketplace add gabchess/scout-onchain --ref v0.7.0
+codex plugin marketplace add gabchess/scout-onchain --ref v0.7.1
 codex plugin add scout-portfolio --marketplace scout-portfolio-manager
-codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager
 ```
 
 The plugin carries skills. The `codex mcp add` line attaches the tools. Restart Codex and confirm the `scout-portfolio` tools appear. Whether Codex also starts the root `.mcp.json` by itself is unverified, so keep the explicit MCP line.
 
-`uvx` installs from the `v0.7.0` tag and resolves dependencies fresh within the version ranges in `pyproject.toml`; it does not read `uv.lock`, and a git tag can be moved. The Claude Code plugin route is the only one pinned to the lockfile.
+`uvx` installs from the `v0.7.1` tag and resolves dependencies fresh within the version ranges in `pyproject.toml`; it does not read `uv.lock`, and a git tag can be moved. The Claude Code plugin route is the only one pinned to the lockfile.
 
 Codex passes only a fixed set of variables (such as `HOME` and `PATH`) to MCP servers. To use your own wallet, list the names in `~/.codex/config.toml`:
 
@@ -61,7 +61,7 @@ Merge this entry into the client's MCP configuration:
   "mcpServers": {
     "scout-portfolio": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/gabchess/scout-onchain@v0.7.0", "scout-portfolio-manager"]
+      "args": ["--from", "git+https://github.com/gabchess/scout-onchain@v0.7.1", "scout-portfolio-manager"]
     }
   }
 }
@@ -74,13 +74,13 @@ Add an `env` block with `ZERION_API_KEY` and `ZERION_WALLET_ADDRESS` to read you
 With uv:
 
 ```bash
-uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager
 ```
 
 Without uv:
 
 ```bash
-pipx run --spec git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+pipx run --spec git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager
 ```
 
 As a library, install the same git ref into a virtual environment and call the host:
@@ -130,7 +130,7 @@ Then add two variables to your own Scout MCP entry. The Claude Code plugin does 
 ```bash
 claude mcp add scout-portfolio-typesafe --scope user \
   --env SCOUT_TYPESAFE=1 --env SCOUT_DOTENV=/Users/you/.config/scout/typesafe.env \
-  -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+  -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager
 ```
 
 Codex, in `~/.codex/config.toml`:
@@ -148,7 +148,7 @@ Cursor, in the Scout entry: `"env": { "SCOUT_TYPESAFE": "1", "SCOUT_DOTENV": "/U
 
 The fourteen tools cover portfolio observation, PnL, DCA proposals, asset analysis, local alerts, portfolio risk, assumed yield, DeFi reference lookup and Zerion action planning. Optional preparation produces an unsigned proposal and exposes its local status. A host agent may call one tool or combine them for a portfolio question. Complete previews keep `approval_state=required` and `execution_available=false`.
 
-Live price history and pushed alerts are outside version 0.7.0. Trade approval, execution, and settlement are not part of this package.
+Live price history and pushed alerts are outside version 0.7.1. Trade approval, execution, and settlement are not part of this package.
 
 Keep secrets and personal wallet data out of source, fixtures, prompts, logs, and issue reports. Read [`SECURITY.md`](SECURITY.md), [`DATA-AND-PRIVACY.md`](DATA-AND-PRIVACY.md), and [`SUPPORT.md`](SUPPORT.md) before using live data.
 

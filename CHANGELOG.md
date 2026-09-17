@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.1 - 2026-09-17
+
+### Behavior changes
+
+- `preview_dca` and `build_preview` reject a `quote_expiry` at or before the current time. `preview_dca` returns `invalid_quote_input` with `field: "quote_expiry"` and no preview. A caller that passed a fixed past time now gets this status instead of a preview.
+- A `quote_expiry` without a timezone is rejected the same way. Earlier, `preview_dca` raised a validation error for it.
+
+### Fixes
+
+- `preview_dca` no longer raises on bad quote input. A malformed date, a non-numeric or negative fee, negative slippage, or a max fee below the fee returns `invalid_quote_input` with the field name. Raw parser and pydantic text is never returned.
+- `preview_dca` returns `invalid_intent_input` with `field: "amount_usd"` for an amount of $0 instead of raising. The TypeSafe path no longer fills a $0 amount, so the request asks for the amount.
+- TypeSafe chain candidates keep hyphenated names: "on base-sepolia" reads `base-sepolia`, not `base`. An unknown chain name over 20 characters is dropped, not truncated.
+- TypeSafe no longer reads "once" as a one-time schedule, so "weekly, once I get paid" stays weekly. "one-time", "one time" and "onetime" still map to `one_time`.
+- Zerion API and x402 transport failures no longer chain the underlying exception, which could carry a URL or credential detail in a traceback.
+
 ## 0.7.0 - 2026-09-16
 
 ### Breaking

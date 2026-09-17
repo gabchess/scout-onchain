@@ -5,7 +5,7 @@ Evidence labels describe what this repository can show. `CI` means a workflow bl
 | Capability | Claude Code plugin | Codex skills | Generic stdio MCP | Evidence |
 |:--|:--|:--|:--|:--|
 | Skill files | Root `skills/` | Generated `codex/plugins/` copy | Outside MCP | PACKAGE; generator has a CI drift check |
-| Install command | `claude plugin marketplace add gabchess/scout-onchain` then `claude plugin install scout-portfolio@scout-portfolio-manager` | `codex plugin marketplace add gabchess/scout-onchain --ref v0.7.0`, `codex plugin add scout-portfolio --marketplace scout-portfolio-manager`, then `codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager` | One `mcpServers` entry running `uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager` | Claude: LOCAL (`--plugin-dir`, 2026-09-16); Codex MCP and Cursor: UNVERIFIED |
+| Install command | `claude plugin marketplace add gabchess/scout-onchain` then `claude plugin install scout-portfolio@scout-portfolio-manager` | `codex plugin marketplace add gabchess/scout-onchain --ref v0.7.1`, `codex plugin add scout-portfolio --marketplace scout-portfolio-manager`, then `codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager` | One `mcpServers` entry running `uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager` | Claude: LOCAL (`--plugin-dir`, 2026-09-16); Codex MCP and Cursor: UNVERIFIED |
 | Config location | Plugin root `.mcp.json`; your shell env for keys | `~/.codex/config.toml` `[mcp_servers.scout-portfolio]` | Client `mcp.json` | PACKAGE |
 | Portfolio tool set | Root `.mcp.json` runs `scout-portfolio-manager` | Attach the stdio route separately | `scout-portfolio-manager` (alias `zpm-mcp`) | CI; tool names and execution boundary are pinned; wheel smoke starts the server offline |
 | Fixture default | Yes | Available after MCP attachment | Yes | CI; offline suite |
@@ -36,7 +36,7 @@ Evidence labels describe what this repository can show. `CI` means a workflow bl
 
 `claude plugin validate .` is a release check; run it before tagging.
 
-The `uvx --from git+...@v0.7.0` routes (Codex, Cursor, Python) resolve dependencies fresh and do not read `uv.lock`, and a git tag can be moved. Only the Claude Code plugin route uses the lockfile.
+The `uvx --from git+...@v0.7.1` routes (Codex, Cursor, Python) resolve dependencies fresh and do not read `uv.lock`, and a git tag can be moved. Only the Claude Code plugin route uses the lockfile.
 
 ## Names
 

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "name": "scout-portfolio",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "release_kind": "stable",
-  "publication_status": "Publication record: https://github.com/gabchess/scout-onchain/releases/tag/v0.7.0",
+  "publication_status": "Publication record: https://github.com/gabchess/scout-onchain/releases/tag/v0.7.1",
   "license": "MIT",
   "default_behavior": "synthetic fixture with no network request",
   "primary_host": "Claude Code plugin from the gabchess/scout-onchain GitHub marketplace",
@@ -57,10 +57,10 @@
   "release_artifact_policy": "The local builder adds an entry after creating a verified ZIP. A build record is not publication evidence.",
   "release_artifacts": [
     {
-      "path": "dist/scout-portfolio-0.7.0.zip",
-      "sha256": "bcec0fcdc3439883fc5c13f4fc1dd1154006d5ec84ebc0b42bf736520180ca69",
-      "version": "0.7.0",
-      "built_at": "2026-09-16T21:20:24Z"
+      "path": "dist/scout-portfolio-0.7.1.zip",
+      "sha256": "14a1e3569f89f0d73cbe71c015bfc89fb8c14e5d0f1bee2407b0cc1bf878018b",
+      "version": "0.7.1",
+      "built_at": "2026-09-17T08:39:01Z"
     }
   ]
 }

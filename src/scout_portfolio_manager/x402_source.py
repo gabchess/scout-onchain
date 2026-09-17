@@ -293,7 +293,7 @@ def x402_transport(session: Any) -> Transport:
                     "inspect payment state before retrying",
                     status=402,
                 ) from None
-            raise ZerionAPITransportError("Zerion API x402 transport failed") from exc
+            raise ZerionAPITransportError("Zerion API x402 transport failed") from None
         response_request = getattr(response, "request", None)
         response_request_headers = getattr(response_request, "headers", None)
         if _is_paid_retry(response_request_headers) and not has_payment_signature(

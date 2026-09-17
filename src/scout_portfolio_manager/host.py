@@ -13,6 +13,8 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
+from pydantic import ValidationError
+
 from . import __version__
 from .advisory import assess_yield, plan_zerion_action, portfolio_risk, validate_shock_pct
 from .advisory_manifest import ADVISORY_TOOL_NAMES, advisory_manifest
@@ -38,7 +40,7 @@ from .knowledge import search_knowledge
 from .pnl import PnlResult, calculate_pnl
 from .portfolio import FixturePortfolioReader, PortfolioReader
 from .price_history import FixturePriceHistoryReader, PriceHistoryReader
-from .safety import build_preview
+from .safety import PreviewInputError, build_preview
 from .typesafe_intent import resolve_dca_request
 from .zerion_api import (
     ZerionAPIAuthError,
@@ -907,6 +909,20 @@ class ReadOnlyHost:
         intent = parsed.intent
         assert intent.amount_usd is not None  # ready status guarantees this
 
+        def invalid(status: str, field: str) -> Dict[str, Any]:
+            # Names the field only. Raw parser or pydantic text never reaches the caller.
+            return {
+                "status": status,
+                "boundary": "propose",
+                "field": field,
+                "intent": intent.model_dump(mode="json"),
+                "field_sources": parsed.field_sources,
+                "preview": None,
+            }
+
+        if not intent.amount_usd > 0:
+            return invalid("invalid_intent_input", "amount_usd")
+
         if expected_output is None:
             if intent.asset == "ETH":
                 expected_output = round(intent.amount_usd / DEFAULT_ETH_USD, 8)
@@ -930,22 +946,45 @@ class ReadOnlyHost:
         if max_fee_usd is None:
             max_fee_usd = DEFAULT_MAX_FEE_USD
             assumed.append(f"max_fee_usd assumed {DEFAULT_MAX_FEE_USD}")
+
+        numbers: Dict[str, float] = {}
+        for name, raw in (
+            ("expected_output", expected_output),
+            ("fees_usd", fees_usd),
+            ("slippage_pct", slippage_pct),
+            ("max_fee_usd", max_fee_usd),
+        ):
+            if isinstance(raw, bool):
+                return invalid("invalid_quote_input", name)
+            try:
+                numbers[name] = float(raw)
+            except (TypeError, ValueError):
+                return invalid("invalid_quote_input", name)
+
         if quote_expiry is None:
             expiry = datetime.now(timezone.utc) + timedelta(seconds=DEFAULT_QUOTE_TTL_SECONDS)
             assumed.append(f"quote_expiry assumed now+{DEFAULT_QUOTE_TTL_SECONDS}s")
-        elif isinstance(quote_expiry, str):
-            expiry = datetime.fromisoformat(quote_expiry.replace("Z", "+00:00"))
-        else:
+        elif isinstance(quote_expiry, datetime):
             expiry = quote_expiry
+        else:
+            try:
+                expiry = datetime.fromisoformat(str(quote_expiry).replace("Z", "+00:00"))
+            except ValueError:
+                return invalid("invalid_quote_input", "quote_expiry")
 
-        preview = build_preview(
-            intent=DcaIntent.model_validate(intent.model_dump()),
-            expected_output=float(expected_output),
-            fees_usd=float(fees_usd),
-            slippage_pct=float(slippage_pct),
-            quote_expiry=expiry,
-            max_fee_usd=float(max_fee_usd) if max_fee_usd is not None else None,
-        )
+        try:
+            preview = build_preview(
+                intent=DcaIntent.model_validate(intent.model_dump()),
+                quote_expiry=expiry,
+                **numbers,
+            )
+        except PreviewInputError as exc:
+            return invalid("invalid_quote_input", exc.field)
+        except ValidationError as exc:
+            locs = [err["loc"][0] for err in exc.errors() if err["loc"]]
+            field = str(locs[0]) if locs else "max_fee_usd"
+            status = "invalid_intent_input" if field == "amount_usd" else "invalid_quote_input"
+            return invalid(status, field)
         return {
             "status": "preview_ready",
             "boundary": "preview",
