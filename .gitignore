@@ -14,3 +14,5 @@ skills-lock.json
 .DS_Store
 .scout/
 scout-report.html
+docs/superpowers/
+.superpowers/
