@@ -236,7 +236,6 @@ SCHEDULE_SYNONYMS = {
     "one-time": "one_time",
     "one time": "one_time",
     "onetime": "one_time",
-    "once": "one_time",
 }
 _NEGATION = re.compile(r"\b(?:not|no|except|excluding|without|instead\s+of|rather\s+than)\b", re.I)
 
@@ -263,7 +262,9 @@ def _find(text: str, pattern: str, mapping: Mapping[str, str], group: int = 0) -
 
 
 def find_candidates(redacted: str) -> Dict[str, List[Candidate]]:
-    chain_pattern = rf"\bon\s+({_alternation(list(CHAIN_SYNONYMS))}|[a-z][a-z0-9-]{{0,19}})\b"
+    chain_pattern = (
+        rf"\bon\s+({_alternation(list(CHAIN_SYNONYMS))}|[a-z][a-z0-9-]{{0,19}})(?![\w-])"
+    )
     chains = []
     for match in re.finditer(chain_pattern, redacted, re.I):
         word = re.sub(r"\s+", " ", match.group(1).lower())
@@ -434,6 +435,8 @@ def resolve_dca_request(
             value: Any = distinct[0]
             if field == "amount_usd":
                 value = float(value.lstrip("$"))
+                if not value > 0:
+                    continue
             values[field] = value
             sources[field] = "regex" if base_values[field] == value else "synonym"
         elif distinct:

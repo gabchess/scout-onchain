@@ -81,7 +81,7 @@ CORPUS = [
     "put $50 into ether every week on base from wallet:a to rail:b",
     "$200 budget, put $50 weekly into ETH, not SOL, on arbitrum from wallet:a to rail:b",
     "buy ETH, not SOL, $25 daily on op mainnet from wallet:a to wallet:b",
-    "my base currency is USD, $10 of bitcoin once on arc from wallet:a to rail:b",
+    "my base currency is USD, $10 of bitcoin one-time on arc from wallet:a to rail:b",
     "$50 ETH weekly on base then $50 again from wallet:a to rail:b",
     "",
 ]
@@ -626,3 +626,47 @@ def test_negation_lookback_stops_at_clause_punctuation(tmp_path):
     assert [(c.value, c.negated) for c in found["asset"]] == [("ETH", False), ("SOL", True)]
     assert [(c.value, c.negated) for c in found["schedule"]] == [("weekly", False)]
     assert [(c.value, c.negated) for c in found["chain"]] == [("base", False)]
+
+
+# --- 0.7.1 hardening -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("$50 ETH weekly on base-sepolia from wallet:a to rail:b", ["base-sepolia"]),
+        ("$50 ETH weekly on arc-testnet from wallet:a to rail:b", ["arc-testnet"]),
+        ("$50 ETH weekly on base from wallet:a to rail:b", ["base"]),
+        ("$50 ETH weekly on base. from wallet:a to rail:b", ["base"]),
+        ("on arbitrum-sepolia", ["arbitrum-sepolia"]),
+    ],
+)
+def test_hyphenated_chain_names_are_not_truncated(text, expected):
+    assert [c.value for c in ts.find_candidates(text)["chain"]] == expected
+
+
+def test_over_long_hyphenated_chain_is_dropped_not_truncated():
+    found = ts.find_candidates("on abcdefghijklmnopqrst-uvw and on short")["chain"]
+    assert [c.value for c in found] == ["short"]
+
+
+def test_once_is_not_a_schedule_synonym(tmp_path):
+    text = "my base currency is USD, $10 of bitcoin once on arc from wallet:a to rail:b"
+    result = ts.resolve_dca_request(text, _env(tmp_path), transport=StubTransport())
+    assert result.intent.schedule is None and "schedule" in result.missing
+
+
+def test_weekly_once_i_get_paid_stays_weekly(tmp_path):
+    text = "$50 ETH weekly, once I get paid, on base from wallet:a to rail:b"
+    transport = StubTransport(error=AssertionError("no call expected"))
+    result = ts.resolve_dca_request(text, _env(tmp_path), transport=transport)
+    assert transport.calls == []
+    assert result.intent.schedule == "weekly"
+
+
+def test_zero_amount_is_not_filled_on_the_typesafe_path(tmp_path):
+    text = "$0 ETH weekly on base from wallet:a to rail:b"
+    transport = StubTransport(error=AssertionError("no call expected"))
+    result = ts.resolve_dca_request(text, _env(tmp_path), transport=transport)
+    assert result.intent.amount_usd is None
+    assert result.status == "needs_clarification" and "amount_usd" in result.missing

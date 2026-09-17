@@ -1,6 +1,6 @@
 import math
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -48,6 +48,14 @@ class DcaPreview(BaseModel):
         return self
 
 
+class PreviewInputError(ValueError):
+    """A preview input failed validation. ``field`` names the input, never its value."""
+
+    def __init__(self, field: str, message: str) -> None:
+        super().__init__(message)
+        self.field = field
+
+
 def build_preview(
     *,
     intent: DcaIntent,
@@ -69,6 +77,10 @@ def build_preview(
         )
     ):
         raise ValueError("complete DCA intent required for preview")
+    if quote_expiry.tzinfo is None or quote_expiry.utcoffset() is None:
+        raise PreviewInputError("quote_expiry", "quote_expiry must include a timezone")
+    if quote_expiry <= datetime.now(timezone.utc):
+        raise PreviewInputError("quote_expiry", "quote_expiry must be in the future")
     # The completeness guard above establishes these fields for type checkers.
     assert intent.asset is not None
     assert intent.amount_usd is not None

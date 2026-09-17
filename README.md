@@ -1,6 +1,6 @@
 # Scout
 
-> **Scout 0.7.0:** Install Scout in Claude Code, Codex or Cursor with no clone, and try it with `/scout-portfolio:try`. The browser demo is gone. x402 now needs `SCOUT_ENABLE_X402=1`. See [release downloads](https://github.com/gabchess/scout-onchain/releases/tag/v0.7.0), [what changed](CHANGELOG.md) and [claim status](CLAIMS.md).
+> **Scout 0.7.1:** A patch release. `preview_dca` now rejects expired quotes, timezone-naive expiries and a $0 amount with a typed status instead of an error. Install Scout in Claude Code, Codex or Cursor with no clone, and try it with `/scout-portfolio:try`. See [release downloads](https://github.com/gabchess/scout-onchain/releases/tag/v0.7.1), [what changed](CHANGELOG.md) and [claim status](CLAIMS.md).
 
 <p align="center">
   <img src="docs/scout-mascot-corgi.png" width="180" height="180" alt="Scout, a corgi mascot for the onchain portfolio manager" />
@@ -9,7 +9,7 @@
 <p align="center"><strong>An onchain portfolio manager for AI agents.</strong></p>
 
 <p align="center">
-  <a href="CLAIMS.md"><img alt="version 0.7.0" src="https://img.shields.io/badge/version-0.7.0-0B57D0" /></a>
+  <a href="CLAIMS.md"><img alt="version 0.7.1" src="https://img.shields.io/badge/version-0.7.1-0B57D0" /></a>
   <a href="LICENSE.md"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-2ea44f" /></a>
   <a href="SECURITY.md"><img alt="DCA proposal only" src="https://img.shields.io/badge/DCA-proposal-6e7781" /></a>
 </p>
@@ -28,7 +28,7 @@ The host is customizable. It works with bundled sample data, a Zerion API key, o
 | Draft a weekly ETH DCA | Clarified intent and an approval-required proposal |
 | Check my alerts | One local, on-demand evaluation |
 
-Market indicators and DCA windows use bundled synthetic price history in 0.7.0. Scout labels that source and keeps confidence low.
+Market indicators and DCA windows use bundled synthetic price history in 0.7.1. Scout labels that source and keeps confidence low.
 
 Every DCA flow stops at a proposal. `preview_dca` returns `approval_state=required` and `execution_available=false`. Scout does not connect the observed wallet, sign a trade, or submit a transaction.
 
@@ -48,9 +48,9 @@ Restart Claude Code. The marketplace tracks the default branch unless you add a 
 **Codex**
 
 ```bash
-codex plugin marketplace add gabchess/scout-onchain --ref v0.7.0
+codex plugin marketplace add gabchess/scout-onchain --ref v0.7.1
 codex plugin add scout-portfolio --marketplace scout-portfolio-manager
-codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager
 ```
 
 The first two commands install the skills. The third attaches the tools. Restart Codex.
@@ -62,7 +62,7 @@ The first two commands install the skills. The third attaches the tools. Restart
   "mcpServers": {
     "scout-portfolio": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/gabchess/scout-onchain@v0.7.0", "scout-portfolio-manager"]
+      "args": ["--from", "git+https://github.com/gabchess/scout-onchain@v0.7.1", "scout-portfolio-manager"]
     }
   }
 }
@@ -71,7 +71,7 @@ The first two commands install the skills. The third attaches the tools. Restart
 **Without uv**
 
 ```bash
-pipx run --spec git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager
+pipx run --spec git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager
 ```
 
 `scout-portfolio-manager` and the older `zpm-mcp` start the same server. Per-host details and evidence are in [`START-HERE.md`](START-HERE.md) and [`HOST-MATRIX.md`](HOST-MATRIX.md).

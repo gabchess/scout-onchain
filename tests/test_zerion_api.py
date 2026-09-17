@@ -1,6 +1,6 @@
 import json
 import logging
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 import pytest
 
@@ -530,6 +530,31 @@ def test_transport_timeout_is_typed_transport_error(monkeypatch):
     monkeypatch.setattr("scout_portfolio_manager.zerion_api.urlopen", raise_timeout)
     with pytest.raises(ZerionAPITransportError):
         make_reader().get_positions(WALLET)
+
+
+def test_injected_transport_failure_is_not_chained():
+    secret = "test-key"
+    leaky = RuntimeError(f"GET {BASE_URL}/wallets/{WALLET}/positions/ auth={secret}")
+    reader = make_reader(transport=recording_transport([leaky]))
+    with pytest.raises(ZerionAPITransportError) as caught:
+        reader.get_positions(WALLET)
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__ is True
+    assert BASE_URL not in str(caught.value) and secret not in str(caught.value)
+
+
+def test_urlopen_failure_is_not_chained(monkeypatch):
+    secret = "test-key"
+
+    def raise_url_error(request, timeout):
+        raise URLError(f"{BASE_URL}/wallets/{WALLET}/positions/ auth={secret}")
+
+    monkeypatch.setattr("scout_portfolio_manager.zerion_api.urlopen", raise_url_error)
+    with pytest.raises(ZerionAPITransportError) as caught:
+        make_reader().get_positions(WALLET)
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__ is True
+    assert BASE_URL not in str(caught.value) and secret not in str(caught.value)
 
 
 def test_non_json_body_is_typed_transport_error(monkeypatch):

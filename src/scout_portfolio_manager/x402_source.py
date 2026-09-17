@@ -293,7 +293,7 @@ def x402_transport(session: Any) -> Transport:
                     "inspect payment state before retrying",
                     status=402,
                 ) from None
-            raise ZerionAPITransportError("Zerion API x402 transport failed") from exc
+            raise ZerionAPITransportError("Zerion API x402 transport failed") from None
         response_request = getattr(response, "request", None)
         response_request_headers = getattr(response_request, "headers", None)
         if _is_paid_retry(response_request_headers) and not has_payment_signature(
@@ -308,10 +308,10 @@ def x402_transport(session: Any) -> Transport:
         if status == 200:
             try:
                 payload = json.loads(response.content)
-            except (TypeError, ValueError, AttributeError) as exc:
+            except (TypeError, ValueError, AttributeError):
                 raise ZerionAPITransportError(
                     "Zerion API returned an undecodable response"
-                ) from exc
+                ) from None
             if not isinstance(payload, Mapping):
                 raise ZerionAPITransportError("Zerion API returned a non-object JSON response")
             return payload

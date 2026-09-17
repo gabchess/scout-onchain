@@ -5,9 +5,9 @@ Give an agent this repository folder or ZIP. Install Scout as its onchain portfo
 ## Install routes
 
 1. Claude Code: [`START-HERE.md`](START-HERE.md) Route 1, `claude plugin marketplace add gabchess/scout-onchain` then `claude plugin install scout-portfolio@scout-portfolio-manager`.
-2. Codex: Route 2 installs the skills plugin and attaches tools with `codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager`.
-3. Cursor or any stdio MCP client: Route 3, one `mcpServers` entry running `uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.0 scout-portfolio-manager`.
-4. Plain Python: Route 4 (`uvx` or `pipx run`). Package version **0.7.0**.
+2. Codex: Route 2 installs the skills plugin and attaches tools with `codex mcp add scout-portfolio -- uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager`.
+3. Cursor or any stdio MCP client: Route 3, one `mcpServers` entry running `uvx --from git+https://github.com/gabchess/scout-onchain@v0.7.1 scout-portfolio-manager`.
+4. Plain Python: Route 4 (`uvx` or `pipx run`). Package version **0.7.1**.
 
 No clone or absolute path is needed. `uv` must be on PATH. `codex/` is generated from `skills/` by `scripts/build_host_layouts.py`; never edit it by hand.
 
