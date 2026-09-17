@@ -585,7 +585,7 @@ def test_no_key_or_request_text_in_failure_counts(tmp_path):
     assert all(KEY_VALUE not in k and "budget" not in k for k in ts.failure_counts)
 
 
-# --- review fixes (Harrier L1, L3; Kestrel negation clause) ------------------------
+# --- review fixes (FIFO dotenv, redaction, negation clause) -----------------------
 
 
 def test_fifo_at_dotenv_path_is_refused_without_hanging(tmp_path):

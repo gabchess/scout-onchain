@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Maintenance
+
+- Removed internal planning notes from the public tree.
+- Added a repo hygiene test that fails CI if internal process files or names are tracked again.
+
 ## 0.7.1 - 2026-09-17
 
 ### Behavior changes
