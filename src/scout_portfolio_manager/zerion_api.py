@@ -526,8 +526,8 @@ class ZerionAPIReader:
             json.JSONDecodeError,
             TypeError,
             ValueError,
-        ) as exc:
-            raise ZerionAPITransportError("Zerion API request or response failed") from exc
+        ):
+            raise ZerionAPITransportError("Zerion API request or response failed") from None
         if not isinstance(payload, Mapping):
             raise ZerionAPITransportError("Zerion API returned a non-object JSON response")
         return payload

@@ -308,10 +308,10 @@ def x402_transport(session: Any) -> Transport:
         if status == 200:
             try:
                 payload = json.loads(response.content)
-            except (TypeError, ValueError, AttributeError) as exc:
+            except (TypeError, ValueError, AttributeError):
                 raise ZerionAPITransportError(
                     "Zerion API returned an undecodable response"
-                ) from exc
+                ) from None
             if not isinstance(payload, Mapping):
                 raise ZerionAPITransportError("Zerion API returned a non-object JSON response")
             return payload

@@ -549,6 +549,23 @@ def test_transport_exception_maps_to_transport_error():
     assert caught.value.__cause__ is None
 
 
+def test_undecodable_200_body_is_not_chained():
+    from scout_portfolio_manager.zerion_api import ZerionAPITransportError
+
+    class UndecodableSession(FakeSession):
+        def get(self, url, headers=None, timeout=None):
+            response = FakeResponse(200)
+            response.content = f"not json {url} {X402_KEY}".encode()
+            return response
+
+    reader = x402_reader_from_env(x402_env(), session=UndecodableSession())
+    with pytest.raises(ZerionAPITransportError) as caught:
+        reader.snapshot()
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__ is True
+    assert "zerion.io" not in str(caught.value) and X402_KEY not in str(caught.value)
+
+
 def test_wrapped_budget_stop_maps_to_typed_budget_error():
     pytest.importorskip("x402")
     from x402.http.clients.requests import PaymentError

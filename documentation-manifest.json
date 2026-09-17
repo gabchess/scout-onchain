@@ -10,11 +10,11 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "a11584a609c79d3a24ef349fc59c3bda36d8762d334fe13d4e1cee31eccea94d"
+      "sha256": "ce18694be8a059fed6351f6659762c2ed51cbcd58a0423196a3121cedb7ed8bf"
     },
     {
       "path": "CLAIMS.md",
-      "sha256": "b2163b9868baffd5220f8ed5c567f5b95ebd7db15e73910b6c3ab64f3467211b"
+      "sha256": "29daef6f519c9684c354f8b9646f94a759f95ec0db4a5916114e9bf880857554"
     },
     {
       "path": "DATA-AND-PRIVACY.md",

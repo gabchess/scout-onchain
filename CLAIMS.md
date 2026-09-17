@@ -4,7 +4,7 @@ Source: `gabchess/scout-onchain` 0.7.1. Each status names the strongest evidence
 
 | Claim | Status | Evidence and limit |
 |:--|:--|:--|
-| Reads Zerion holdings and transaction history | TESTED OFFLINE | Injected-response tests cover positions and paginated transactions. Since 0.7.1, API-key and x402 transport failures raise a typed error with no chained cause. No current live API-key call is recorded. |
+| Reads Zerion holdings and transaction history | TESTED OFFLINE | Injected-response tests cover positions and paginated transactions. Since 0.7.1, API-key and x402 transport and response-decode failures raise a typed error with no chained cause. No current live API-key call is recorded. |
 | Reads Arc wallets through Zerion | TESTED OFFLINE | A Zerion-shaped Arc fixture runs through the reader, PnL, risk, report and alert paths. No live Arc call is recorded. |
 | Calculates portfolio PnL | VERIFIED WITH FIXTURE | `get_pnl` uses observed buys for cost basis and leaves missing basis unknown. |
 | Offers several agent routes | VERIFIED IN PACKAGE | The host and MCP registry expose portfolio, PnL, DCA proposal, analysis, DCA-window, and local-alert tools. |
