@@ -6,6 +6,7 @@
 
 - Removed internal planning notes from the public tree.
 - Added a repo hygiene test that fails CI if internal process files or names are tracked again.
+- Widened the public-repo hygiene test: it now scans packaged data, matches joined-up names, and checks a longer list of internal terms.
 
 ## 0.7.1 - 2026-09-17
 
