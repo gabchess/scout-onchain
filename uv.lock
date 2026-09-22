@@ -2185,7 +2185,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'quality'", specifier = ">=0.6,<1" },
     { name = "x402", extras = ["requests", "evm"], marker = "extra == 'x402'", specifier = ">=2.22,<3" },
 ]
-provides-extras = ["test", "quality", "mcp", "x402"]
+provides-extras = ["test", "quality", "mcp", "x402", "x402-hedwig"]
 
 [[package]]
 name = "sse-starlette"
