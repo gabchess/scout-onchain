@@ -23,16 +23,36 @@ error: one authorization mode per source, decided loudly at startup.
 
 from __future__ import annotations
 
+import atexit
 import json
 import logging
+import os
 import re
+import shutil
+import signal
+import tempfile
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 from threading import Lock
-from typing import Any, Mapping, Optional
+from types import FrameType, SimpleNamespace
+from typing import Any, Callable, Mapping, Optional, Sequence
 from urllib.request import Request
 
-from .x402_guard import X402GuardError, X402PaymentGuard, has_payment_signature
+from .hedwig_client import (
+    ConsultAnswer,
+    HedwigClient,
+    HedwigProtocolError,
+    HedwigTimeout,
+    HedwigUnavailable,
+)
+from .x402_guard import (
+    BASE_NETWORK,
+    BASE_USDC_ADDRESS,
+    USDC_DECIMALS,
+    X402GuardError,
+    X402PaymentGuard,
+    has_payment_signature,
+)
 from .zerion_api import (
     API_KEY_ENV,
     CHAIN_ENV,
@@ -58,6 +78,11 @@ X402_KEY_ENV = "ZERION_X402_PRIVATE_KEY"
 X402_MAX_ENV = "ZERION_X402_MAX_USD_PER_CALL"
 X402_SESSION_MAX_ENV = "ZERION_X402_MAX_USD_PER_SESSION"
 X402_PAY_TO_ENV = "ZERION_X402_PAY_TO"
+
+#: Path to a built Hedwig stdio MCP server (``node <path>``). Unset means the
+#: Hedwig preflight hook is never installed; Scout's own guard and budget
+#: still run on their own.
+HEDWIG_SERVER_PATH_ENV = "HEDWIG_SERVER_PATH"
 
 #: Default per-payment spend cap. The x402 SDK enforces it before signing.
 DEFAULT_MAX_USD_PER_CALL = "$0.05"
@@ -167,12 +192,229 @@ class X402SpendBudget:
             }
 
 
+def hedwig_policy_cap_atomic(max_usd_per_call: str) -> str:
+    """Floor a USD cap like ``$0.05`` to atomic USDC units: ``"50000"``.
+
+    Reuses the same validation the ``ZERION_X402_MAX_USD_PER_CALL`` cap gets:
+    positive, finite, well-formed, so a negative, zero, non-finite, or
+    non-numeric cap is a loud ``ZerionConfigError`` here too, never a
+    silently-wrong policy value like ``"-1000000"``. Uses ``ROUND_FLOOR``
+    explicitly so a cap with more precision than USDC's 6 decimals is always
+    rounded down, never up. A cap that floors to 0 atomic units (for example
+    ``$0.0000005``) is rejected too: a policy cap of "0" would silently deny
+    every payment, and the operator almost certainly meant a usable cap.
+    """
+    amount = _parse_positive_usd(
+        max_usd_per_call, env_name="the Hedwig policy cap", example=DEFAULT_MAX_USD_PER_CALL
+    )
+    atomic = int(
+        (amount * (Decimal(10) ** USDC_DECIMALS)).to_integral_value(rounding=ROUND_FLOOR)
+    )
+    if atomic <= 0:
+        raise ZerionConfigError(
+            f"the Hedwig policy cap must floor to at least 1 atomic USDC unit; "
+            f"{max_usd_per_call} floors to {atomic}"
+        )
+    return str(atomic)
+
+
+def build_hedwig_policy_document(*, pay_to: str, max_usd_per_call: str) -> Mapping[str, Any]:
+    """Build the Hedwig policy Scout derives from its own x402 configuration."""
+    return {
+        "permits": True,
+        "chainId": BASE_NETWORK,
+        "approvedRecipients": [pay_to],
+        "perActionCaps": {"pay": hedwig_policy_cap_atomic(max_usd_per_call)},
+        "role": {"mode": "not-required"},
+        # Hedwig v0.3.0 is expected to add this field; a policy written
+        # without it would answer UNKNOWN on every call under that release.
+        # v0.2.0 ignores unknown policy keys (verified against the real
+        # server), so writing it now costs nothing and keeps Scout working
+        # across the upgrade without a code change on this side.
+        "authorizationWindow": {"mode": "not-required"},
+    }
+
+
+def write_hedwig_policy_file(*, pay_to: str, max_usd_per_call: str) -> tuple[str, str]:
+    """Write a 0600 Hedwig policy file into a fresh ``mkdtemp`` directory.
+
+    The document is built, and its cap validated, before ``mkdtemp`` runs: an
+    invalid cap raises before any directory or file exists, instead of
+    leaking an empty temp dir for every rejected value.
+
+    Returns ``(policy_path, policy_dir)``. The caller owns removing
+    ``policy_dir``; ``build_hedwig_client`` registers that cleanup to run at
+    process exit and on SIGTERM.
+    """
+    document = build_hedwig_policy_document(pay_to=pay_to, max_usd_per_call=max_usd_per_call)
+    policy_dir = tempfile.mkdtemp(prefix="scout-hedwig-")
+    policy_path = os.path.join(policy_dir, "policy.json")
+    fd = os.open(policy_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as handle:
+        json.dump(document, handle)
+    return policy_path, policy_dir
+
+
+def _force_close_no_lock(client: HedwigClient, policy_dir: str) -> None:
+    """Tear down the child and the policy dir without the client's lock.
+
+    Safe to call from a SIGTERM handler even while the main thread is
+    stopped mid-call, holding the lock inside ``consult_payment``: a plain
+    ``threading.Lock`` is not reentrant, so a handler that called
+    ``client.close()`` (which acquires that same lock) would deadlock the
+    interrupted thread against itself. This touches the raw subprocess
+    directly instead; the blocked read already treats a dead pipe (EOF) as
+    a protocol error, so the interrupted call still unwinds cleanly once the
+    child is gone, with no lock involved on this side at all.
+    """
+    process = client._process
+    if process is not None:
+        try:
+            process.terminate()
+        except OSError:
+            pass
+        try:
+            process.wait(timeout=0.5)
+        except Exception:
+            try:
+                process.kill()
+            except OSError:
+                pass
+            try:
+                process.wait(timeout=0.5)
+            except Exception:
+                pass
+    client._unavailable = True
+    shutil.rmtree(policy_dir, ignore_errors=True)
+
+
+def _install_process_exit_cleanup(cleanup: Callable[[], None]) -> None:
+    """Run ``cleanup`` at normal process exit and, best-effort, on SIGTERM.
+
+    ``atexit`` alone never fires on SIGTERM (Python exits with status -15
+    without unwinding), which would leave the policy dir and the Hedwig
+    child behind. The SIGTERM handler chains to whatever handler was already
+    installed (if any) after cleanup runs, so a second installation in the
+    same process composes instead of silently replacing the first.
+    ``cleanup`` itself must never block on anything the interrupted thread
+    might already hold; see ``_force_close_no_lock``.
+    """
+    atexit.register(cleanup)
+    try:
+        previous_handler = signal.getsignal(signal.SIGTERM)
+    except ValueError:
+        return  # not the main thread; atexit above still covers a normal exit
+
+    def _on_sigterm(signum: int, frame: Optional[FrameType]) -> None:
+        cleanup()
+        signal.signal(signal.SIGTERM, previous_handler)
+        if callable(previous_handler):
+            previous_handler(signum, frame)
+        else:
+            os.kill(os.getpid(), signum)
+
+    try:
+        signal.signal(signal.SIGTERM, _on_sigterm)
+    except ValueError:
+        pass  # not the main thread; atexit above still covers a normal exit
+
+
+#: A version-handshake result row carrying a code with this suffix means
+#: Hedwig's policy schema and Scout's generated policy are out of step (for
+#: example, a future Hedwig release requiring a field this policy lacks).
+_HANDSHAKE_REJECT_SUFFIXES = ("_POLICY_MISSING", "_POLICY_MALFORMED")
+
+
+def _handshake_rejection_reason(answer: ConsultAnswer) -> Optional[str]:
+    code = answer.worst_row_code or ""
+    if any(code.endswith(suffix) for suffix in _HANDSHAKE_REJECT_SUFFIXES):
+        return f"the policy check returned {code}"
+    if not answer.proceed:
+        return (
+            f"the fixture consult did not proceed "
+            f"(verdict={answer.verdict}, code={code or 'none'})"
+        )
+    return None
+
+
+def build_hedwig_client(
+    environ: Mapping[str, str],
+    *,
+    pay_to: Optional[str],
+    max_usd_per_call: str,
+    command: Optional[Sequence[str]] = None,
+    spawn_deadline: Optional[float] = None,
+    call_deadline: Optional[float] = None,
+) -> Optional[HedwigClient]:
+    """Build Scout's Hedwig second-opinion client, or ``None`` when it is not installed.
+
+    Only active when ``HEDWIG_SERVER_PATH`` is set and a recipient pin
+    exists: an unset path means the hook is never installed at all, and a
+    missing pin means there is nothing valid to put in Hedwig's policy.
+    ``command`` overrides the spawned argv (tests inject the fake server);
+    production leaves it unset and gets ``["node", server_path]``.
+
+    Before returning, this runs ONE fixture ``consult`` against Hedwig, built
+    from the same policy just written, as a version handshake: a policy
+    schema mismatch (Hedwig answering UNKNOWN with a `*_POLICY_MISSING` or
+    `*_POLICY_MALFORMED` code, or any non-proceeding answer) surfaces here,
+    at startup, where an operator can fix it, instead of on the first real
+    payment. A handshake failure tears down what was just spawned and raises
+    ``ZerionConfigError`` with code ``hedwig_policy_rejected``.
+    """
+    server_path = (environ.get(HEDWIG_SERVER_PATH_ENV) or "").strip()
+    if not server_path or not pay_to:
+        return None
+    policy_path, policy_dir = write_hedwig_policy_file(
+        pay_to=pay_to, max_usd_per_call=max_usd_per_call
+    )
+    client_kwargs: dict[str, Any] = {}
+    if spawn_deadline is not None:
+        client_kwargs["spawn_deadline"] = spawn_deadline
+    if call_deadline is not None:
+        client_kwargs["call_deadline"] = call_deadline
+    client = HedwigClient(
+        list(command) if command is not None else ["node", server_path],
+        policy_file=policy_path,
+        environ=environ,
+        **client_kwargs,
+    )
+
+    def _cleanup() -> None:
+        _force_close_no_lock(client, policy_dir)
+
+    _install_process_exit_cleanup(_cleanup)
+
+    fixture_requirements = SimpleNamespace(
+        network=BASE_NETWORK,
+        asset=BASE_USDC_ADDRESS,
+        pay_to=pay_to,
+        get_amount=lambda: hedwig_policy_cap_atomic(max_usd_per_call),
+    )
+    try:
+        handshake = client.consult_payment(fixture_requirements)
+    except (HedwigTimeout, HedwigProtocolError, HedwigUnavailable) as exc:
+        _cleanup()
+        raise ZerionConfigError(
+            f"Scout refused to start x402 with Hedwig (hedwig_policy_rejected): "
+            f"the version handshake with Hedwig failed: {exc}"
+        ) from None
+    rejection = _handshake_rejection_reason(handshake)
+    if rejection is not None:
+        _cleanup()
+        raise ZerionConfigError(
+            f"Scout refused to start x402 with Hedwig (hedwig_policy_rejected): {rejection}"
+        )
+    return client
+
+
 def build_payment_session(
     private_key: str,
     max_usd_per_call: str = DEFAULT_MAX_USD_PER_CALL,
     *,
     spend_budget: Optional[X402SpendBudget] = None,
     pay_to: Optional[str] = None,
+    environ: Optional[Mapping[str, str]] = None,
 ) -> Any:
     """Build a requests Session that settles x402 payments automatically.
 
@@ -196,10 +438,6 @@ def build_payment_session(
         # Never echo the exception text: it may contain the key material.
         raise ZerionConfigError(f"{X402_KEY_ENV} is not a valid EVM private key") from None
     client = x402ClientSync()
-    # The helper defaults to an eip155:* wildcard. Scout's configured payment
-    # wallet is only authorized for the documented Base analytics rail.
-    from .x402_guard import BASE_NETWORK
-
     # EthAccountSigner is load-bearing for the spend cap, not just a default.
     # The SDK's gas-sponsoring extension signs approve(Permit2, MaxUint256), an
     # unlimited USDC allowance that no cap or recipient pin bounds. It is gated
@@ -208,11 +446,17 @@ def build_payment_session(
     register_exact_evm_client(client, EthAccountSigner(account), networks=BASE_NETWORK)
     client.set_spend_controls({"max_amount_per_payment": max_usd_per_call})
     guard = X402PaymentGuard.from_usd(max_usd_per_call, pay_to=pay_to)
+    hedwig_client = build_hedwig_client(
+        environ if environ is not None else os.environ,
+        pay_to=pay_to,
+        max_usd_per_call=max_usd_per_call,
+    )
     client.on_before_payment_creation(
         lambda context: preflight_before_signing(
             context,
             guard=guard,
             spend_budget=spend_budget,
+            hedwig_client=hedwig_client,
         )
     )
     return x402_requests(client)
@@ -223,13 +467,17 @@ def preflight_before_signing(
     *,
     guard: X402PaymentGuard,
     spend_budget: Optional[X402SpendBudget] = None,
+    hedwig_client: Optional[HedwigClient] = None,
 ) -> None:
     """Validate the selected payment before reserving budget or signing.
 
     The x402 SDK invokes this callback after it has parsed a 402 response and
     immediately before it creates a payment payload. Requirement validation is
     intentionally before budget reservation: an unsupported chain, asset,
-    recipient or amount must not burn Scout's allowance.
+    recipient or amount must not burn Scout's allowance. Hedwig's second
+    opinion, when installed, runs after Scout's own guard and before the same
+    reservation, for the same reason: a denial must not burn Scout's
+    allowance either.
     """
     try:
         guard.validate(context)
@@ -237,8 +485,45 @@ def preflight_before_signing(
         raise ZerionAPIPaymentError(
             f"Scout refused x402 payment before signing ({exc.code})", status=402
         ) from None
+    if hedwig_client is not None:
+        _consult_hedwig(context, hedwig_client)
     if spend_budget is not None:
         spend_budget.reserve_payment()
+
+
+def _selected_requirements(context: Any) -> Any:
+    if isinstance(context, Mapping):
+        return context.get("selected_requirements")
+    return getattr(context, "selected_requirements", None)
+
+
+def _consult_hedwig(context: Any, hedwig_client: HedwigClient) -> None:
+    """Ask Hedwig's second opinion; fail closed on any of its three exceptions."""
+    requirements = _selected_requirements(context)
+    try:
+        answer = hedwig_client.consult_payment(requirements)
+    except (HedwigTimeout, HedwigProtocolError, HedwigUnavailable):
+        raise ZerionAPIPaymentError(
+            "Scout refused x402 payment before signing (hedwig_unavailable)", status=402
+        ) from None
+    if answer.proceed:
+        return
+    # Evidence is detailed enough to carry a caller-shaped string (Hedwig's
+    # own evidence text); it goes to Scout's own debug log, not the raised
+    # error, so the error surface stays a bounded, predictable shape.
+    logger.debug(
+        "hedwig consult: verdict=%s worst_row_id=%s worst_row_code=%s worst_row_evidence=%s",
+        answer.verdict,
+        answer.worst_row_id,
+        answer.worst_row_code,
+        answer.worst_row_evidence,
+    )
+    code = "hedwig_deny" if answer.verdict == "DENY" else "hedwig_unknown"
+    raise ZerionAPIPaymentError(
+        f"Scout refused x402 payment before signing ({code}): "
+        f"worst row {answer.worst_row_id} ({answer.worst_row_code})",
+        status=402,
+    )
 
 
 def _is_x402_payment_error(exc: Exception) -> bool:
@@ -413,6 +698,11 @@ def reader_from_env(
     budget = X402SpendBudget.from_strings(max_usd, max_session_usd)
     chain = (environ.get(CHAIN_ENV) or "").strip() or "multi-chain"
     if session is None:
+        # HEDWIG_SERVER_PATH is deliberately not threaded from this reader's
+        # own `environ` mapping: it is an ambient process setting Scout reads
+        # from the real environment (build_payment_session's own default),
+        # the same way any other MCP server host config would be, not part
+        # of this source's own x402 configuration bundle.
         session = build_payment_session(x402_key, max_usd, spend_budget=budget, pay_to=pay_to)
     # api_key=None: the reader sends no Authorization header; the transport
     # settles access per request via x402 instead.
@@ -428,6 +718,7 @@ __all__ = [
     "DEFAULT_MAX_USD_PER_CALL",
     "DEFAULT_MAX_USD_PER_SESSION",
     "DEFAULT_MAX_PAYMENTS_PER_SESSION",
+    "HEDWIG_SERVER_PATH_ENV",
     "WALLET_ENV",
     "X402_KEY_ENV",
     "X402_MAX_ENV",
@@ -435,10 +726,14 @@ __all__ = [
     "X402SpendBudget",
     "ZerionAPIPaginationError",
     "ZerionConfigError",
+    "build_hedwig_client",
+    "build_hedwig_policy_document",
     "build_payment_session",
+    "hedwig_policy_cap_atomic",
     "parse_max_usd_per_call",
     "parse_max_usd_per_session",
     "preflight_before_signing",
     "reader_from_env",
+    "write_hedwig_policy_file",
     "x402_transport",
 ]

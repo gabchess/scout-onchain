@@ -1,0 +1,53 @@
+{
+  "scout_max_usd_per_call": "$0.05",
+  "hedwig_max_usd_per_call": "$0.04",
+  "frames": [
+    {
+      "name": "config",
+      "outcome": "printed",
+      "policy": {
+        "permits": true,
+        "chainId": "eip155:8453",
+        "approvedRecipients": [
+          "0x1111111111111111111111111111111111111111"
+        ],
+        "perActionCaps": {
+          "pay": "40000"
+        },
+        "role": {
+          "mode": "not-required"
+        },
+        "authorizationWindow": {
+          "mode": "not-required"
+        }
+      },
+      "owner_policy_cap": "40000",
+      "agent_own_cap": "50000",
+      "note": "owner_policy_cap: \"40000\" (set by the owner in the Hedwig policy, below the agent's own cap of \"50000\")"
+    },
+    {
+      "name": "good_pay",
+      "outcome": "allowed",
+      "reservations_after": 1,
+      "detail": "verdict=ALLOW_UNDER_POLICY all rows PASS"
+    },
+    {
+      "name": "swapped_pay_to",
+      "outcome": "blocked",
+      "reservations_after": 1,
+      "detail": "Scout refused x402 payment before signing (pay_to_not_allowed)"
+    },
+    {
+      "name": "stricter_owner_policy",
+      "outcome": "blocked",
+      "reservations_after": 1,
+      "detail": "Scout refused x402 payment before signing (hedwig_deny): worst row amount-within-cap (AMOUNT_EXCEEDS_CAP)"
+    },
+    {
+      "name": "server_killed",
+      "outcome": "blocked",
+      "reservations_after": 1,
+      "detail": "Scout refused x402 payment before signing (hedwig_unavailable)"
+    }
+  ]
+}
