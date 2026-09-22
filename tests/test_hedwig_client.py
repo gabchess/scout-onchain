@@ -150,11 +150,13 @@ def test_consult_answer_has_no_support_or_band_fields():
 def test_request_ids_are_unpredictable_not_sequential():
     # Never spawned: _take_id() only touches in-memory state.
     client = HedwigClient(["true"])
-    first = client._take_id()
-    second = client._take_id()
-    assert first > 2**40
-    assert second > 2**40
-    assert abs(first - second) > 1
+    # A single 52-bit draw lands under 2**40 about once in 4096, so the
+    # size assertion samples many ids and checks the set, not one value.
+    ids = [client._take_id() for _ in range(64)]
+    assert len(set(ids)) == 64
+    assert all(0 < value < 2**52 for value in ids)
+    assert max(ids) > 2**40
+    assert all(abs(a - b) > 1 for a, b in zip(ids, ids[1:]))
 
 
 # --- env allowlist ------------------------------------------------------------
