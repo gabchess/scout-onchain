@@ -29,6 +29,7 @@ from scout_portfolio_manager.x402_source import (
     build_hedwig_policy_document,
     preflight_before_signing,
 )
+from scout_portfolio_manager.zerion_api import ZerionConfigError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TRANSCRIPT_PATH = REPO_ROOT / "fixtures" / "x402" / "hedwig-demo-transcript.json"
@@ -38,8 +39,12 @@ PAY_TO = "0x1111111111111111111111111111111111111111"
 OTHER_RECIPIENT = "0x2222222222222222222222222222222222222222"
 
 SCOUT_MAX_USD_PER_CALL = "$0.05"
-#: Deliberately stricter than Scout's own cap: this is the frame that shows
-#: what Hedwig adds. Scout alone would accept 45000; Hedwig will not.
+#: build_hedwig_client always mirrors Scout's own cap into Hedwig's policy,
+#: so in normal operation these two caps are identical. This demo passes a
+#: DIFFERENT, stricter value here on purpose, standing in for an operator
+#: who edited the generated Hedwig policy file afterward to tighten it
+#: further. That is the only way the "stricter_owner_policy" frame below can
+#: happen; Scout's own wiring cannot produce it by itself.
 HEDWIG_MAX_USD_PER_CALL = "$0.04"
 
 
@@ -78,9 +83,12 @@ def _run_frame(
         if hedwig_client is not None:
             # Display-only: guard and Hedwig already both passed, so this
             # extra call cannot change the reservation Scout already made.
+            # ALLOW_UNDER_POLICY only happens when every row passed, so
+            # naming a "worst" row here would read like a failure; there
+            # isn't one.
             try:
                 answer = hedwig_client.consult_payment(context.selected_requirements)
-                detail = f"verdict={answer.verdict} worst_row_id={answer.worst_row_id}"
+                detail = f"verdict={answer.verdict} all rows PASS"
             except Exception:  # noqa: BLE001 - purely cosmetic
                 detail = None
 
@@ -110,23 +118,44 @@ def main() -> int:
     budget = X402SpendBudget.from_strings(SCOUT_MAX_USD_PER_CALL, "$5.00")
     # PATH/HOME come from the real environment so the child finds `node`;
     # build_hedwig_client's own allowlist decides what reaches the child.
-    hedwig_client = build_hedwig_client(
-        {**os.environ, HEDWIG_SERVER_PATH_ENV: server_path},
-        pay_to=PAY_TO,
-        max_usd_per_call=HEDWIG_MAX_USD_PER_CALL,
-    )
+    try:
+        hedwig_client = build_hedwig_client(
+            {**os.environ, HEDWIG_SERVER_PATH_ENV: server_path},
+            pay_to=PAY_TO,
+            max_usd_per_call=HEDWIG_MAX_USD_PER_CALL,
+        )
+    except ZerionConfigError as exc:
+        print(f"Hedwig client did not build: {exc}", file=sys.stderr)
+        return 1
     if hedwig_client is None:
         print("Hedwig client did not build", file=sys.stderr)
         return 1
 
     policy = build_hedwig_policy_document(pay_to=PAY_TO, max_usd_per_call=HEDWIG_MAX_USD_PER_CALL)
+    agent_cap = X402PaymentGuard.from_usd(SCOUT_MAX_USD_PER_CALL, pay_to=PAY_TO)
+    agent_cap_atomic = int(agent_cap.max_usd_per_payment * 10**6)
+    owner_policy_cap = policy["perActionCaps"]["pay"]
+    owner_policy_cap_note = (
+        f'owner_policy_cap: "{owner_policy_cap}" (set by the owner in the '
+        f'Hedwig policy, below the agent\'s own cap of "{agent_cap_atomic}")'
+    )
     print(
         f"config: scout_max_usd_per_call={SCOUT_MAX_USD_PER_CALL} "
         f"hedwig_max_usd_per_call={HEDWIG_MAX_USD_PER_CALL}"
     )
+    print(owner_policy_cap_note)
     print(f"derived policy: {json.dumps(policy)}")
 
-    frames: list[dict[str, Any]] = [{"name": "config", "outcome": "printed", "policy": policy}]
+    frames: list[dict[str, Any]] = [
+        {
+            "name": "config",
+            "outcome": "printed",
+            "policy": policy,
+            "owner_policy_cap": owner_policy_cap,
+            "agent_own_cap": str(agent_cap_atomic),
+            "note": owner_policy_cap_note,
+        }
+    ]
 
     frames.append(
         _run_frame(
@@ -150,7 +179,7 @@ def main() -> int:
     )
     frames.append(
         _run_frame(
-            "cap_exceeded_at_hedwig",
+            "stricter_owner_policy",
             context=_fixture(amount="45000"),
             guard=guard,
             budget=budget,
@@ -161,7 +190,9 @@ def main() -> int:
 
     print("killing the Hedwig server to simulate it disappearing mid-session")
     child = hedwig_client._process  # noqa: SLF001 - deliberate, for this frame only
-    assert child is not None, "the good_pay frame above must have already spawned the child"
+    # build_hedwig_client's own version-handshake consult already forced a
+    # real spawn before this script ever ran a frame.
+    assert child is not None, "build_hedwig_client's handshake should have already spawned it"
     child.kill()
     child.wait(timeout=2)
 

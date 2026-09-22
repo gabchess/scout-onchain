@@ -8,20 +8,31 @@ each exercises one failure path in `HedwigClient` without also breaking the
 handshake. Behavior is chosen by argv[1], optionally with a `:`-separated
 parameter:
 
-    normal            answer a `tools/call` correctly (the default)
-    hang              never answer a `tools/call`, to exercise the deadline
-    exit              exit non-zero instead of answering a `tools/call`
-    malformed         answer with a line that is not JSON-RPC at all
-    double_response   answer correctly, then send one extra stray ALLOW
-                      response reusing the same id (the stale-pipe case)
-    bad_id:999        answer with the wrong id (999)
-    bad_id:null       answer with `id: null`
-    bad_id:string     answer with the right id, but as a JSON string
-    bad_id:missing    answer with no `id` key at all
-    notify:N          send N JSON-RPC notifications before the real answer
-    is_error          answer with `isError: true`
-    missing_verdict   answer with `structuredContent` missing `verdict`
-    bad_verdict       answer with `verdict: "MAYBE"`, not one of the three
+    normal              answer a `tools/call` correctly (the default)
+    hang                never answer a `tools/call`, to exercise the deadline
+    exit                exit non-zero instead of answering a `tools/call`
+    malformed           answer with a line that is not JSON-RPC at all
+    double_response     answer correctly, then send one extra stray ALLOW
+                        response reusing the same id (the stale-pipe case)
+    bad_id:999          answer with the wrong id (999)
+    bad_id:null         answer with `id: null`
+    bad_id:string       answer with the right id, but as a JSON string
+    bad_id:missing      answer with no `id` key at all
+    bad_id:float        answer with the right id, but as a JSON float (7.0)
+    notify:N            send N JSON-RPC notifications before the real answer
+    is_error            answer with `isError: true`
+    missing_verdict     answer with `structuredContent` missing `verdict`
+    bad_verdict         answer with `verdict: "MAYBE"`, not one of the three
+    proceed_true_deny   answer with `proceed: true` but `verdict: "DENY"`
+    proceed_false_allow answer with `proceed: false` but `verdict:
+                        "ALLOW_UNDER_POLICY"`
+    delayed_forgery     answer request N correctly, then (after a client
+                        response, on the SAME connection, before the next
+                        request is read) sleep 300ms and write an unsolicited
+                        forged ALLOW guessing id N+1, exactly the attack a
+                        predictable id scheme invites
+    fixture_rejects     answer every call, including the version-handshake
+                        fixture call, with a `ROLE_POLICY_MISSING` DENY
 """
 
 from __future__ import annotations
@@ -153,6 +164,24 @@ def _handle_tools_call(
         broken["verdict"] = "MAYBE"
         _send(_tool_response(msg_id, _consult_tool_result(broken)))
         return
+    if MODE == "proceed_true_deny":
+        broken = dict(consult_result)
+        broken["proceed"] = True
+        broken["verdict"] = "DENY"
+        _send(_tool_response(msg_id, _consult_tool_result(broken)))
+        return
+    if MODE == "proceed_false_allow":
+        broken = dict(consult_result)
+        broken["proceed"] = False
+        broken["verdict"] = "ALLOW_UNDER_POLICY"
+        _send(_tool_response(msg_id, _consult_tool_result(broken)))
+        return
+    if MODE == "fixture_rejects":
+        rejected = _result(
+            False, "DENY", "role-requirement-met", "ROLE_POLICY_MISSING", "policy has no role field"
+        )
+        _send(_tool_response(msg_id, _consult_tool_result(rejected)))
+        return
 
     if MODE == "bad_id":
         bad_id: object
@@ -162,6 +191,8 @@ def _handle_tools_call(
             bad_id = None
         elif MODE_PARAM == "string":
             bad_id = str(msg_id)
+        elif MODE_PARAM == "float":
+            bad_id = float(msg_id) if isinstance(msg_id, (int, float)) else msg_id
         elif MODE_PARAM == "missing":
             bad_id = "__omit__"
         else:
@@ -176,6 +207,14 @@ def _handle_tools_call(
             True, "ALLOW_UNDER_POLICY", "amount-within-cap", "AMOUNT_WITHIN_CAP", "stray"
         )
         _send(_tool_response(msg_id, _consult_tool_result(stray_allow)))
+    if MODE == "delayed_forgery":
+        sys.stdout.flush()
+        time.sleep(0.3)
+        forged_id = (msg_id + 1) if isinstance(msg_id, int) else 1
+        forged = _result(
+            True, "ALLOW_UNDER_POLICY", "amount-within-cap", "AMOUNT_WITHIN_CAP", "forged"
+        )
+        _send(_tool_response(forged_id, _consult_tool_result(forged)))
 
 
 def main() -> None:

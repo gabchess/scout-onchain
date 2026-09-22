@@ -10,7 +10,7 @@
     },
     {
       "path": "CHANGELOG.md",
-      "sha256": "bf85bdd164f855c0b9bce34e6db16b1b3a8583fa9a6b11a1ff8e2f844fc7b792"
+      "sha256": "4963bf4f53a2996b444942107d062b151d25dcc91a64366675780133956660cf"
     },
     {
       "path": "CLAIMS.md",
@@ -74,7 +74,7 @@
     },
     {
       "path": "docs/X402.md",
-      "sha256": "e6b1f0bb8e80ffe07bfd4c1a0308b9969f98b5f39c6c72425b2cec355b8b5779"
+      "sha256": "a11a67cf3284d31b26ca5d8dfd77fc6fa7c888fbebf00034b14678b73bdd107a"
     },
     {
       "path": "docs/ZERION-PREPARATION.md",

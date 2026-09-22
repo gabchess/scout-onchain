@@ -13,6 +13,10 @@ client permanently unavailable, for the rest of the process, so a stale
 response already sitting in the pipe can never be misread as the answer to a
 different call. There is no later call: every call after the first failure
 raises immediately without touching the pipe again.
+
+Request ids are unpredictable (``secrets.randbits``), never sequential: a
+server that could guess the next id could forge a response for it in
+advance, which a strict-but-predictable id check would still accept.
 """
 
 from __future__ import annotations
@@ -20,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import queue
+import secrets
 import subprocess
 import threading
 import time
@@ -176,6 +181,10 @@ def _parse_consult_answer(result: Mapping[str, Any]) -> ConsultAnswer:
         raise HedwigProtocolError(
             f"Hedwig verdict {verdict!r} is not one of the three known values"
         )
+    if proceed != (verdict == "ALLOW_UNDER_POLICY"):
+        raise HedwigProtocolError(
+            f"Hedwig's proceed={proceed} contradicts verdict={verdict!r}"
+        )
     results = structured.get("results")
     worst = results[0] if isinstance(results, list) and results else None
     return ConsultAnswer(
@@ -232,7 +241,7 @@ class HedwigClient:
         self._process: Optional["subprocess.Popen[bytes]"] = None
         self._responses: "queue.Queue[bytes]" = queue.Queue()
         self._unavailable = False
-        self._next_id = 1
+        self._issued_ids: set[int] = set()
 
     def consult_payment(self, requirements: Any) -> ConsultAnswer:
         """Ask Hedwig's second opinion on one selected payment requirement."""
@@ -390,9 +399,18 @@ class HedwigClient:
             raise
 
     def _take_id(self) -> int:
-        current = self._next_id
-        self._next_id += 1
-        return current
+        """A fresh, unpredictable, positive id, never reused this process.
+
+        Sequential ids let a malicious server guess a future request's id
+        and forge a response for it in advance (the exact attack this
+        method exists to close). ``secrets.randbits(52)`` leaves the id
+        comfortably inside JSON's safe-integer range.
+        """
+        while True:
+            candidate = secrets.randbits(52) + 1  # + 1: 0 is not positive
+            if candidate not in self._issued_ids:
+                self._issued_ids.add(candidate)
+                return candidate
 
     def _kill_locked(self) -> None:
         process, self._process = self._process, None

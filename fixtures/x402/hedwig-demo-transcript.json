@@ -16,14 +16,20 @@
         },
         "role": {
           "mode": "not-required"
+        },
+        "authorizationWindow": {
+          "mode": "not-required"
         }
-      }
+      },
+      "owner_policy_cap": "40000",
+      "agent_own_cap": "50000",
+      "note": "owner_policy_cap: \"40000\" (set by the owner in the Hedwig policy, below the agent's own cap of \"50000\")"
     },
     {
       "name": "good_pay",
       "outcome": "allowed",
       "reservations_after": 1,
-      "detail": "verdict=ALLOW_UNDER_POLICY worst_row_id=recipient-matches-policy"
+      "detail": "verdict=ALLOW_UNDER_POLICY all rows PASS"
     },
     {
       "name": "swapped_pay_to",
@@ -32,10 +38,10 @@
       "detail": "Scout refused x402 payment before signing (pay_to_not_allowed)"
     },
     {
-      "name": "cap_exceeded_at_hedwig",
+      "name": "stricter_owner_policy",
       "outcome": "blocked",
       "reservations_after": 1,
-      "detail": "Scout refused x402 payment before signing (hedwig_deny): worst row amount-within-cap"
+      "detail": "Scout refused x402 payment before signing (hedwig_deny): worst row amount-within-cap (AMOUNT_EXCEEDS_CAP)"
     },
     {
       "name": "server_killed",

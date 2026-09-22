@@ -4,7 +4,7 @@
 
 ### Added
 
-- An optional Hedwig second opinion in the x402 preflight. When `HEDWIG_SERVER_PATH` names a built Hedwig MCP server, Scout asks it before every payment requirement and fails closed (`hedwig_deny`, `hedwig_unknown`, `hedwig_unavailable`) on a denial or on any Hedwig failure. Unset, the hook is never installed.
+- An optional Hedwig second opinion in the x402 preflight. When `HEDWIG_SERVER_PATH` names a built Hedwig MCP server, Scout asks it before every payment requirement and fails closed (`hedwig_deny`, `hedwig_unknown`, `hedwig_unavailable`) on a denial or on any Hedwig failure. Unset, the hook is never installed. Request ids to Hedwig are unpredictable, never sequential. At session start Scout runs one fixture consult as a version handshake and refuses to start (`hedwig_policy_rejected`) if Hedwig cannot read its policy. A SIGTERM during an in-flight call now closes the child and removes the policy directory instead of hanging.
 
 ### Maintenance
 

@@ -23,10 +23,11 @@ quality = ["ruff>=0.6,<1", "mypy>=1.11,<2"]
 # Kept empty so older `[mcp]` install commands still resolve.
 mcp = []
 x402 = ["x402[requests,evm]>=2.22,<3", "eth-account>=0.13"]
-# Documents the optional Hedwig preflight, not a package: enabling it needs a
-# Node runtime and a built server from gabchess/hedwig, pinned commit
-# 775e54f. Set HEDWIG_SERVER_PATH to that build's mcp/dist/server.js.
-x402-hedwig = []
+# The optional Hedwig preflight has no Python package: it needs a Node
+# runtime and a built server from gabchess/hedwig instead. An empty extra
+# here would let `pip install scout[x402-hedwig]` succeed while installing
+# nothing that actually works, so there is no extra for it. See the "Run the
+# Hedwig demo" section in docs/X402.md.
 
 [project.scripts]
 zpm-mcp = "scout_portfolio_manager.mcp_server:main"

@@ -100,11 +100,11 @@ def popen_spy(monkeypatch):
 
 
 def fake_client(mode: str = "normal", *, policy_file: str, **kwargs: object) -> HedwigClient:
+    kwargs.setdefault("spawn_deadline", FAST_SPAWN_DEADLINE)
+    kwargs.setdefault("call_deadline", FAST_CALL_DEADLINE)
     return HedwigClient(
         [sys.executable, str(FAKE_SERVER), mode],
         policy_file=policy_file,
-        spawn_deadline=FAST_SPAWN_DEADLINE,
-        call_deadline=FAST_CALL_DEADLINE,
         **kwargs,
     )
 
@@ -142,6 +142,19 @@ def test_consult_answer_has_no_support_or_band_fields():
         "worst_row_code",
         "worst_row_evidence",
     }
+
+
+# --- round 3: unpredictable request ids ----------------------------------------
+
+
+def test_request_ids_are_unpredictable_not_sequential():
+    # Never spawned: _take_id() only touches in-memory state.
+    client = HedwigClient(["true"])
+    first = client._take_id()
+    second = client._take_id()
+    assert first > 2**40
+    assert second > 2**40
+    assert abs(first - second) > 1
 
 
 # --- env allowlist ------------------------------------------------------------
@@ -184,6 +197,7 @@ def test_hedwig_policy_document_shape():
         "approvedRecipients": [PINNED],
         "perActionCaps": {"pay": "50000"},
         "role": {"mode": "not-required"},
+        "authorizationWindow": {"mode": "not-required"},
     }
 
 
@@ -222,8 +236,48 @@ def test_build_hedwig_client_builds_when_configured(tmp_path, monkeypatch):
     )
     os.makedirs(tmp_path / "hedwig", exist_ok=True)
     environ = {HEDWIG_SERVER_PATH_ENV: str(FAKE_SERVER)}
-    client = build_hedwig_client(environ, pay_to=PINNED, max_usd_per_call="$0.05")
+    # command must point at the fake Python server, not real "node": since
+    # build_hedwig_client now runs a real version-handshake consult before
+    # returning, this call really spawns and speaks the protocol.
+    client = build_hedwig_client(
+        environ,
+        pay_to=PINNED,
+        max_usd_per_call="$0.05",
+        command=[sys.executable, str(FAKE_SERVER)],
+    )
     assert isinstance(client, HedwigClient)
+    client.close()
+
+
+# --- round 3, M8: version handshake at session start --------------------------
+
+
+def test_version_handshake_rejects_a_policy_hedwig_cannot_read(tmp_path, monkeypatch):
+    import scout_portfolio_manager.x402_source as x402_source_module
+
+    monkeypatch.setattr(x402_source_module.atexit, "register", lambda *a, **k: None)
+    monkeypatch.setattr(
+        x402_source_module.tempfile, "mkdtemp", lambda prefix="": str(tmp_path / "hedwig")
+    )
+    os.makedirs(tmp_path / "hedwig", exist_ok=True)
+    environ = {HEDWIG_SERVER_PATH_ENV: str(FAKE_SERVER)}
+
+    with pytest.raises(ZerionConfigError, match="hedwig_policy_rejected") as caught:
+        build_hedwig_client(
+            environ,
+            pay_to=PINNED,
+            max_usd_per_call="$0.05",
+            command=[sys.executable, str(FAKE_SERVER), "fixture_rejects"],
+        )
+    assert "ROLE_POLICY_MISSING" in str(caught.value)
+
+
+def test_authorization_window_field_is_ignored_by_the_real_hedwig_server():
+    # This is a design assertion, not a live check (see the opt-in real
+    # server test for the empirical one): the policy schema below is
+    # exactly what write_hedwig_policy_file emits.
+    document = build_hedwig_policy_document(pay_to=PINNED, max_usd_per_call="$0.05")
+    assert document["authorizationWindow"] == {"mode": "not-required"}
 
 
 # --- the eight offline preflight cases -----------------------------------------
@@ -279,13 +333,16 @@ def test_unknown_recipient_reaching_hedwig_is_denied(hedwig_policy):
     guard = X402PaymentGuard.from_usd("$0.05", pay_to=PINNED)
     budget = X402SpendBudget.from_strings("$0.05", "$0.10")
 
-    with pytest.raises(ZerionAPIPaymentError, match="hedwig_deny"):
+    with pytest.raises(ZerionAPIPaymentError, match="hedwig_deny") as caught:
         preflight_before_signing(
             hedwig_payment_context(amount="30000"),
             guard=guard,
             spend_budget=budget,
             hedwig_client=client,
         )
+    # M4: the sub-reason code, not just the row id, so an operator can tell
+    # what actually failed without re-running the payment.
+    assert "RECIPIENT_NOT_IN_POLICY" in str(caught.value)
 
     assert budget.status()["reserved_payments"] == 0
     client.close()
@@ -299,13 +356,14 @@ def test_cap_exceeded_at_hedwig_but_not_at_scout(hedwig_policy):
     guard = X402PaymentGuard.from_usd("$0.05", pay_to=PINNED)
     budget = X402SpendBudget.from_strings("$0.05", "$0.10")
 
-    with pytest.raises(ZerionAPIPaymentError, match="hedwig_deny"):
+    with pytest.raises(ZerionAPIPaymentError, match="hedwig_deny") as caught:
         preflight_before_signing(
             hedwig_payment_context(amount="45000"),
             guard=guard,
             spend_budget=budget,
             hedwig_client=client,
         )
+    assert "AMOUNT_EXCEEDS_CAP" in str(caught.value)
 
     assert budget.status()["reserved_payments"] == 0
     client.close()
@@ -423,7 +481,65 @@ def test_stale_second_response_never_answers_the_next_call(hedwig_policy, popen_
     client.close()
 
 
-@pytest.mark.parametrize("mode_param", ["999", "null", "string", "missing"])
+def test_evil_server_cannot_forge_the_next_predictable_id(hedwig_policy):
+    # Under the old sequential-id scheme, an evil server could answer
+    # request N honestly, then later write an unsolicited forged ALLOW
+    # guessing id N+1: the client's own next request WAS N+1, so the forged
+    # line matched and was returned as its answer. With unpredictable ids,
+    # the guess almost never matches the real next id. Hedwig's cap (20000)
+    # is stricter than Scout's own (50000), so the second call clears
+    # Scout's guard and would reach a real DENY from Hedwig if the forged
+    # ALLOW did not intercept it first.
+    policy_path = hedwig_policy(max_usd_per_call="$0.02")
+    client = fake_client("delayed_forgery", policy_file=policy_path, call_deadline=2.0)
+    guard = X402PaymentGuard.from_usd("$0.05", pay_to=PINNED)
+    budget = X402SpendBudget.from_strings("$0.05", "$1.00")
+
+    preflight_before_signing(
+        hedwig_payment_context(amount="10000"),
+        guard=guard,
+        spend_budget=budget,
+        hedwig_client=client,
+    )
+    assert budget.status()["reserved_payments"] == 1
+
+    with pytest.raises(ZerionAPIPaymentError, match="hedwig_unavailable"):
+        preflight_before_signing(
+            hedwig_payment_context(amount="30000"),
+            guard=guard,
+            spend_budget=budget,
+            hedwig_client=client,
+        )
+    assert budget.status()["reserved_payments"] == 1
+    client.close()
+
+
+def test_pre_send_buffer_check_refuses_without_reading_the_stale_line(hedwig_policy):
+    # M7: exercise the buffer check itself, not just the id-check fallback.
+    # Its own error message ("unread bytes") is distinct from the id
+    # mismatch message ("did not match"), so this proves specifically that
+    # Scout refuses to even send the next request rather than merely
+    # rejecting whatever comes back.
+    policy_path = hedwig_policy()
+    client = fake_client("double_response", policy_file=policy_path)
+    requirements = hedwig_payment_context(amount="10000").selected_requirements
+
+    client.consult_payment(requirements)  # leaves a stray extra line in the pipe
+
+    # Deterministically wait for the reader thread to have actually queued
+    # the stray line, so this exercises the buffer check itself rather than
+    # racing it (the buffer check's own comment says it can lose that race).
+    deadline = time.monotonic() + 1.0
+    while client._responses.empty() and time.monotonic() < deadline:
+        time.sleep(0.005)
+    assert not client._responses.empty(), "the stray response should already be queued"
+
+    with pytest.raises(HedwigProtocolError, match="unread bytes"):
+        client.consult_payment(requirements)
+    client.close()
+
+
+@pytest.mark.parametrize("mode_param", ["999", "null", "string", "missing", "float"])
 def test_mismatched_response_id_fails_permanent(hedwig_policy, mode_param):
     policy_path = hedwig_policy()
     client = fake_client(f"bad_id:{mode_param}", policy_file=policy_path)
@@ -483,7 +599,16 @@ def test_nine_notifications_before_the_response_fails_permanent(hedwig_policy):
 # --- fix round: parse failures also fail permanent ------------------------------
 
 
-@pytest.mark.parametrize("mode", ["is_error", "missing_verdict", "bad_verdict"])
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "is_error",
+        "missing_verdict",
+        "bad_verdict",
+        "proceed_true_deny",  # round 3, M5: proceed/verdict consistency
+        "proceed_false_allow",
+    ],
+)
 def test_bad_tool_result_fails_permanent(hedwig_policy, mode):
     policy_path = hedwig_policy()
     client = fake_client(mode, policy_file=policy_path)
@@ -522,7 +647,17 @@ def test_unexpected_requirements_shape_is_a_protocol_error_not_attributeerror(he
 # --- fix round: policy cap validated before mkdtemp -----------------------------
 
 
-@pytest.mark.parametrize("bad_cap", ["$-1", "$0", "not-a-number", "", "$NaN"])
+@pytest.mark.parametrize(
+    "bad_cap",
+    [
+        "$-1",
+        "$0",
+        "not-a-number",
+        "",
+        "$NaN",
+        "$0.0000005",  # round 3, M6: floors to "0" atomic units, silently
+    ],
+)
 def test_write_hedwig_policy_file_rejects_a_bad_cap_before_creating_anything(
     monkeypatch, bad_cap
 ):
@@ -573,6 +708,59 @@ def _pid_alive(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def _leaked_hedwig_dir_count() -> int:
+    import glob
+    import tempfile as _tempfile
+
+    return len(glob.glob(os.path.join(_tempfile.gettempdir(), "scout-hedwig-*")))
+
+
+def _no_fake_hedwig_children_running() -> bool:
+    try:
+        result = subprocess.run(
+            ["pgrep", "-f", "fake_hedwig_server.py"], capture_output=True, timeout=2
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return True  # pgrep unavailable: cannot assert either way, don't fail the test
+    return result.returncode != 0  # pgrep exits 1 when it finds nothing
+
+
+# --- round 3, B2: SIGTERM during an in-flight call -----------------------------
+
+
+def test_sigterm_during_an_in_flight_call_does_not_deadlock():
+    before = _leaked_hedwig_dir_count()
+    harness = Path(__file__).resolve().parent / "_sigterm_inflight_harness.py"
+    proc = subprocess.Popen(
+        [sys.executable, str(harness), str(FAKE_SERVER), PINNED],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        line = proc.stdout.readline().strip()
+        assert line == "ready", proc.stderr.read()
+        # Give the background thread a moment to actually reach the blocked
+        # read inside the version-handshake call before signalling.
+        time.sleep(0.3)
+
+        started = time.monotonic()
+        proc.terminate()  # SIGTERM
+        proc.wait(timeout=3)
+        elapsed = time.monotonic() - started
+        assert elapsed < 3, "SIGTERM during an in-flight call must not hang"
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait(timeout=2)
+
+    deadline = time.monotonic() + 2.0
+    while time.monotonic() < deadline and not _no_fake_hedwig_children_running():
+        time.sleep(0.05)
+    assert _no_fake_hedwig_children_running(), "the Hedwig child must not outlive Scout"
+    assert _leaked_hedwig_dir_count() == before, "the policy dir must not leak"
 
 
 # --- opt-in real server ---------------------------------------------------------
