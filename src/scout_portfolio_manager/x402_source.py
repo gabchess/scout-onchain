@@ -29,11 +29,13 @@ import logging
 import os
 import re
 import shutil
+import signal
 import tempfile
 from dataclasses import dataclass, field
 from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 from threading import Lock
-from typing import Any, Mapping, Optional
+from types import FrameType
+from typing import Any, Callable, Mapping, Optional, Sequence
 from urllib.request import Request
 
 from .hedwig_client import (
@@ -191,10 +193,16 @@ class X402SpendBudget:
 def hedwig_policy_cap_atomic(max_usd_per_call: str) -> str:
     """Floor a USD cap like ``$0.05`` to atomic USDC units: ``"50000"``.
 
-    Uses ``ROUND_FLOOR`` explicitly so a cap with more precision than USDC's
-    6 decimals is always rounded down, never up.
+    Reuses the same validation the ``ZERION_X402_MAX_USD_PER_CALL`` cap gets:
+    positive, finite, well-formed, so a negative, zero, non-finite, or
+    non-numeric cap is a loud ``ZerionConfigError`` here too, never a
+    silently-wrong policy value like ``"-1000000"``. Uses ``ROUND_FLOOR``
+    explicitly so a cap with more precision than USDC's 6 decimals is always
+    rounded down, never up.
     """
-    amount = Decimal(max_usd_per_call.strip().lstrip("$"))
+    amount = _parse_positive_usd(
+        max_usd_per_call, env_name="the Hedwig policy cap", example=DEFAULT_MAX_USD_PER_CALL
+    )
     atomic = (amount * (Decimal(10) ** USDC_DECIMALS)).to_integral_value(rounding=ROUND_FLOOR)
     return str(int(atomic))
 
@@ -213,27 +221,66 @@ def build_hedwig_policy_document(*, pay_to: str, max_usd_per_call: str) -> Mappi
 def write_hedwig_policy_file(*, pay_to: str, max_usd_per_call: str) -> tuple[str, str]:
     """Write a 0600 Hedwig policy file into a fresh ``mkdtemp`` directory.
 
+    The document is built, and its cap validated, before ``mkdtemp`` runs: an
+    invalid cap raises before any directory or file exists, instead of
+    leaking an empty temp dir for every rejected value.
+
     Returns ``(policy_path, policy_dir)``. The caller owns removing
     ``policy_dir``; ``build_hedwig_client`` registers that cleanup to run at
-    process exit.
+    process exit and on SIGTERM.
     """
+    document = build_hedwig_policy_document(pay_to=pay_to, max_usd_per_call=max_usd_per_call)
     policy_dir = tempfile.mkdtemp(prefix="scout-hedwig-")
     policy_path = os.path.join(policy_dir, "policy.json")
-    document = build_hedwig_policy_document(pay_to=pay_to, max_usd_per_call=max_usd_per_call)
     fd = os.open(policy_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "w") as handle:
         json.dump(document, handle)
     return policy_path, policy_dir
 
 
+def _install_process_exit_cleanup(cleanup: Callable[[], None]) -> None:
+    """Run ``cleanup`` at normal process exit and, best-effort, on SIGTERM.
+
+    ``atexit`` alone never fires on SIGTERM (Python exits with status -15
+    without unwinding), which would leave the policy dir and the Hedwig
+    child behind. The SIGTERM handler chains to whatever handler was already
+    installed (if any) after cleanup runs, so a second installation in the
+    same process composes instead of silently replacing the first.
+    """
+    atexit.register(cleanup)
+    try:
+        previous_handler = signal.getsignal(signal.SIGTERM)
+    except ValueError:
+        return  # not the main thread; atexit above still covers a normal exit
+
+    def _on_sigterm(signum: int, frame: Optional[FrameType]) -> None:
+        cleanup()
+        signal.signal(signal.SIGTERM, previous_handler)
+        if callable(previous_handler):
+            previous_handler(signum, frame)
+        else:
+            os.kill(os.getpid(), signum)
+
+    try:
+        signal.signal(signal.SIGTERM, _on_sigterm)
+    except ValueError:
+        pass  # not the main thread; atexit above still covers a normal exit
+
+
 def build_hedwig_client(
-    environ: Mapping[str, str], *, pay_to: Optional[str], max_usd_per_call: str
+    environ: Mapping[str, str],
+    *,
+    pay_to: Optional[str],
+    max_usd_per_call: str,
+    command: Optional[Sequence[str]] = None,
 ) -> Optional[HedwigClient]:
     """Build Scout's Hedwig second-opinion client, or ``None`` when it is not installed.
 
     Only active when ``HEDWIG_SERVER_PATH`` is set and a recipient pin
     exists: an unset path means the hook is never installed at all, and a
-    missing pin means there is nothing safe to put in Hedwig's policy.
+    missing pin means there is nothing valid to put in Hedwig's policy.
+    ``command`` overrides the spawned argv (tests inject the fake server);
+    production leaves it unset and gets ``["node", server_path]``.
     """
     server_path = (environ.get(HEDWIG_SERVER_PATH_ENV) or "").strip()
     if not server_path or not pay_to:
@@ -241,8 +288,18 @@ def build_hedwig_client(
     policy_path, policy_dir = write_hedwig_policy_file(
         pay_to=pay_to, max_usd_per_call=max_usd_per_call
     )
-    atexit.register(shutil.rmtree, policy_dir, ignore_errors=True)
-    return HedwigClient(["node", server_path], policy_file=policy_path, environ=environ)
+    client = HedwigClient(
+        list(command) if command is not None else ["node", server_path],
+        policy_file=policy_path,
+        environ=environ,
+    )
+
+    def _cleanup() -> None:
+        client.close()
+        shutil.rmtree(policy_dir, ignore_errors=True)
+
+    _install_process_exit_cleanup(_cleanup)
+    return client
 
 
 def build_payment_session(

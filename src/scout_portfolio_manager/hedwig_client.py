@@ -6,12 +6,13 @@ spawns a Node child once, lazily, on the first call, and speaks the same
 newline-delimited JSON-RPC 2.0 framing the MCP stdio transport uses: no
 Content-Length headers, one JSON object per line.
 
-Fails closed by construction: a timeout, a parse error, a non-zero exit, or a
-broken pipe kills the child and marks this client permanently unavailable,
-for the rest of the process, so a stale response already sitting in the pipe
-can never be read as the answer to a later call. There is no later call:
-every call after the first failure raises immediately without touching the
-pipe again.
+Fails closed by construction: a timeout, a parse error, a non-zero exit, a
+broken pipe, a response whose id does not match the request it answers, or a
+tool result Scout cannot parse into an answer, kills the child and marks this
+client permanently unavailable, for the rest of the process, so a stale
+response already sitting in the pipe can never be misread as the answer to a
+different call. There is no later call: every call after the first failure
+raises immediately without touching the pipe again.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ import os
 import queue
 import subprocess
 import threading
+import time
 from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Sequence
 
@@ -34,6 +36,15 @@ DEFAULT_CALL_DEADLINE_SECONDS = 2.0
 #: never reaches the child.
 CHILD_ENV_ALLOWLIST = ("PATH", "HOME")
 HEDWIG_POLICY_FILE_ENV = "HEDWIG_POLICY_FILE"
+
+#: A well-behaved server should never emit one, but a build that logs
+#: `notifications/message` must not brick the client for the rest of the
+#: process. More than this many discarded while waiting for one response is
+#: treated as a protocol violation instead of tolerated.
+MAX_DISCARDED_NOTIFICATIONS = 8
+
+#: The only three verdict strings Hedwig's consult() can return.
+_VALID_VERDICTS = frozenset({"ALLOW_UNDER_POLICY", "DENY", "UNKNOWN"})
 
 _PROTOCOL_VERSION = "2024-11-05"
 _CLIENT_NAME = "scout-hedwig-preflight"
@@ -55,8 +66,13 @@ class HedwigTimeout(Exception):
 
 
 class HedwigProtocolError(Exception):
-    """Hedwig's response was not usable: bad JSON-RPC, a missing field, or a
-    tool result with ``isError`` set."""
+    """Hedwig's response was not usable.
+
+    Covers bad JSON-RPC, a response id that does not match the request it
+    answers, a tool result with ``isError`` set, a missing or invalid
+    ``verdict``, and an unexpected shape for the payment requirements Scout
+    was asked to map.
+    """
 
 
 @dataclass(frozen=True)
@@ -86,10 +102,21 @@ def map_payment_requirements(requirements: Any) -> Mapping[str, Any]:
     """Map the x402 SDK's selected requirements to a Hedwig ``pay`` request.
 
     v2 field names (snake_case); ``get_amount()`` also covers v1, since both
-    expose it. Nothing beyond these fields is ever sent to Hedwig.
+    expose it. Nothing beyond these fields is ever sent to Hedwig. An
+    unexpected shape (``None``, an object with no ``get_amount()``, or one
+    whose ``get_amount()`` itself fails) becomes a ``HedwigProtocolError``
+    instead of a bare ``AttributeError``/``TypeError`` escaping this module.
     """
+    get_amount = getattr(requirements, "get_amount", None)
+    if not callable(get_amount):
+        raise HedwigProtocolError(
+            "the selected payment requirements have no get_amount() to map"
+        )
+    try:
+        amount = get_amount()
+    except Exception as exc:
+        raise HedwigProtocolError(f"get_amount() failed while mapping the request: {exc}") from None
     asset = _attr(requirements, "asset")
-    amount = requirements.get_amount()
     return {
         "action": {
             "type": "pay",
@@ -145,6 +172,10 @@ def _parse_consult_answer(result: Mapping[str, Any]) -> ConsultAnswer:
     verdict = structured.get("verdict")
     if not isinstance(proceed, bool) or not isinstance(verdict, str):
         raise HedwigProtocolError("Hedwig response is missing proceed or verdict")
+    if verdict not in _VALID_VERDICTS:
+        raise HedwigProtocolError(
+            f"Hedwig verdict {verdict!r} is not one of the three known values"
+        )
     results = structured.get("results")
     worst = results[0] if isinstance(results, list) and results else None
     return ConsultAnswer(
@@ -154,6 +185,23 @@ def _parse_consult_answer(result: Mapping[str, Any]) -> ConsultAnswer:
         worst_row_code=_str_or_none(worst, "code") if isinstance(worst, Mapping) else None,
         worst_row_evidence=_str_or_none(worst, "evidence") if isinstance(worst, Mapping) else None,
     )
+
+
+def _is_notification(message: Mapping[str, Any]) -> bool:
+    """A JSON-RPC notification: has ``method``, and no ``id`` key at all."""
+    return "method" in message and "id" not in message
+
+
+def _id_matches(message: Mapping[str, Any], expected_id: int) -> bool:
+    """Strict by type and value: only a bare, exact-matching int id passes.
+
+    ``type(value) is int`` (not ``isinstance``) so a bool, which Python
+    treats as an int subclass, never slips through as a matching id.
+    """
+    if "id" not in message:
+        return False
+    value = message["id"]
+    return type(value) is int and value == expected_id
 
 
 class HedwigClient:
@@ -194,13 +242,12 @@ class HedwigClient:
                 raise HedwigUnavailable("Hedwig client is permanently unavailable")
             if self._process is None:
                 self._spawn_locked()
-            result = self._call_locked(
+            return self._call_locked(
                 "tools/call", {"name": _TOOL_NAME, "arguments": {"request": request}}
             )
-        return _parse_consult_answer(result)
 
     def close(self) -> None:
-        """Best-effort shutdown; never raises. Safe to call more than once."""
+        """Best-effort shutdown; never raises. Can be called more than once."""
         with self._lock:
             self._kill_locked()
 
@@ -225,10 +272,11 @@ class HedwigClient:
         thread = threading.Thread(target=self._read_loop, args=(process,), daemon=True)
         thread.start()
         try:
+            request_id = self._take_id()
             self._send_locked(
                 {
                     "jsonrpc": "2.0",
-                    "id": self._take_id(),
+                    "id": request_id,
                     "method": "initialize",
                     "params": {
                         "protocolVersion": _PROTOCOL_VERSION,
@@ -237,7 +285,7 @@ class HedwigClient:
                     },
                 }
             )
-            self._read_locked(self._spawn_deadline)
+            self._read_locked(self._spawn_deadline, request_id)
             self._send_locked({"jsonrpc": "2.0", "method": "notifications/initialized"})
         except (HedwigTimeout, HedwigProtocolError, HedwigUnavailable):
             self._kill_locked()
@@ -264,9 +312,10 @@ class HedwigClient:
         except (BrokenPipeError, OSError) as exc:
             raise HedwigUnavailable(f"Hedwig pipe broke while sending: {exc}") from None
 
-    def _read_locked(self, deadline: float) -> Mapping[str, Any]:
+    def _read_one_message_locked(self, remaining: float) -> Mapping[str, Any]:
+        """Read and JSON-decode exactly one line, or raise. No id logic here."""
         try:
-            line = self._responses.get(timeout=deadline)
+            line = self._responses.get(timeout=remaining)
         except queue.Empty:
             raise HedwigTimeout("Hedwig did not answer inside its deadline") from None
         if not line:
@@ -278,19 +327,63 @@ class HedwigClient:
             raise HedwigProtocolError(f"Hedwig sent an unparsable line: {exc}") from None
         if not isinstance(message, Mapping) or message.get("jsonrpc") != "2.0":
             raise HedwigProtocolError("Hedwig response was not a JSON-RPC 2.0 message")
-        if "error" in message:
-            raise HedwigProtocolError(f"Hedwig returned a JSON-RPC error: {message['error']}")
-        result = message.get("result")
-        if not isinstance(result, Mapping):
-            raise HedwigProtocolError("Hedwig response had no result")
-        return result
+        return message
 
-    def _call_locked(self, method: str, params: Mapping[str, Any]) -> Mapping[str, Any]:
+    def _read_locked(self, deadline: float, expected_id: int) -> Mapping[str, Any]:
+        """Read exactly the response to ``expected_id``, never anything else.
+
+        Tolerates up to ``MAX_DISCARDED_NOTIFICATIONS`` JSON-RPC
+        notifications arriving before that response, within the same total
+        deadline (a notification never extends the wait). Any response whose
+        id does not match ``expected_id``, by type and value, is a protocol
+        violation: this never "resynchronises" by skipping ahead to find a
+        matching line, because the next line is exactly the stale answer
+        this whole check exists to refuse.
+        """
+        deadline_at = time.monotonic() + deadline
+        discarded_notifications = 0
+        while True:
+            remaining = deadline_at - time.monotonic()
+            if remaining <= 0:
+                raise HedwigTimeout("Hedwig did not answer inside its deadline")
+            message = self._read_one_message_locked(remaining)
+            if _is_notification(message):
+                discarded_notifications += 1
+                if discarded_notifications > MAX_DISCARDED_NOTIFICATIONS:
+                    raise HedwigProtocolError(
+                        "Hedwig sent more notifications than Scout tolerates "
+                        "while waiting for one response"
+                    )
+                continue
+            if not _id_matches(message, expected_id):
+                raise HedwigProtocolError(
+                    f"Hedwig response id {message.get('id')!r} did not match "
+                    f"the request id {expected_id}"
+                )
+            if "error" in message:
+                raise HedwigProtocolError(f"Hedwig returned a JSON-RPC error: {message['error']}")
+            result = message.get("result")
+            if not isinstance(result, Mapping):
+                raise HedwigProtocolError("Hedwig response had no result")
+            return result
+
+    def _call_locked(self, method: str, params: Mapping[str, Any]) -> ConsultAnswer:
         try:
+            if not self._responses.empty():
+                # Best-effort: catches a stray line left over from the
+                # previous call before Scout even writes the next request.
+                # Not load-bearing by itself (a raw pipe read can race this
+                # check); the id check above is what actually guarantees a
+                # stale answer is never returned, whether or not this fires.
+                raise HedwigProtocolError(
+                    "Hedwig had unread bytes on the pipe before Scout's next call"
+                )
+            request_id = self._take_id()
             self._send_locked(
-                {"jsonrpc": "2.0", "id": self._take_id(), "method": method, "params": params}
+                {"jsonrpc": "2.0", "id": request_id, "method": method, "params": params}
             )
-            return self._read_locked(self._call_deadline)
+            result = self._read_locked(self._call_deadline, request_id)
+            return _parse_consult_answer(result)
         except (HedwigTimeout, HedwigProtocolError, HedwigUnavailable):
             self._kill_locked()
             self._unavailable = True
@@ -323,6 +416,7 @@ class HedwigClient:
 
 __all__ = [
     "CHILD_ENV_ALLOWLIST",
+    "MAX_DISCARDED_NOTIFICATIONS",
     "ConsultAnswer",
     "HedwigClient",
     "HedwigProtocolError",
