@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- An optional Hedwig second opinion in the x402 preflight. When `HEDWIG_SERVER_PATH` names a built Hedwig MCP server, Scout asks it before every payment requirement and fails closed (`hedwig_deny`, `hedwig_unknown`, `hedwig_unavailable`) on a denial or on any Hedwig failure. Unset, the hook is never installed.
+
 ### Maintenance
 
 - Removed internal planning notes from the public tree.
