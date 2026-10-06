@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "request": {
+    "chainId": "eip155:143",
+    "action": "swap",
+    "transaction": {
+      "from": "0x3333333333333333333333333333333333333333",
+      "to": "0xfe31f71c1b106eac32f1a19239c9a9a72ddfb900",
+      "data": "0x1234",
+      "value": "10000000000000000000"
+    },
+    "contracts": {
+      "target": "0xfe31f71c1b106eac32f1a19239c9a9a72ddfb900",
+      "token_out": "0x1111111111111111111111111111111111111111"
+    },
+    "amounts": [
+      {
+        "asset": "MON",
+        "amount": "10000000000000000000",
+        "direction": "in"
+      }
+    ],
+    "setup": {
+      "slippageBps": 100,
+      "deadline": 1791331200
+    },
+    "swapIntent": {
+      "tokenIn": {
+        "kind": "native",
+        "symbol": "MON"
+      },
+      "tokenOutSymbol": "USDC",
+      "recipient": "0x3333333333333333333333333333333333333333",
+      "quotedOut": "10000000",
+      "minOut": "9900000",
+      "approvalAmount": "0"
+    }
+  }
+}

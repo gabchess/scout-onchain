@@ -1,0 +1,58 @@
+[
+  {
+    "source": "https://example.invalid:bad/path",
+    "accepted": false
+  },
+  {
+    "source": "https://example.invalid:65536/path",
+    "accepted": false
+  },
+  {
+    "source": "https://exa\u0000mple.invalid/path",
+    "accepted": false
+  },
+  {
+    "source": "https://example.invalid/path",
+    "accepted": false
+  },
+  {
+    "source": "https://example.invalid/a b",
+    "accepted": true
+  },
+  {
+    "source": "https://example.invalid:443/a b?q=x y#z w",
+    "accepted": true
+  },
+  {
+    "source": "https://example.invalid/café/😀",
+    "accepted": true
+  },
+  {
+    "source": "HTTPS://example.invalid:65535/source",
+    "accepted": true
+  },
+  {
+    "source": "https://user:pass@example.invalid/path",
+    "accepted": false
+  },
+  {
+    "source": "https://example .invalid/path",
+    "accepted": false
+  },
+  {
+    "source": "https://example.invalid/a\\b",
+    "accepted": false
+  },
+  {
+    "source": "https://example.invalid/a\nb",
+    "accepted": false
+  },
+  {
+    "source": "\thttps://example.invalid/path",
+    "accepted": false
+  },
+  {
+    "source": "https:///example.invalid/path",
+    "accepted": false
+  }
+]
