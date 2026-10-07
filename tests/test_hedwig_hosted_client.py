@@ -493,6 +493,62 @@ def test_deadline_is_not_reset_after_headers_and_late_success_is_rejected():
     asyncio.run(run())
 
 
+@pytest.mark.parametrize("blocking_close", [False, True], ids=["cooperative", "stalled"])
+def test_acquired_body_timeout_keeps_detached_cleanup_bounded(blocking_close):
+    """Offline regression: an acquired body needs async cleanup after its read expires."""
+
+    async def run():
+        loop = asyncio.get_running_loop()
+        original_time = loop.time
+        offset = 0
+        loop.time = lambda: original_time() + offset
+        release = asyncio.Event()
+        finished = asyncio.Event()
+        close_calls = []
+        closed = []
+        cancelled = []
+
+        class Body:
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                nonlocal offset
+                offset = 8
+                await asyncio.Event().wait()
+
+            async def aclose(self):
+                close_calls.append(1)
+                try:
+                    await release.wait()
+                    closed.append(True)
+                except asyncio.CancelledError:
+                    cancelled.append(True)
+                    raise
+                finally:
+                    finished.set()
+
+        response = reply({})
+        response.body = Body()
+        client, calls = client_for(response)
+        try:
+            with pytest.raises(HedwigHostedError, match="HEDWIG_TIMEOUT"):
+                await client.assess(REQUEST)
+            # Cleanup can finish only after the caller has received its timeout.
+            if not blocking_close:
+                release.set()
+            await asyncio.wait_for(finished.wait(), timeout=0.3)
+            assert close_calls == [1]
+            assert len(calls) == 1
+            assert closed == ([] if blocking_close else [True])
+            assert cancelled == ([True] if blocking_close else [])
+        finally:
+            loop.time = original_time
+            release.set()
+
+    asyncio.run(run())
+
+
 @pytest.mark.parametrize("late", [False, True])
 @pytest.mark.parametrize("blocking_close", [False, True])
 def test_abandoned_transport_response_closes_once_without_delaying_timeout(late, blocking_close):

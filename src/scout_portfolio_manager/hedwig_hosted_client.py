@@ -354,8 +354,8 @@ def _live(deadline: float) -> None:
 
 
 def _close_abandoned(response: HostedResponse) -> None:
-    # A transport can complete after its caller timed out. Close its unused body
-    # once, off the caller's path, with a bounded cooperative cleanup budget.
+    # Close an unused body once, off the caller's path, with its own bounded
+    # cooperative cleanup budget.
     try:
         task = asyncio.ensure_future(response.body.aclose())
         timer = asyncio.get_running_loop().call_later(0.1, task.cancel)
@@ -533,7 +533,13 @@ class HedwigHostedClient:
         except Exception:
             raise HedwigHostedError("HEDWIG_TRANSPORT_FAILED") from None
         finally:
-            if response is not None:
+            if (
+                response is not None
+                and not completed
+                and asyncio.get_running_loop().time() >= deadline
+            ):
+                _close_abandoned(response)
+            elif response is not None:
                 try:
                     await _bounded(response.body.aclose(), deadline)
                 except Exception:

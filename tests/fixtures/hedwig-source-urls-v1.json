@@ -12,7 +12,7 @@
     "accepted": false
   },
   {
-    "source": "https://example.invalid/path",
+    "source": "https://exa\u007fmple.invalid/path",
     "accepted": false
   },
   {
