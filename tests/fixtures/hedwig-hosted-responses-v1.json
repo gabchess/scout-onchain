@@ -1,0 +1,115 @@
+{
+  "allowThreshold": {
+    "version": 1,
+    "assessment": {
+      "status": "ok",
+      "score": 0.8,
+      "verdict": "ALLOW_UNDER_POLICY",
+      "proceed": true,
+      "reasons": [{ "source": "check", "code": "CHECKS_PASSED", "text": "Synthetic checks passed." }],
+      "label": "documented-canonical",
+      "rating": 0.9,
+      "citations": [{ "lane": "defi", "source": "https://example.invalid/synthetic-defi" }],
+      "note": "The score cannot exceed verified checks. The caller controls execution."
+    },
+    "reference": {
+      "handle": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "requestDigest": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "expiresAt": 1791332100000
+    }
+  },
+  "unknownIntermediate": {
+    "version": 1,
+    "assessment": {
+      "status": "ok",
+      "score": 0.79,
+      "verdict": "UNKNOWN",
+      "proceed": false,
+      "reasons": [{ "source": "model", "code": "SERIOUS_RISK", "text": "The assessment did not establish permission." }],
+      "label": "documented-risk-pattern",
+      "rating": 0.95,
+      "citations": [
+        { "lane": "defi", "source": "https://example.invalid/synthetic-defi" },
+        { "lane": "payments", "source": "https://example.invalid/synthetic-payments" },
+        { "lane": "security", "source": "https://example.invalid/synthetic-security" },
+        { "lane": "opsec", "source": "https://example.invalid/synthetic-opsec" }
+      ],
+      "note": "The score cannot exceed verified checks. The caller controls execution."
+    },
+    "reference": {
+      "handle": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "requestDigest": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "expiresAt": 1791332100000
+    }
+  },
+  "denyWithIssuer": {
+    "version": 1,
+    "assessment": {
+      "status": "ok",
+      "score": 0,
+      "verdict": "DENY",
+      "proceed": false,
+      "reasons": [
+        { "source": "check", "code": "CHECK_DENIED", "text": "The required check did not permit this assessment." },
+        {
+          "source": "check",
+          "code": "SWAP_TOKEN_OUT_NOT_CANONICAL",
+          "text": "The proposed output token differs from the issuer reference for USDC on Monad.",
+          "canonicalAsset": {
+            "chainId": "eip155:143",
+            "symbol": "USDC",
+            "contractAddress": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+            "issuerSource": {
+              "origin": "circle.com",
+              "url": "https://developers.circle.com/stablecoins/usdc-contract-addresses",
+              "retrievedAt": 1791244800
+            }
+          }
+        }
+      ],
+      "label": null,
+      "rating": null,
+      "citations": [],
+      "note": "The score cannot exceed verified checks. The caller controls execution."
+    },
+    "reference": {
+      "handle": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "requestDigest": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "expiresAt": 1791332100000
+    }
+  },
+  "storageFailure": {
+    "version": 1,
+    "assessment": {
+      "status": "unavailable",
+      "score": 0,
+      "verdict": "UNKNOWN",
+      "proceed": false,
+      "reasons": [{ "source": "check", "code": "ASSESSMENT_RECORD_UNAVAILABLE", "text": "The assessment record could not be saved." }],
+      "label": null,
+      "rating": null,
+      "citations": [],
+      "note": "The score cannot exceed verified checks. The caller controls execution."
+    },
+    "reference": null
+  },
+  "timeout": {
+    "version": 1,
+    "assessment": {
+      "status": "timeout",
+      "score": 0,
+      "verdict": "UNKNOWN",
+      "proceed": false,
+      "reasons": [{ "source": "check", "code": "DEADLINE_EXCEEDED", "text": "The required check did not permit this assessment." }],
+      "label": null,
+      "rating": null,
+      "citations": [],
+      "note": "The score cannot exceed verified checks. The caller controls execution."
+    },
+    "reference": {
+      "handle": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "requestDigest": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
+      "expiresAt": 1791332100000
+    }
+  }
+}
