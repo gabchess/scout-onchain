@@ -15,6 +15,7 @@ from typing import Literal, Mapping
 
 from pydantic import StrictFloat, StrictInt, StrictStr
 
+from .hedwig_tools import HedwigAssessmentBody, HedwigReference
 from .host import ReadOnlyHost, default_host
 from .zerion_api import ZerionConfigError, reader_from_env
 from .zerion_cli import preparation_from_env
@@ -232,6 +233,20 @@ def create_server(host: ReadOnlyHost | None = None):
     def get_zerion_preparation(request_id: StrictStr) -> str:
         """Read local preparation state; never interprets a prepared envelope as settlement."""
         return json.dumps(host.get_zerion_preparation(request_id), allow_nan=False)
+
+    @server.tool(name="assess_with_hedwig")
+    async def assess_with_hedwig(body: HedwigAssessmentBody) -> str:
+        """Assess one unsigned Monad proposal. Disabled without operator client injection.
+        Returns the complete assessment and original reference. No execution follows.
+        """
+        return json.dumps(await host.assess_with_hedwig(body), allow_nan=False)
+
+    @server.tool(name="get_hedwig_report")
+    async def get_hedwig_report(reference: HedwigReference) -> str:
+        """Read the authenticated owner's original report; never rescores or executes.
+        Forward the saved handle and requestDigest unchanged. No credential arguments.
+        """
+        return json.dumps(await host.get_hedwig_report(reference), allow_nan=False)
 
     return server
 

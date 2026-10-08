@@ -36,6 +36,8 @@ from .analytics import (
 from .contracts import Holding, PortfolioSnapshot, Transaction
 from .dca import DcaIntent
 from .dca_windows import SIZING_FRACTION, classify_window
+from .hedwig_hosted_client import HedwigHostedClient
+from .hedwig_tools import HEDWIG_TOOL_NAMES, HedwigAssessmentBody, HedwigReference, hedwig_manifest
 from .knowledge import search_knowledge
 from .pnl import PnlResult, calculate_pnl
 from .portfolio import FixturePortfolioReader, PortfolioReader
@@ -68,15 +70,19 @@ def error_kind_counts() -> Dict[str, int]:
 
 
 TOOL_NAMES = (
-    "get_portfolio_snapshot",
-    "get_pnl",
-    "parse_dca_request",
-    "preview_dca",
-    "analyze_asset",
-    "dca_windows",
-    "set_alert",
-    "check_alerts",
-) + ADVISORY_TOOL_NAMES
+    (
+        "get_portfolio_snapshot",
+        "get_pnl",
+        "parse_dca_request",
+        "preview_dca",
+        "analyze_asset",
+        "dca_windows",
+        "set_alert",
+        "check_alerts",
+    )
+    + ADVISORY_TOOL_NAMES
+    + HEDWIG_TOOL_NAMES
+)
 
 #: analyze_asset's freshness gate: how many days old the last observed price
 #: point may be, relative to the snapshot's observed_at date, before the
@@ -154,7 +160,9 @@ class ReadOnlyHost:
         price_history_path: Optional[Union[str, Path]] = None,
         alerts_path: Optional[Union[str, Path]] = None,
         preparation: PreparationService | None = None,
+        hedwig_client: HedwigHostedClient | None = None,
     ):
+        self._hedwig_client = hedwig_client if hedwig_client is not None else HedwigHostedClient()
         self.preparation = preparation or PreparationService()
         self.reader: PortfolioReader = (
             FixturePortfolioReader(source) if isinstance(source, (str, Path)) else source
@@ -387,9 +395,30 @@ class ReadOnlyHost:
                     "additionalProperties": False,
                 },
             },
-        ] + advisory_manifest(__version__)
+        ] + advisory_manifest(__version__) + hedwig_manifest(__version__)
+
+    async def assess_with_hedwig(self, body: HedwigAssessmentBody) -> Dict[str, Any]:
+        """Assess an unsigned proposal through the explicitly injected hosted client."""
+        return await self._hedwig_client.assess(body)
+
+    async def get_hedwig_report(self, reference: HedwigReference) -> Dict[str, Any]:
+        """Request the owner's original report using its opaque handle and digest."""
+        return await self._hedwig_client.report(reference)
+
+    async def call_tool_async(
+        self, name: str, arguments: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Async dispatch for hosted Hedwig tools; existing tools keep synchronous dispatch."""
+        arguments = {} if arguments is None else arguments
+        if name == "assess_with_hedwig":
+            return await self.assess_with_hedwig(**arguments)
+        if name == "get_hedwig_report":
+            return await self.get_hedwig_report(**arguments)
+        raise ValueError(f"unknown async tool: {name}")
 
     def call_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if name in HEDWIG_TOOL_NAMES:
+            raise ValueError(f"{name} requires call_tool_async")
         arguments = arguments or {}
         if name in ADVISORY_TOOL_NAMES:
             methods: Dict[str, Callable[..., Dict[str, Any]]] = {

@@ -1,4 +1,4 @@
-"""Exercise the installed Scout package over real stdio MCP with no credential inheritance."""
+"""Exercise this Scout checkout over real stdio MCP with no credential inheritance."""
 
 from __future__ import annotations
 
@@ -28,6 +28,8 @@ EXPECTED = {
     "plan_zerion_action",
     "prepare_zerion_transaction",
     "get_zerion_preparation",
+    "assess_with_hedwig",
+    "get_hedwig_report",
 }
 
 
@@ -36,7 +38,11 @@ async def verify() -> dict[str, object]:
     params = StdioServerParameters(
         command=sys.executable,
         args=["-m", "scout_portfolio_manager.mcp_server"],
-        env={"PATH": os.defpath, "PYTHONNOUSERSITE": "1"},
+        env={
+            "PATH": os.defpath,
+            "PYTHONNOUSERSITE": "1",
+            "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
+        },
     )
     results: dict[str, object] = {}
     async with stdio_client(params) as (read, write):
@@ -103,7 +109,7 @@ def main() -> None:
     rendered = json.dumps(result, indent=2, allow_nan=False) + "\n"
     if args.output:
         args.output.write_text(rendered)
-        print(f"MCP verification passed: 14 tools, 7 calls and rejected boolean; {args.output}")
+        print(f"MCP verification passed: 16 tools, 7 calls and rejected boolean; {args.output}")
     else:
         print(rendered)
 

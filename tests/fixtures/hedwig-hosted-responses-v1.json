@@ -106,10 +106,6 @@
       "citations": [],
       "note": "The score cannot exceed verified checks. The caller controls execution."
     },
-    "reference": {
-      "handle": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-      "requestDigest": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
-      "expiresAt": 1791332100000
-    }
+    "reference": null
   }
 }

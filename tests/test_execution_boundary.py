@@ -25,6 +25,8 @@ EXPECTED_TOOLS = frozenset(
         "plan_zerion_action",
         "prepare_zerion_transaction",
         "get_zerion_preparation",
+        "assess_with_hedwig",
+        "get_hedwig_report",
     }
 )
 

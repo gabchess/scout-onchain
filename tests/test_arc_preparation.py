@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shlex
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -13,7 +14,7 @@ from pathlib import Path
 import pytest
 from tests.test_arc_read_path import arc_host
 
-from scout_portfolio_manager.zerion_cli import ZerionCliProvider
+from scout_portfolio_manager.zerion_cli import ZerionCliProvider, bounded_process
 from scout_portfolio_manager.zerion_prepare import (
     ARC_SAME_BALANCE,
     ARC_TRANSFERS_ONLY,
@@ -300,10 +301,15 @@ def fake_cli(root: Path, stderr: str = "", stdout: str = "", code: int = 1) -> P
     (root / "cli").mkdir(parents=True)
     (root / "package.json").write_text(json.dumps({"name": "zerion-cli", "version": "1.9.1"}))
     path = root / "cli/zerion.js"
-    path.write_text(
-        f"#!{sys.executable}\nimport sys\n"
+    program = (
+        "import sys\n"
         f"sys.stdout.write({stdout!r})\nsys.stdout.flush()\n"
         f"sys.stderr.write({stderr!r})\nsys.exit({code})\n"
+    )
+    script = root / "fixture.py"
+    script.write_text(program)
+    path.write_text(
+        f'#!/bin/sh\nexec {shlex.quote(sys.executable)} {shlex.quote(str(script))} "$@"\n'
     )
     path.chmod(0o700)
     return path
@@ -330,6 +336,12 @@ def test_base_cli_flag_refusal_is_chain_not_supported_and_leaks_nothing(tmp_path
     assert "sk-secret" not in json.dumps(result)
     with sqlite3.connect(tmp_path / "db") as db:
         assert "sk-secret" not in json.dumps(db.execute("SELECT * FROM preparations").fetchall())
+
+
+def test_oversized_cli_refusal_reaches_output_limit(tmp_path):
+    cli = fake_cli(tmp_path, stderr=refusal(message="x" * 1_100_000))
+    with pytest.raises(ValueError, match="output limit"):
+        bounded_process([str(cli)], {}, timeout=5)
 
 
 @pytest.mark.parametrize(
