@@ -42,8 +42,12 @@ reviews:
         flag that does not exist in the repo.
     - path: "tests/**/*.py"
       instructions: >
-        Flag only a test that cannot fail (asserts a mock's own return, has no
-        assertion) or that swallows the error it should catch.
+        Each new test must name the failure it catches and be able to fail.
+        Flag only: a test that cannot fail (asserts a mock's own return, has no
+        assertion); a test that swallows the error it should catch; an
+        assertion that passes vacuously (empty loop or collection, always-true
+        condition); a probabilistic lower bound on timing; a substring match
+        that can hit the wrong symbol.
     - path: "**/*.md"
       instructions: >
         Flag only a number, date, path, version, or command that contradicts the
