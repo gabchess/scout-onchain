@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import sys
 from pathlib import Path
 
@@ -62,9 +63,14 @@ def cli_fixture(root: Path, version="1.9.1") -> Path:
     (root / "cli").mkdir()
     (root / "package.json").write_text(json.dumps({"name": "zerion-cli", "version": version}))
     path = root / "cli/zerion.js"
-    path.write_text(
-        "#!" + sys.executable + "\nimport json,os,sys\n"
+    program = (
+        "import json,os,sys\n"
         'print(json.dumps({"argv":sys.argv[1:],"env":sorted(os.environ)}))\n'
+    )
+    script = root / "fixture.py"
+    script.write_text(program)
+    path.write_text(
+        f'#!/bin/sh\nexec {shlex.quote(sys.executable)} {shlex.quote(str(script))} "$@"\n'
     )
     path.chmod(0o700)
     return path

@@ -161,6 +161,7 @@ def _score_envelope(value: Any) -> None:
     _require(type(value["version"]) is int and value["version"] == 1)
     _assessment(value["assessment"])
     if value["reference"] is not None:
+        _require(value["assessment"]["status"] != "timeout")
         _reference(value["reference"])
     else:
         _require(value["assessment"]["score"] == 0 and value["assessment"]["proceed"] is False)
@@ -345,7 +346,46 @@ def _report(value: Any, original: Any = None) -> None:
             if assessment["verdict"] == "DENY"
             else "This request could not be approved. Do not sign or submit it."
         )
-        _require(prose == expected and value["sources"] == [])
+        allowed: list[tuple[str, list[str]]] = [(expected, [])]
+        reasons = assessment["reasons"]
+        if assessment["verdict"] == "DENY":
+            mismatch = next(
+                (
+                    reason
+                    for reason in reasons
+                    if reason["source"] == "check"
+                    and reason["code"] == "SWAP_TOKEN_OUT_NOT_CANONICAL"
+                ),
+                None,
+            )
+            if mismatch is not None:
+                prefix = "This request was denied. Its output token differs from USDC on Monad. "
+                suffix = " Do not sign or submit it."
+                allowed.append(
+                    (prefix + "The replacement address is unavailable in this report." + suffix, [])
+                )
+                asset = mismatch.get("canonicalAsset")
+                # _assessment already validated all issuer fields at this wire boundary.
+                if asset and _address(asset["contractAddress"]):
+                    allowed.append(
+                        (
+                            prefix + f"Verified USDC: {asset['contractAddress']}." + suffix,
+                            [asset["issuerSource"]["url"]],
+                        )
+                    )
+        elif any(
+            reason["source"] == "check"
+            and reason["code"] in ("CHECKS_UNAVAILABLE", "RETRIEVAL_UNAVAILABLE")
+            for reason in reasons
+        ):
+            allowed.append(
+                (
+                    "This request could not be approved. Required evidence is unavailable. "
+                    "Do not sign or submit it.",
+                    [],
+                )
+            )
+        _require((prose, value["sources"]) in allowed)
 
 
 def _live(deadline: float) -> None:
@@ -436,7 +476,7 @@ class HedwigHostedClient:
             self._report_timeout if report else self._assessment_timeout
         )
 
-    async def assess(self, body: Any) -> Any:
+    async def assess(self, body: Any) -> dict[str, Any]:
         """Capture the complete version-1 unsigned request and return its score envelope."""
         deadline = self._deadline()
         try:
@@ -446,7 +486,7 @@ class HedwigHostedClient:
             raise HedwigHostedError("HEDWIG_REQUEST_INVALID") from None
         return await self._exchange("/v1/assess", captured, _score_envelope, deadline)
 
-    async def report(self, reference: Any, *, original_assessment: Any = None) -> Any:
+    async def report(self, reference: Any, *, original_assessment: Any = None) -> dict[str, Any]:
         """Send only handle/digest; optionally bind the returned assessment to a local copy.
 
         expiresAt is accepted from a saved reference but never transmitted or extended.
@@ -471,7 +511,7 @@ class HedwigHostedClient:
 
     async def _exchange(
         self, path: str, captured: bytes, validate: Callable[[Any], None], deadline: float
-    ) -> Any:
+    ) -> dict[str, Any]:
         response = None
         completed = False
         try:
@@ -525,7 +565,7 @@ class HedwigHostedClient:
             validate(value)
             _live(deadline)
             completed = True
-            return value
+            return dict(value)
         except HedwigHostedError as error:
             raise HedwigHostedError(error.code, retry_after=error.retry_after) from None
         except (ValueError, TypeError, KeyError, RecursionError, AttributeError):
