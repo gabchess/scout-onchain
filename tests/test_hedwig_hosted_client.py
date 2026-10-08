@@ -426,10 +426,16 @@ def test_default_assessment_and_report_deadlines_are_distinct():
 @pytest.mark.parametrize("stage", ["connect", "body", "close"])
 def test_whole_operation_timeout_covers_connect_body_and_cleanup(stage):
     async def run():
+        loop = asyncio.get_running_loop()
+        original_time = loop.time
+        offset = 0
+        loop.time = lambda: original_time() + offset
         calls = []
         cancelled = []
 
         async def stall():
+            nonlocal offset
+            offset = 8
             try:
                 await asyncio.Event().wait()
             finally:
@@ -462,12 +468,15 @@ def test_whole_operation_timeout_covers_connect_body_and_cleanup(stage):
             response.body = Body()
             return response
 
-        client = HedwigHostedClient(transport, enabled=True, assessment_timeout=0.02)
-        with pytest.raises(HedwigHostedError, match="HEDWIG_TIMEOUT"):
-            await asyncio.wait_for(client.assess(REQUEST), timeout=0.5)
-        await asyncio.sleep(0)
-        assert len(calls) == 1
-        assert cancelled == [stage]
+        client = HedwigHostedClient(transport, enabled=True)
+        try:
+            with pytest.raises(HedwigHostedError, match="HEDWIG_TIMEOUT"):
+                await asyncio.wait_for(client.assess(REQUEST), timeout=10)
+            await asyncio.sleep(0)
+            assert len(calls) == 1
+            assert cancelled == [stage]
+        finally:
+            loop.time = original_time
 
     asyncio.run(run())
 
