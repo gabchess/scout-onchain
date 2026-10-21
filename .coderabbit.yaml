@@ -1,17 +1,16 @@
 # yaml-language-server: $schema=https://www.coderabbit.ai/integrations/schema.v2.json
 # Public repo: keep this file free of private names and internal process.
-# Inherit organization settings, with repository approval controls below.
+# Inherit organization settings, with repository review settings below.
 inheritance: true
 reviews:
-  request_changes_workflow: true
+  request_changes_workflow: false
   allow_author_approval: false
   auto_review:
     enabled: true
     drafts: false                       # a draft PR is reviewed once it is marked ready
-    # Kept on: main requires one approving review and dismisses stale approvals on
-    # push, so each new commit needs a fresh review before the approval can return.
+    # Kept on: CodeRabbit is an optional reviewer, so each new commit still gets a fresh review.
     auto_incremental_review: true
-    # 0 turns off the default pause after 5 reviewed commits, which would leave a stale approval.
+    # 0 turns off the default pause after 5 reviewed commits, so later commits keep getting reviewed.
     auto_pause_after_reviewed_commits: 0
     ignore_title_keywords:
       - "[WIP]"
