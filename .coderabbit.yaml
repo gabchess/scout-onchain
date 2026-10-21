@@ -11,6 +11,8 @@ reviews:
     # Kept on: main requires one approving review and dismisses stale approvals on
     # push, so each new commit needs a fresh review before the approval can return.
     auto_incremental_review: true
+    # 0 turns off the default pause after 5 reviewed commits, which would leave a stale approval.
+    auto_pause_after_reviewed_commits: 0
     ignore_title_keywords:
       - "[WIP]"
       - "WIP:"
