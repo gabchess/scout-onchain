@@ -8,14 +8,16 @@ reviews:
   auto_review:
     enabled: true
     drafts: false                       # a draft PR is reviewed once it is marked ready
-    # Kept on: CodeRabbit is an optional reviewer, so each new commit still gets a fresh review.
-    auto_incremental_review: true
-    # 0 turns off the default pause after 5 reviewed commits, so later commits keep getting reviewed.
+    # Off: CodeRabbit reviews each PR once. Re-review with "@coderabbitai review".
+    auto_incremental_review: false
+    # Has no effect while auto_incremental_review is off.
     auto_pause_after_reviewed_commits: 0
     ignore_title_keywords:
       - "[WIP]"
       - "WIP:"
       - "DO NOT MERGE"
+      - WIP
+      - '[no-cr]'
   path_filters:
     # shared block v1: narrative files and data logs. Same lines in every repo yaml.
     - "!**/handoffs/**"
@@ -72,6 +74,27 @@ reviews:
       instructions: >
         Flag only a number, date, path, version, or command that contradicts the
         code or another file. Skip wording, tone, and structure.
+  profile: chill
+  tools:
+    gitleaks:
+      enabled: true
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+    autofix:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
+      enabled: false
 knowledge_base:
   learnings:
     scope: local
+  code_guidelines:
+    enabled: true
+chat:
+  auto_reply: false
