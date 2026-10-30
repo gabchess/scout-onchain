@@ -16,7 +16,6 @@ reviews:
       - "[WIP]"
       - "WIP:"
       - "DO NOT MERGE"
-      - WIP
       - '[no-cr]'
   path_filters:
     # shared block v1: narrative files and data logs. Same lines in every repo yaml.
