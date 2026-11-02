@@ -43,8 +43,6 @@ reviews:
     - "!fixtures/**"
     - '!**/*.md'
     - '!**/INVENTORY*'
-    - '**/AGENTS.md'
-    - '**/CLAUDE.md'
   path_instructions:
     - path: "src/scout_portfolio_manager/**/*.py"
       instructions: >
