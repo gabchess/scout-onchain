@@ -41,6 +41,8 @@ reviews:
     - "!src/scout_portfolio_manager/data/portfolio.json"        # synthetic, same as fixtures/
     - "!src/scout_portfolio_manager/data/price_history.json"    # synthetic, same as fixtures/
     - "!fixtures/**"
+    - '!**/*.md'
+    - '!**/INVENTORY*'
   path_instructions:
     - path: "src/scout_portfolio_manager/**/*.py"
       instructions: >
@@ -73,6 +75,8 @@ reviews:
       instructions: >
         Flag only a number, date, path, version, or command that contradicts the
         code or another file. Skip wording, tone, and structure.
+    - path: .github/**
+      instructions: Check secrets, env leaks, and permissions.
   profile: chill
   tools:
     gitleaks:
@@ -92,7 +96,7 @@ reviews:
       enabled: false
 knowledge_base:
   learnings:
-    scope: local
+    scope: auto
   code_guidelines:
     enabled: true
 chat:
