@@ -41,7 +41,6 @@ reviews:
     - "!src/scout_portfolio_manager/data/portfolio.json"        # synthetic, same as fixtures/
     - "!src/scout_portfolio_manager/data/price_history.json"    # synthetic, same as fixtures/
     - "!fixtures/**"
-    - '!**/*.md'
     - '!**/INVENTORY*'
   path_instructions:
     - path: "src/scout_portfolio_manager/**/*.py"
